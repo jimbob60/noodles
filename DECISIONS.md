@@ -2,6 +2,12 @@
 
 Newest first. Each entry says what we decided, why, and what it affects.
 
+## 2026-11-07: Play — a bouncy ball and a ribbon wand
+
+- **Decision:** a toy tray in the bottom-right corner (the mode button moved to the top-right). Throw the ball and it bounces about the screen; the dragon chases it and boops it back up with its nose (+4 Love, −1.5 Energy a boop). After 8 boops, or 6 s without one, the game ends and the ball drifts home. The ball can be grabbed again anywhere. Hold and wave the ribbon wand and the dragon chases the tip of its silky streamer (+3 Love, −1 Energy a second while it keeps up with a moving ribbon). Below 25 Energy it's too sleepy to play and shakes its head. Food takes priority over toys.
+- **Why:** phase 17 ("play raises happiness and looks fun"), and playing tiring the dragon out leads naturally into sleep (phase 18).
+- **Affects:** phase 18 (sleep refills the Energy play uses), phase 26 (the mini-game can reuse the ball).
+
 ## 2026-11-07: Petting — touch the dragon to pet, empty space to steer
 
 - **Decision:** a press that starts on the dragon (head or body) pets it; anywhere else still steers it. While rubbed it holds still, closes its eyes happily, purrs (a tiny vibration and ")))" waves), glows in its accent color, and sparkles and hearts pop where you rub. Love grows about +10 per 600 px of rubbing, at most 8 a second. Each dragon has 1–2 secret tickle spots along its body (from its seed); rubbing one sets off a giggle and a squirm (+3 Love). A sleeping dragon can be petted without waking. The purr only fades after 0.3 s without rubbing, because fingers report movement less often than the game updates.

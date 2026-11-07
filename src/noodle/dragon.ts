@@ -194,6 +194,23 @@ export class Dragon {
     for (let i = 0; i < 6; i++) this.sparkle(m.x + (Math.random() - 0.5) * 40, m.y - 10);
   }
 
+  /** Booped the ball with its nose: a little burst of hearts and a happy blink. */
+  boop(): void {
+    const m = this.mouth;
+    for (let i = 0; i < 4; i++) {
+      this.bits.push({
+        kind: i === 0 ? "heart" : "sparkle",
+        x: m.x + (Math.random() - 0.5) * 20,
+        y: m.y - 10,
+        vx: (Math.random() - 0.5) * this.halfWidth * 3,
+        vy: -this.halfWidth * (2 + Math.random() * 2),
+        age: 0,
+        life: 0.9,
+        color: i === 0 ? "#ff8ad8" : "#fff6c9",
+      });
+    }
+  }
+
   /** A polite head shake: "no thanks, I'm full". */
   refuse(): void {
     if (this.face.chewLeft <= 0) this.face.shakeLeft = SHAKE_TIME;

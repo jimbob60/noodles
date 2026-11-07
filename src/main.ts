@@ -10,6 +10,7 @@ import { makeLook } from "./noodle/look";
 import { palette } from "./palette";
 import { NeedsBar } from "./ui/needsBar";
 import { Feeding } from "./ui/feeding";
+import { Toys } from "./ui/toys";
 import { feedEffect } from "./care/food";
 import { Petting } from "./care/petting";
 import { drawTitle, TITLE_FONT } from "./title";
@@ -91,6 +92,7 @@ async function main(): Promise<void> {
   const needsBar = new NeedsBar();
   const feeding = new Feeding();
   const petting = new Petting();
+  const toys = new Toys();
   const persist = () => {
     if (mode === "play") saveNeeds(needs);
   };
@@ -120,10 +122,10 @@ async function main(): Promise<void> {
     dragon.resize(segmentFor(screen));
   });
 
-  /** The build tag doubles as the mode button: a generous tap area in the corner. */
+  /** The build tag doubles as the mode button: a generous tap area in the top-right corner. */
   const TAG_W = 230;
   const TAG_H = 44;
-  const onTag = (x: number, y: number) => x > screen.width - TAG_W && y > screen.height - TAG_H;
+  const onTag = (x: number, y: number) => x > screen.width - TAG_W && y < TAG_H;
   let wasDown = false;
   let swallowing = false;
   const noFinger = { x: 0, y: 0, down: false };
@@ -154,8 +156,26 @@ async function main(): Promise<void> {
         // For automated checks: how many snacks have been eaten this visit.
         document.body.dataset.fed = String(Number(document.body.dataset.fed ?? 0) + 1);
       }
+      // Then the toys. Food wins over toys if both want the dragon's attention.
+      const foodLure = dragon.lure;
+      const play = toys.update(
+        dt,
+        swallowing || tray.busy ? noFinger : input,
+        swallowing || tray.busy ? null : pressAt,
+        dragon,
+        needs.values,
+        screen.width,
+        screen.height,
+      );
+      if (foodLure) dragon.lure = foodLure;
+      // For automated checks: boops in the current ball game.
+      const boops = String(toys.ball?.boops ?? "-");
+      if (document.body.dataset.boops !== boops) document.body.dataset.boops = boops;
+      if (play.love !== 0 || play.energy !== 0) {
+        needs = change(needs, { happiness: play.love, energy: play.energy });
+      }
       // Next, a press that lands on the dragon itself pets it instead of steering it.
-      const free = !swallowing && !tray.busy;
+      const free = !swallowing && !tray.busy && !play.busy;
       const pet = petting.update(
         dt,
         free ? input : noFinger,
@@ -196,6 +216,7 @@ async function main(): Promise<void> {
         dragon.draw(ctx);
         needsBar.draw(ctx, screen.width, screen.height);
         feeding.draw(ctx);
+        toys.draw(ctx);
       }
 
       if (showNumbers() && mode !== "gallery") {
@@ -215,12 +236,12 @@ async function main(): Promise<void> {
       const w = ctx.measureText(label).width + 20;
       ctx.fillStyle = mode === "play" ? "rgba(255,255,255,0.08)" : "rgba(183,160,255,0.3)";
       ctx.beginPath();
-      ctx.roundRect(screen.width - w - 6, screen.height - 32, w, 26, 13);
+      ctx.roundRect(screen.width - w - 6, 8, w, 26, 13);
       ctx.fill();
       ctx.textAlign = "right";
       ctx.textBaseline = "middle";
       ctx.fillStyle = mode === "play" ? "rgba(255,255,255,0.45)" : "rgba(255,255,255,0.9)";
-      ctx.fillText(label, screen.width - 16, screen.height - 19);
+      ctx.fillText(label, screen.width - 16, 21);
     },
   });
   document.body.dataset.favorite = dragon.favorite;
