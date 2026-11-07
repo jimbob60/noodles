@@ -11,9 +11,9 @@ export function onBedButton(p: Point, width: number, height: number): boolean {
   return Math.hypot(p.x - b.x, p.y - b.y) <= b.r * 1.15;
 }
 
-/** Where the bed goes: low and central, with room for the curled-up dragon. */
+/** Where the bed goes: on the den floor, in the middle, with room for the curled-up dragon. */
 export function bedSpot(width: number, height: number): Point {
-  return { x: width * 0.5, y: height * 0.62 };
+  return { x: width * 0.5, y: height * 0.7 };
 }
 
 /** A moon to go to bed, or a sun to wake up. */

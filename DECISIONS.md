@@ -2,6 +2,12 @@
 
 Newest first. Each entry says what we decided, why, and what it affects.
 
+## 2026-11-07: The den — a cave with a window on a real-clock sky
+
+- **Decision:** the play screen is now the den: rounded rock walls with glowing crystals frame a big arched opening onto two rows of hills and the sky; a mossy floor with grass and glowing mushrooms; vines with lantern bulbs; fireflies. Layers are painted once (again on resize and every 15 minutes of sky time) and drift slightly at different speeds as the dragon moves (parallax). The sky follows the device's local clock through night (stars, moon), dawn (pink), day (a soft twilight, never above 62% lightness) and dusk (peach), blending smoothly; crystals, mushrooms and fireflies glow brighter in the dark. Fast mode runs the day 600× too. The title leaves the play screen until the title screen in phase 44. The bed sits lower, on the den floor.
+- **Why:** phase 22 ("the den feels like home"), in the night-and-glow look of VISION.md.
+- **Affects:** phase 23 (decorations go in the den), phase 26 (the mini-game can reuse the sky).
+
 ## 2026-11-07: Saving — one versioned save, a spare, and backup codes
 
 - **Decision:** the whole dragon (its seed, needs and bedtime) is one save, stamped `version: 1`, stored on the device (`noodle-dragons.save`) every 5 s and when the app is hidden or closed. Before each write the last good save is kept as a spare (`noodle-dragons.save.previous`), used if the latest is ever damaged. Needs saved by the phase 13–20 builds are carried over, with a new seed. Saves are read carefully: anything broken is ignored, and a newer version is read as far as this one understands. A 💾 button (top right) shows a backup code (`ND1-…` with a checksum, so typos and cut-off codes are refused) to copy, and a box to paste one back. If the device can't save (for example a locked-down preview window), the panel says so. Fast mode and the gallery never save.

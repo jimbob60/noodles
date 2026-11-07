@@ -9,7 +9,6 @@ import { Screen } from "./engine/screen";
 import { Gallery } from "./gallery";
 import { Dragon } from "./noodle/dragon";
 import { makeLook } from "./noodle/look";
-import { palette } from "./palette";
 import { NeedsBar } from "./ui/needsBar";
 import { Feeding } from "./ui/feeding";
 import { Toys } from "./ui/toys";
@@ -19,38 +18,9 @@ import { Petting } from "./care/petting";
 import { moodFrom } from "./care/mood";
 import { bedRefill, rested, sleepy } from "./care/bedtime";
 import { bedSpot, drawBed, drawBedButton, drawNight, onBedButton } from "./ui/bedtime";
-import { drawTitle, TITLE_FONT } from "./title";
-
-/** Fixed star positions (0–1 of the screen), so the sky looks the same every time. */
-const stars = Array.from({ length: 90 }, (_, i) => {
-  const r = (n: number) => (((Math.sin(i * 12.9898 + n * 78.233) * 43758.5453) % 1) + 1) % 1;
-  return { x: r(1), y: r(2), size: 0.6 + r(3) * 1.6, alpha: 0.3 + r(4) * 0.6 };
-});
-
-/**
- * The sky, stars and title only change on resize, so they are drawn once into an offscreen
- * canvas and copied each frame (glow effects are too slow to redraw 60 times a second).
- */
-function paintBackdrop(screen: Screen, backdrop: HTMLCanvasElement): void {
-  const { width: w, height: h, dpr } = screen;
-  backdrop.width = Math.round(w * dpr);
-  backdrop.height = Math.round(h * dpr);
-  const ctx = backdrop.getContext("2d")!;
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-  const sky = ctx.createLinearGradient(0, 0, 0, h);
-  sky.addColorStop(0, palette.night);
-  sky.addColorStop(1, palette.dusk);
-  ctx.fillStyle = sky;
-  ctx.fillRect(0, 0, w, h);
-  for (const s of stars) {
-    ctx.fillStyle = `rgba(255,255,255,${s.alpha})`;
-    ctx.beginPath();
-    ctx.arc(s.x * w, s.y * h, s.size, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  drawTitle(ctx, w, h);
-}
+import { TITLE_FONT } from "./title";
+import { Den } from "./den/den";
+import { hourOf } from "./den/timeOfDay";
 
 /** Spine spacing scales with the screen so the noodle is the same size on any tablet. */
 function segmentFor(screen: Screen): number {
@@ -63,8 +33,7 @@ async function main(): Promise<void> {
 
   const screen = new Screen(document.getElementById("game") as HTMLCanvasElement);
   const input = new Input(screen.canvas);
-  const backdrop = document.createElement("canvas");
-  paintBackdrop(screen, backdrop);
+  const den = new Den();
   const world = () => ({ width: screen.width, height: screen.height, unit: segmentFor(screen) });
   // Your dragon: its look comes from the saved seed (a brand-new dragon if there's no save).
   const store = deviceStore();
@@ -165,7 +134,6 @@ async function main(): Promise<void> {
   };
 
   screen.onResize(() => {
-    paintBackdrop(screen, backdrop);
     dragon.resize(segmentFor(screen));
   });
 
@@ -327,7 +295,16 @@ async function main(): Promise<void> {
       if (mode === "gallery" && gallery) {
         gallery.draw(ctx);
       } else {
-        ctx.drawImage(backdrop, 0, 0, screen.width, screen.height);
+        // The den, with the sky outside following the real clock (sped up in fast mode).
+        den.draw(
+          ctx,
+          screen.width,
+          screen.height,
+          screen.dpr,
+          hourOf(needsNow()),
+          dragon.centre,
+          modeSeconds,
+        );
         drawNight(ctx, screen.width, screen.height, night, bedAt);
         drawBed(ctx, bedAt, dragon.halfWidth * 4.2, night);
         dragon.draw(ctx);
@@ -353,7 +330,13 @@ async function main(): Promise<void> {
       }
 
       // Build tag, frame rate and test mode in the corner. Tap it to switch mode.
-      const label = `${mode === "play" ? "play" : mode === "fast" ? "⏩ fast" : "🖼 gallery"} · build ${__BUILD__} · ${Math.round(loop.fps())} fps`;
+      const modeName = mode === "play" ? "play" : mode === "fast" ? "⏩ fast" : "🖼 gallery";
+      const fps = `${Math.round(loop.fps())} fps`;
+      // Narrow phones get a short tag (just the commit), so it doesn't run into the need orbs.
+      const label =
+        screen.width < 600
+          ? `${modeName} · ${__BUILD__.split(" ")[0]} · ${fps}`
+          : `${modeName} · build ${__BUILD__} · ${fps}`;
       ctx.font = "13px system-ui, sans-serif";
       const w = ctx.measureText(label).width + 20;
       ctx.fillStyle = mode === "play" ? "rgba(255,255,255,0.08)" : "rgba(183,160,255,0.3)";
