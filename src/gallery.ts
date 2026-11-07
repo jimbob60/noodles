@@ -1,4 +1,4 @@
-import type { Input } from "./engine/input";
+import type { PointerState } from "./engine/input";
 import type { Screen } from "./engine/screen";
 import { Dragon } from "./noodle/dragon";
 import { makeLook } from "./noodle/look";
@@ -49,7 +49,7 @@ export class Gallery {
     });
   }
 
-  update(dt: number, input: Input): void {
+  update(dt: number, input: PointerState): void {
     this.time += dt;
     if (input.down && !this.wasDown) this.roll();
     this.wasDown = input.down;

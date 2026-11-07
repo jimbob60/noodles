@@ -65,42 +65,82 @@ async function main(): Promise<void> {
     world(),
     look,
   );
-  const gallery = location.hash === "#gallery" ? new Gallery(screen) : null;
-  window.addEventListener("hashchange", () => location.reload());
-  // #fast: a demo where needs time runs 600× faster (an hour every 6 seconds), starting full.
-  // It never saves, so the real dragon's needs are untouched.
-  const fast = location.hash === "#fast";
-  const debug = location.hash === "#debug" || fast;
-  const startedAt = Date.now();
-  let gameSeconds = 0;
-  const needsNow = () => (fast ? startedAt + gameSeconds * 600_000 : Date.now());
+  /**
+   * Test modes, switched by tapping the build tag in the bottom-right corner (links with #fast
+   * or #gallery also work in a normal browser, but Claude's app viewer can drop the #):
+   * - play: the real game.
+   * - fast: needs time runs 600× faster (an hour every 6 s) from full; never saves.
+   * - gallery: twenty random dragons.
+   */
+  type Mode = "play" | "fast" | "gallery";
+  const MODES: Mode[] = ["play", "fast", "gallery"];
+  const fromHash = location.hash.slice(1);
+  let mode: Mode = MODES.includes(fromHash as Mode) ? (fromHash as Mode) : "play";
+  const showNumbers = () => mode === "fast" || location.hash === "#debug";
+  let gallery: Gallery | null = null;
+  let modeStartedAt = Date.now();
+  let modeSeconds = 0;
+  const needsNow = () => (mode === "fast" ? modeStartedAt + modeSeconds * 600_000 : Date.now());
 
   // Needs follow the real clock, so they keep changing while the app is closed.
-  let needs = fast
-    ? change(freshNeeds(startedAt), { fullness: 10, happiness: 10, energy: 10, cleanliness: 10 })
-    : loadNeeds(startedAt);
+  let needs = loadNeeds(Date.now());
   let sinceSave = 0;
   const needsBar = new NeedsBar();
   const persist = () => {
-    if (!fast) saveNeeds(needs);
+    if (mode === "play") saveNeeds(needs);
   };
   window.addEventListener("pagehide", persist);
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) persist();
   });
+
+  function enterMode(next: Mode): void {
+    persist();
+    mode = next;
+    modeStartedAt = Date.now();
+    modeSeconds = 0;
+    if (mode === "fast") {
+      const full = { fullness: 100, happiness: 100, energy: 100, cleanliness: 100 };
+      needs = change(freshNeeds(modeStartedAt), full);
+    } else if (mode === "play") {
+      needs = loadNeeds(Date.now());
+    } else if (!gallery) {
+      gallery = new Gallery(screen);
+    }
+  }
+  enterMode(mode);
+
   screen.onResize(() => {
     paintBackdrop(screen, backdrop);
     dragon.resize(segmentFor(screen));
   });
 
+  /** The build tag doubles as the mode button: a generous tap area in the corner. */
+  const TAG_W = 230;
+  const TAG_H = 44;
+  const onTag = (x: number, y: number) => x > screen.width - TAG_W && y > screen.height - TAG_H;
+  let wasDown = false;
+  let swallowing = false;
+  const noFinger = { x: 0, y: 0, down: false };
+
   const loop = startLoop({
     update(dt) {
-      if (gallery) {
-        gallery.update(dt, input);
+      // A press that starts on the tag switches mode and doesn't steer anything.
+      const pressed = input.down && !wasDown;
+      wasDown = input.down;
+      if (pressed && onTag(input.x, input.y)) {
+        swallowing = true;
+        enterMode(MODES[(MODES.indexOf(mode) + 1) % MODES.length]);
+      }
+      if (!input.down) swallowing = false;
+      const finger = swallowing ? noFinger : input;
+
+      if (mode === "gallery" && gallery) {
+        gallery.update(dt, finger);
         return;
       }
-      dragon.update(dt, input, world());
-      gameSeconds += dt;
+      dragon.update(dt, finger, world());
+      modeSeconds += dt;
       needs = advance(needs, needsNow(), dragon.asleep);
       needsBar.update(dt, needs.values);
       sinceSave += dt;
@@ -114,7 +154,7 @@ async function main(): Promise<void> {
     },
     render() {
       const ctx = screen.begin();
-      if (gallery) {
+      if (mode === "gallery" && gallery) {
         gallery.draw(ctx);
       } else {
         ctx.drawImage(backdrop, 0, 0, screen.width, screen.height);
@@ -122,8 +162,8 @@ async function main(): Promise<void> {
         needsBar.draw(ctx, screen.width, screen.height);
       }
 
-      if (debug) {
-        // Exact numbers for checking (#debug and #fast).
+      if (showNumbers() && mode !== "gallery") {
+        // Exact numbers for checking (fast mode and #debug).
         ctx.font = "13px system-ui, sans-serif";
         ctx.textAlign = "left";
         ctx.textBaseline = "top";
@@ -133,16 +173,18 @@ async function main(): Promise<void> {
         });
       }
 
-      // Build tag and frame rate in the corner, so Jacob can tell which build he is playing.
-      ctx.font = "12px system-ui, sans-serif";
+      // Build tag, frame rate and test mode in the corner. Tap it to switch mode.
+      const label = `${mode === "play" ? "play" : mode === "fast" ? "⏩ fast" : "🖼 gallery"} · build ${__BUILD__} · ${Math.round(loop.fps())} fps`;
+      ctx.font = "13px system-ui, sans-serif";
+      const w = ctx.measureText(label).width + 20;
+      ctx.fillStyle = mode === "play" ? "rgba(255,255,255,0.08)" : "rgba(183,160,255,0.3)";
+      ctx.beginPath();
+      ctx.roundRect(screen.width - w - 6, screen.height - 32, w, 26, 13);
+      ctx.fill();
       ctx.textAlign = "right";
-      ctx.textBaseline = "bottom";
-      ctx.fillStyle = "rgba(255,255,255,0.35)";
-      ctx.fillText(
-        `build ${__BUILD__} · ${Math.round(loop.fps())} fps`,
-        screen.width - 10,
-        screen.height - 8,
-      );
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = mode === "play" ? "rgba(255,255,255,0.45)" : "rgba(255,255,255,0.9)";
+      ctx.fillText(label, screen.width - 16, screen.height - 19);
     },
   });
   document.body.dataset.ready = "true";
