@@ -4,8 +4,11 @@ import { startLoop } from "./engine/loop";
 import { Screen } from "./engine/screen";
 import { Follower } from "./follower";
 import { bodyHalfWidth, drawBody } from "./noodle/drawBody";
+import { drawLegs, drawTailTuft, drawWhiskers } from "./noodle/drawExtras";
 import { drawHead } from "./noodle/drawHead";
 import { Face } from "./noodle/face";
+import { legSizes, makeLegs, updateLegs } from "./noodle/legs";
+import { Whiskers } from "./noodle/whiskers";
 import { Spine } from "./noodle/spine";
 import { palette } from "./palette";
 import { drawTitle, TITLE_FONT } from "./title";
@@ -57,9 +60,16 @@ async function main(): Promise<void> {
   paintBackdrop(screen, backdrop);
   const dot = new Follower(screen.width / 2, screen.height * 0.85);
   const spine = new Spine(dot.x, dot.y, SPINE_POINTS, segmentFor(screen));
+  const headRadius = () => bodyHalfWidth(spine) * 1.3;
+  let sizes = legSizes(bodyHalfWidth(spine));
+  let legs = makeLegs(spine.points, sizes);
+  const whiskers = new Whiskers(spine.head, spine.segment * 0.95);
   screen.onResize(() => {
     paintBackdrop(screen, backdrop);
     spine.resize(segmentFor(screen));
+    sizes = legSizes(bodyHalfWidth(spine));
+    legs = makeLegs(spine.points, sizes);
+    whiskers.resize(spine.segment * 0.95);
   });
   const face = new Face();
   let idleTime = 0;
@@ -82,12 +92,18 @@ async function main(): Promise<void> {
         ? { x: input.x, y: input.y }
         : { x: head.x + (head.x - neck.x) * 6, y: head.y + (head.y - neck.y) * 6 };
       face.update(dt, head, neck, target, bodyHalfWidth(spine) * 6);
+      updateLegs(legs, spine.points, sizes, dt);
+      whiskers.update(dt, head, headRadius(), face);
     },
     render() {
       const ctx = screen.begin();
       ctx.drawImage(backdrop, 0, 0, screen.width, screen.height);
+      drawLegs(ctx, legs, spine.points, sizes);
       drawBody(ctx, spine);
-      drawHead(ctx, spine.head, bodyHalfWidth(spine) * 1.3, face);
+      drawTailTuft(ctx, spine.points, bodyHalfWidth(spine), idleTime);
+      // Whiskers before the head, so they hang out from under the snout instead of over the eyes.
+      drawWhiskers(ctx, whiskers, bodyHalfWidth(spine));
+      drawHead(ctx, spine.head, headRadius(), face);
 
       // Build tag and frame rate in the corner, so Jacob can tell which build he is playing.
       ctx.font = "12px system-ui, sans-serif";
