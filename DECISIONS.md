@@ -2,6 +2,12 @@
 
 Newest first. Each entry says what we decided, why, and what it affects.
 
+## 2026-11-07: Feeding — drag to the mouth, or let food float
+
+- **Decision:** three foods in a bottom-left tray (noodles +30, dumpling +20, fish +25 Food; +4 Love each, +14 more for the dragon's favorite, picked from its seed). Drag a food to the mouth to feed it, or let go and the food floats, drifting and bobbing with a little of the throw. A hungry dragon swims after floating food (at most 16 spine units a second, so it's watchable) and eats it; a full one (Food 97+) shakes its head, and the food lingers 1.2 s, then drifts slowly home to its bubble over 2.5 s. The tray is an endless pantry: a bubble always has its food. Grabs are judged by where the press began, so a quick flick still picks up the food.
+- **Why:** phase 15, and Jacob's ask that dropped food float and get chased, or slowly go home.
+- **Affects:** phase 17 (toys can reuse floating) and phases 24–25 (food may cost coins later).
+
 ## 2026-11-07: Needs display — draining potion orbs, 1%–100%
 
 - **Decision:** each need is a glass orb of glowing liquid that drains downward in whole 1% stages: 100% when perfectly cared for, down to a 1% puddle at the cozy floor (15), never fully empty. One short word sits under each orb (Food, Love, Energy, Hygiene). No numbers, no red; low orbs dim slightly and wobble softly every 4 s. Fast mode runs needs time 600× faster from full (an hour every 6 s) and never saves, so the drain can be watched in about a minute. Test modes (play → fast → gallery) are switched by tapping the build tag in the bottom-right corner, because Claude's app viewer can drop `#` links.

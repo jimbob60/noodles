@@ -16,6 +16,12 @@ export class Input implements PointerState {
   down = false;
   /** True once the player has touched or moved the mouse at least once. */
   active = false;
+  /**
+   * Where the latest press started. A quick flick can move the finger far before the next
+   * frame, so anything that is grabbed (food, buttons) is judged by where the press began.
+   */
+  pressX = 0;
+  pressY = 0;
   private pointerId: number | null = null;
 
   constructor(target: HTMLElement) {
@@ -25,6 +31,8 @@ export class Input implements PointerState {
       target.setPointerCapture?.(e.pointerId);
       this.down = true;
       this.move(e);
+      this.pressX = e.clientX;
+      this.pressY = e.clientY;
     });
     target.addEventListener("pointermove", (e) => {
       if (this.pointerId !== null && this.pointerId !== e.pointerId) return;

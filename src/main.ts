@@ -131,7 +131,8 @@ async function main(): Promise<void> {
       // A press that starts on the tag switches mode and doesn't steer anything.
       const pressed = input.down && !wasDown;
       wasDown = input.down;
-      if (pressed && onTag(input.x, input.y)) {
+      const pressAt = pressed ? { x: input.pressX, y: input.pressY } : null;
+      if (pressAt && onTag(pressAt.x, pressAt.y)) {
         swallowing = true;
         enterMode(MODES[(MODES.indexOf(mode) + 1) % MODES.length]);
       }
@@ -144,7 +145,7 @@ async function main(): Promise<void> {
       // The food tray gets first say over a press; while it holds food, the finger is busy.
       const tray = swallowing
         ? { busy: false, event: null }
-        : feeding.update(dt, input, pressed, dragon, needs.values, screen.width, screen.height);
+        : feeding.update(dt, input, pressAt, dragon, needs.values, screen.width, screen.height);
       if (tray.event) {
         const favorite = tray.event.ate === dragon.favorite;
         needs = change(needs, feedEffect(tray.event.ate, favorite));
@@ -152,6 +153,9 @@ async function main(): Promise<void> {
         document.body.dataset.fed = String(Number(document.body.dataset.fed ?? 0) + 1);
       }
       const finger = swallowing || tray.busy ? noFinger : input;
+      // For automated checks: how many foods are floating about right now.
+      const floating = String(feeding.floating.length);
+      if (document.body.dataset.floating !== floating) document.body.dataset.floating = floating;
       dragon.update(dt, finger, world());
       modeSeconds += dt;
       needs = advance(needs, needsNow(), dragon.asleep);

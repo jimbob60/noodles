@@ -19,24 +19,37 @@ export interface FeedEvent {
   ate: FoodId;
 }
 
-/** Seconds a dropped food takes to float back to the tray. */
-const RETURN_TIME = 0.35;
+/** Seconds a food takes to drift back home to its bubble (slowly, on purpose). */
+export const RETURN_TIME = 2.5;
+/** Seconds a dropped food hangs in the air before a full dragon's food heads home. */
+export const LINGER_TIME = 1.2;
+/** Fastest a thrown food can start floating, in px per second. */
+const MAX_THROW = 600;
 /** The food floats a little above the finger, so the finger doesn't hide it. */
 const LIFT = 34;
 
-interface Returning {
+/** A dropped food: it floats about until eaten, or drifts home if the dragon doesn't want it. */
+export interface Floater {
   food: FoodId;
-  from: Point;
-  t: number;
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  age: number;
+  /** Set once it starts drifting home: where it started from, and progress 0–1. */
+  home: { from: Point; t: number } | null;
 }
 
 /**
- * The food tray (bottom-left) and the food being dragged. Drag a food to the dragon's mouth to
- * feed it; let go anywhere else and the food floats back to the tray.
+ * The food tray (bottom-left), the food being dragged, and dropped food floating about.
+ * Drag a food to the dragon's mouth to feed it. Let go anywhere and the food floats: a hungry
+ * dragon swims after it, and a full one leaves it to drift slowly back home to its bubble.
  */
 export class Feeding {
   held: { food: FoodId; x: number; y: number } | null = null;
-  private returning: Returning[] = [];
+  floating: Floater[] = [];
+  private lastHeld: Point | null = null;
+  private throwV: Point = { x: 0, y: 0 };
   private refusedAt = -Infinity;
   private time = 0;
   private width = 0;
@@ -61,13 +74,13 @@ export class Feeding {
   }
 
   /**
-   * @param pressed true on the frame the finger first touches down
+   * @param pressed where a press started, on the frame it is first seen (null otherwise)
    * @returns true while the tray has the finger (so nothing else should react to it)
    */
   update(
     dt: number,
     input: PointerState,
-    pressed: boolean,
+    pressed: Point | null,
     dragon: Feedable,
     needs: Needs,
     width: number,
@@ -76,21 +89,44 @@ export class Feeding {
     this.time += dt;
     this.width = width;
     this.height = height;
-    for (const r of this.returning) r.t += dt / RETURN_TIME;
-    this.returning = this.returning.filter((r) => r.t < 1);
+    const hungry = wantsFood(needs);
+    this.updateFloaters(dt, hungry);
 
     if (pressed && !this.held) {
-      const food = this.slotAt(input.x, input.y);
-      if (food) this.held = { food, x: input.x, y: input.y - LIFT };
+      const food = this.slotAt(pressed.x, pressed.y);
+      if (food) {
+        this.held = { food, x: input.x, y: input.y - LIFT };
+        this.lastHeld = null;
+      }
     }
     if (!this.held) {
-      dragon.lure = null;
+      // Nothing in hand: a hungry dragon goes after the nearest floating food, unless the
+      // finger is busy steering it.
+      const meal = hungry && !input.down ? this.nearestFloater(dragon.mouth) : null;
+      dragon.lure = meal ? { x: meal.x, y: meal.y } : null;
+      if (meal && this.reaches(meal, dragon)) {
+        this.floating.splice(this.floating.indexOf(meal), 1);
+        dragon.eat(meal.food);
+        dragon.lure = null;
+        return { busy: false, event: { ate: meal.food } };
+      }
       return { busy: false, event: null };
     }
 
     if (!input.down) {
-      // Let go before reaching the mouth: float back to the tray.
-      this.returning.push({ food: this.held.food, from: { x: this.held.x, y: this.held.y }, t: 0 });
+      // Let go: the food floats off with a little of the throw.
+      const v = this.throwV;
+      const speed = Math.hypot(v.x, v.y);
+      const k = speed > MAX_THROW ? MAX_THROW / speed : 1;
+      this.floating.push({
+        food: this.held.food,
+        x: this.held.x,
+        y: this.held.y,
+        vx: v.x * k * 0.5,
+        vy: v.y * k * 0.5,
+        age: 0,
+        home: null,
+      });
       this.held = null;
       dragon.lure = null;
       return { busy: false, event: null };
@@ -98,10 +134,18 @@ export class Feeding {
 
     this.held.x = input.x;
     this.held.y = input.y - LIFT;
+    if (this.lastHeld && dt > 0) {
+      // Smoothed finger speed, so a flick sends the food floating that way.
+      const k = 1 - Math.exp(-15 * dt);
+      this.throwV.x += ((this.held.x - this.lastHeld.x) / dt - this.throwV.x) * k;
+      this.throwV.y += ((this.held.y - this.lastHeld.y) / dt - this.throwV.y) * k;
+    } else {
+      this.throwV = { x: 0, y: 0 };
+    }
+    this.lastHeld = { x: this.held.x, y: this.held.y };
     dragon.lure = { x: this.held.x, y: this.held.y };
-    const m = dragon.mouth;
-    if (Math.hypot(this.held.x - m.x, this.held.y - m.y) < dragon.headRadius * 0.85) {
-      if (wantsFood(needs)) {
+    if (this.reaches(this.held, dragon)) {
+      if (hungry) {
         const food = this.held.food;
         dragon.eat(food);
         this.held = null;
@@ -114,6 +158,56 @@ export class Feeding {
       }
     }
     return { busy: true, event: null };
+  }
+
+  private reaches(food: Point, dragon: Feedable): boolean {
+    const m = dragon.mouth;
+    return Math.hypot(food.x - m.x, food.y - m.y) < dragon.headRadius * 0.85;
+  }
+
+  private nearestFloater(from: Point): Floater | null {
+    let best: Floater | null = null;
+    let bestD = Infinity;
+    for (const f of this.floating) {
+      if (f.home) continue;
+      const d = Math.hypot(f.x - from.x, f.y - from.y);
+      if (d < bestD) {
+        bestD = d;
+        best = f;
+      }
+    }
+    return best;
+  }
+
+  /** Floating food drifts, slows down and bobs; unwanted food heads home slowly. */
+  private updateFloaters(dt: number, hungry: boolean): void {
+    const margin = 30;
+    for (const f of this.floating) {
+      f.age += dt;
+      if (f.home) {
+        f.home.t = Math.min(1, f.home.t + dt / RETURN_TIME);
+        const slot = this.slots().find((s) => s.food === f.food)!;
+        const e = f.home.t * f.home.t * (3 - 2 * f.home.t);
+        f.x = f.home.from.x + (slot.x - f.home.from.x) * e;
+        // A gentle arc on the way home, so it floats rather than slides.
+        f.y = f.home.from.y + (slot.y - f.home.from.y) * e - Math.sin(e * Math.PI) * 40;
+        continue;
+      }
+      const damp = Math.exp(-1.8 * dt);
+      f.vx *= damp;
+      f.vy *= damp;
+      f.x += f.vx * dt;
+      f.y += (f.vy + Math.sin(f.age * 2.4) * 14) * dt;
+      // Soft walls: stay on screen.
+      if (f.x < margin) f.vx = Math.abs(f.vx);
+      if (f.x > this.width - margin) f.vx = -Math.abs(f.vx);
+      if (f.y < margin) f.vy = Math.abs(f.vy);
+      if (f.y > this.height - margin) f.vy = -Math.abs(f.vy);
+      f.x = Math.min(this.width - margin, Math.max(margin, f.x));
+      f.y = Math.min(this.height - margin, Math.max(margin, f.y));
+      if (!hungry && f.age > LINGER_TIME) f.home = { from: { x: f.x, y: f.y }, t: 0 };
+    }
+    this.floating = this.floating.filter((f) => !f.home || f.home.t < 1);
   }
 
   draw(ctx: CanvasRenderingContext2D): void {
@@ -140,12 +234,18 @@ export class Feeding {
       }
     }
     const r = slots[0].r;
-    for (const back of this.returning) {
-      const slot = slots.find((s) => s.food === back.food)!;
-      const e = 1 - Math.pow(1 - back.t, 3);
-      const x = back.from.x + (slot.x - back.from.x) * e;
-      const y = back.from.y + (slot.y - back.from.y) * e;
-      drawFood(ctx, back.food, x, y, r * 0.6 * (1.25 - 0.25 * e));
+    for (const f of this.floating) {
+      // A soft glow and a gentle tilt, so it looks like it's floating.
+      const shrink = f.home ? 1.25 - 0.25 * f.home.t : 1.25;
+      ctx.fillStyle = "rgba(255,240,200,0.14)";
+      ctx.beginPath();
+      ctx.arc(f.x, f.y, r * 0.95 * shrink, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.save();
+      ctx.translate(f.x, f.y);
+      ctx.rotate(Math.sin(f.age * 1.7) * 0.15);
+      drawFood(ctx, f.food, 0, 0, r * 0.6 * shrink);
+      ctx.restore();
     }
     if (this.held) {
       // Held food is a bit bigger, with a soft glow under it.

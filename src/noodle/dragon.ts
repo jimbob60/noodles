@@ -38,6 +38,8 @@ interface Bit {
 
 /** How quickly the head swims toward held-out food (slower than following a finger: it reaches). */
 const LURE_RATE = 4;
+/** Top swimming speed toward food, in spine units per second, so you can watch it swim over. */
+export const LURE_TOP_SPEED = 16;
 
 /** One noodle dragon: its body parts, and who is steering it (the finger or its idle brain). */
 export class Dragon {
@@ -154,7 +156,16 @@ export class Dragon {
       const r = this.headRadius;
       const tx = this.lure.x - this.face.facing * r * 0.72;
       const ty = this.lure.y - r * 0.56;
+      const fromX = this.head.x;
+      const fromY = this.head.y;
       this.head.update(dt, tx, ty, LURE_RATE);
+      // Never faster than a quick swim, however far away the food is.
+      const step = Math.hypot(this.head.x - fromX, this.head.y - fromY);
+      const max = LURE_TOP_SPEED * this.spine.segment * dt;
+      if (step > max) {
+        this.head.x = fromX + ((this.head.x - fromX) * max) / step;
+        this.head.y = fromY + ((this.head.y - fromY) * max) / step;
+      }
     } else if (input.down) {
       // The finger is in charge: wake up and follow it.
       this.held = true;
