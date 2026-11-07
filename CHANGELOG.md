@@ -2,6 +2,7 @@
 
 Newest first. One line per finished phase.
 
+- **Phase 7 — Body (2026-11-07):** chubby tapered body around the spine, with a soft glow, a rim and a shine on top.
 - **Phase 6 — Spine (2026-11-07):** a 26-point chain that trails behind the finger like a ribbon, with no sharp kinks.
 - **Phase 5 — Screen and game loop (2026-11-07):** full-screen canvas, fixed-step loop, touch and mouse input, a glowing dot that follows your finger.
 - **Phase 4 — Preview link (2026-11-07):** single-file build published to a private preview page; "Hello, Noodle!" greeting and build tag added.
