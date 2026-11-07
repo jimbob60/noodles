@@ -62,6 +62,8 @@ export interface PlayResult {
   energy: number;
   /** Hygiene change (negative: playing gets it a bit grubby). */
   grime: number;
+  /** True on the frame the ball got booped (for coins). */
+  booped: boolean;
 }
 
 /**
@@ -118,7 +120,7 @@ export class Toys {
     this.width = width;
     this.height = height;
     this.boopCooldown = Math.max(0, this.boopCooldown - dt);
-    const result: PlayResult = { busy: false, love: 0, energy: 0, grime: 0 };
+    const result: PlayResult = { busy: false, love: 0, energy: 0, grime: 0, booped: false };
     const keen = wantsToPlay(needs);
 
     // Pick up: a toy from the tray, or the ball wherever it is.
@@ -257,6 +259,7 @@ export class Toys {
         result.love += BOOP_LOVE;
         result.energy -= BOOP_ENERGY;
         result.grime -= BOOP_GRIME;
+        result.booped = true;
         dragon.boop();
       }
     } else if (!keen && b.idle < dt * 1.5) {

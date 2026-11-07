@@ -26,6 +26,12 @@ Newest first. Each entry says what we decided, why, and what it affects.
 - **Why:** Jacob's ask, and it gives the bath sponge a reason to come out regularly.
 - **Affects:** phase 42 (balance).
 
+## 2026-11-07: Noodle coins — earned only by caring and playing
+
+- **Decision:** coins for a snack (2), the favorite food (3), a good petting that ends in the excited loop (3), a ball boop (1), every 5 s of ribbon chasing (2), a squeaky-clean bath (4), waking up rested (5), and a daily hello on the first visit each day (10). After 150 in a day, everyday care pays half, so there's no grinding; it resets the next day. Coins pop out and fly to a counter under the need orbs. Fast mode never pays. Saved with the dragon (save version 3; older saves start at 0). No real money anywhere; spending comes with the shop (phase 25).
+- **Why:** phase 24 ("coins add up correctly").
+- **Affects:** phase 25 (shop prices), phase 42 (balance).
+
 ## 2026-11-07: Idea for later — a premium currency
 
 - **Idea:** Jacob's: a premium currency (say, gems 💎) bought with real money, alongside the free noodle coins.

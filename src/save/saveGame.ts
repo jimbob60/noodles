@@ -1,27 +1,37 @@
 import { freshNeeds, parseNeeds, type NeedsState } from "../care/needs";
 import { parseDecor, type DecorItem } from "../den/decor";
+import { emptyWallet, parseWallet, type Wallet } from "../care/coins";
 
 /** The save format version. Bump it (and add a migration below) whenever the format changes. */
-export const SAVE_VERSION = 2;
+export const SAVE_VERSION = 3;
 
 /**
  * Everything that makes your dragon yours.
  * - Version 1 (phase 21): seed and needs.
  * - Version 2 (phase 23): plus the den's decorations.
+ * - Version 3 (phase 24): plus the noodle coin wallet.
  */
-export interface SaveV2 {
-  version: 2;
+export interface SaveV3 {
+  version: 3;
   /** When this was saved (milliseconds since 1970). */
   savedAt: number;
   /** The seed its look comes from (and its favorite food and tickle spots). */
   seed: number;
   needs: NeedsState;
   decor: DecorItem[];
+  wallet: Wallet;
 }
-export type Save = SaveV2;
+export type Save = SaveV3;
 
 export function newSave(seed: number, now: number): Save {
-  return { version: 2, savedAt: now, seed, needs: freshNeeds(now), decor: [] };
+  return {
+    version: 3,
+    savedAt: now,
+    seed,
+    needs: freshNeeds(now),
+    decor: [],
+    wallet: emptyWallet(),
+  };
 }
 
 export function makeSave(
@@ -29,8 +39,9 @@ export function makeSave(
   needs: NeedsState,
   now: number,
   decor: DecorItem[] = [],
+  wallet: Wallet = emptyWallet(),
 ): Save {
-  return { version: 2, savedAt: now, seed, needs, decor };
+  return { version: 3, savedAt: now, seed, needs, decor, wallet };
 }
 
 const validSeed = (v: unknown): v is number =>
@@ -48,12 +59,15 @@ export function parseSave(raw: unknown, now: number): Save | null {
     needs?: unknown;
     savedAt?: unknown;
     decor?: unknown;
+    wallet?: unknown;
   };
   if (typeof r.version !== "number" || r.version < 1 || !validSeed(r.seed)) return null;
   const savedAt = typeof r.savedAt === "number" && r.savedAt <= now ? r.savedAt : now;
   // Version 1 had no decorations: it upgrades with an empty den.
   const decor = r.version >= 2 ? parseDecor(r.decor) : [];
-  return { version: 2, savedAt, seed: r.seed, needs: parseNeeds(r.needs, now), decor };
+  // Versions 1–2 had no coins: they upgrade with an empty wallet.
+  const wallet = r.version >= 3 ? parseWallet(r.wallet) : emptyWallet();
+  return { version: 3, savedAt, seed: r.seed, needs: parseNeeds(r.needs, now), decor, wallet };
 }
 
 // ---- Backup codes: a save as text that can be copied out and pasted back in. ----

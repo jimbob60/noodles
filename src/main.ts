@@ -14,6 +14,8 @@ import { Feeding } from "./ui/feeding";
 import { Toys } from "./ui/toys";
 import { Bath } from "./ui/bath";
 import { feedEffect } from "./care/food";
+import { earn, emptyWallet, type CoinReason, type Wallet } from "./care/coins";
+import { CoinCounter } from "./ui/coinCounter";
 import { Petting } from "./care/petting";
 import { moodFrom } from "./care/mood";
 import { bedRefill, rested, sleepy } from "./care/bedtime";
@@ -49,6 +51,9 @@ async function main(): Promise<void> {
   /** The den's decorations (saved with the dragon). */
   let decor: DecorItem[] = loaded.save?.decor ?? [];
   const decorator = new Decorator();
+  /** Noodle coins (saved with the dragon). */
+  let wallet: Wallet = loaded.save?.wallet ?? emptyWallet();
+  const coinCounter = new CoinCounter();
   /**
    * Test modes, switched by tapping the build tag in the bottom-right corner (links with #fast
    * or #gallery also work in a normal browser, but Claude's app viewer can drop the #):
@@ -78,7 +83,7 @@ async function main(): Promise<void> {
   const bath = new Bath();
   /** Saves on this device (only the real game: fast mode and the gallery never save). */
   const persist = () => {
-    if (mode === "play") storeGame(store, makeSave(seed, needs, Date.now(), decor));
+    if (mode === "play") storeGame(store, makeSave(seed, needs, Date.now(), decor, wallet));
   };
   window.addEventListener("pagehide", persist);
   document.addEventListener("visibilitychange", () => {
@@ -120,6 +125,14 @@ async function main(): Promise<void> {
   }
   if (needs.inBed) setBedtime(true);
 
+  /** Coins for care: only in the real game (not fast mode), popping out at `from`. */
+  function pay(reason: CoinReason, from: { x: number; y: number }): void {
+    if (mode !== "play") return;
+    const r = earn(wallet, reason, Date.now());
+    wallet = r.wallet;
+    if (r.earned > 0) coinCounter.earned(r.earned, from);
+  }
+
   /** Restores a dragon from a backup code. Returns false if the code doesn't work. */
   function restore(code: string): boolean {
     const save = decodeBackup(code, Date.now());
@@ -129,6 +142,7 @@ async function main(): Promise<void> {
     dragon = makeDragon();
     needs = fromSave(save);
     decor = save.decor;
+    wallet = save.wallet;
     if (needs.inBed) setBedtime(true);
     document.body.dataset.favorite = dragon.favorite;
     document.body.dataset.seed = String(seed);
@@ -138,7 +152,7 @@ async function main(): Promise<void> {
   const showBackup = () => {
     persist();
     openBackupPanel(
-      encodeBackup(makeSave(seed, needs, Date.now(), decor)),
+      encodeBackup(makeSave(seed, needs, Date.now(), decor, wallet)),
       restore,
       store !== null,
     );
@@ -153,6 +167,7 @@ async function main(): Promise<void> {
   const TAG_H = 44;
   const onTag = (x: number, y: number) => x > screen.width - TAG_W && y < TAG_H;
   let seenPresses = 0;
+  let ribbonTime = 0;
   let swallowing = false;
   const noFinger = { x: 0, y: 0, down: false };
 
@@ -223,6 +238,7 @@ async function main(): Promise<void> {
       if (tray.event) {
         const favorite = tray.event.ate === dragon.favorite;
         needs = change(needs, feedEffect(tray.event.ate, favorite));
+        pay(favorite ? "favorite" : "snack", dragon.mouth);
         // For automated checks: how many snacks have been eaten this visit.
         document.body.dataset.fed = String(Number(document.body.dataset.fed ?? 0) + 1);
       }
@@ -242,6 +258,15 @@ async function main(): Promise<void> {
       // For automated checks: boops in the current ball game.
       const boops = String(toys.ball?.boops ?? "-");
       if (document.body.dataset.boops !== boops) document.body.dataset.boops = boops;
+      if (play.booped && toys.ball) pay("boop", toys.ball);
+      // Every 5 seconds of keeping up with the ribbon earns a little.
+      if (play.love > 0 && !play.booped) {
+        ribbonTime += dt;
+        if (ribbonTime >= 5) {
+          ribbonTime = 0;
+          pay("ribbon", dragon.mouth);
+        }
+      }
       if (play.love !== 0 || play.energy !== 0 || play.grime !== 0) {
         needs = change(needs, {
           happiness: play.love,
@@ -262,6 +287,7 @@ async function main(): Promise<void> {
       );
       if (wash.clean > 0) needs = change(needs, { cleanliness: wash.clean });
       if (wash.squeaky) {
+        pay("bath", dragon.centre);
         needs = change(needs, { happiness: 3 });
         dragon.shakeDry();
       }
@@ -285,6 +311,8 @@ async function main(): Promise<void> {
       if (document.body.dataset.pet !== petState) document.body.dataset.pet = petState;
       const finger = !free || pet.active || inBed ? noFinger : input;
       // For automated checks: how many foods are floating about right now.
+      if (document.body.dataset.coins !== String(wallet.coins))
+        document.body.dataset.coins = String(wallet.coins);
       const floating = String(feeding.floating.length);
       if (document.body.dataset.floating !== floating) document.body.dataset.floating = floating;
       // How it feels comes from its needs; it shows on its face and in how it moves.
@@ -292,13 +320,19 @@ async function main(): Promise<void> {
       dragon.grime = Math.min(1, Math.max(0, (40 - needs.values.cleanliness) / 25));
       const tray0 = feeding.slots()[0];
       dragon.foodTrayAt = tray0 ? { x: tray0.x, y: tray0.y } : null;
+      const wasExcited = dragon.exciteLeft > 0;
       dragon.update(dt, finger, world());
+      if (!wasExcited && dragon.exciteLeft > 0) pay("petting", dragon.spine.head);
+      coinCounter.update(dt, wallet.coins);
       modeSeconds += dt;
       needs = advance(needs, needsNow(), dragon.asleep);
       // Sleeping in bed refills Energy fast enough to watch; rested, it wakes by itself.
       const refill = bedRefill(dt, inBed && dragon.asleep);
       if (refill > 0) needs = change(needs, { energy: refill });
-      if (inBed && dragon.asleep && rested(needs.values)) setBedtime(false);
+      if (inBed && dragon.asleep && rested(needs.values)) {
+        setBedtime(false);
+        pay("rested", dragon.spine.head);
+      }
       night += ((inBed ? 1 : 0) - night) * (1 - Math.exp(-2 * dt));
       // Once it starts curling up, the cushion slides gently under it.
       if (
@@ -340,6 +374,7 @@ async function main(): Promise<void> {
         drawBed(ctx, bedAt, dragon.halfWidth * 4.2, night);
         dragon.draw(ctx);
         needsBar.draw(ctx, screen.width, screen.height);
+        if (mode === "play") coinCounter.draw(ctx);
         if (decorator.active) {
           decorator.draw(ctx, decor, screen.width, screen.height, dark);
         } else {
@@ -387,6 +422,8 @@ async function main(): Promise<void> {
       ctx.fillText(label, screen.width - 16, 21);
     },
   });
+  // A daily hello: a few coins the first time you visit each day.
+  pay("hello", dragon.spine.head);
   document.body.dataset.favorite = dragon.favorite;
   document.body.dataset.seed = String(seed);
   document.body.dataset.ready = "true";
