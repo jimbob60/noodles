@@ -171,7 +171,7 @@ export class NeedsBar {
   }
 }
 
-function drawBowl(ctx: CanvasRenderingContext2D, s: number): void {
+export function drawBowl(ctx: CanvasRenderingContext2D, s: number): void {
   // Noodles: three wavy lines rising out of a round bowl.
   ctx.lineWidth = s * 0.16;
   for (const dx of [-0.35, 0, 0.35]) {
@@ -189,7 +189,7 @@ function drawBowl(ctx: CanvasRenderingContext2D, s: number): void {
   ctx.fill();
 }
 
-function drawHeart(ctx: CanvasRenderingContext2D, s: number): void {
+export function drawHeart(ctx: CanvasRenderingContext2D, s: number): void {
   ctx.beginPath();
   ctx.moveTo(0, s * 0.8);
   ctx.bezierCurveTo(-s * 1.3, -s * 0.1, -s * 0.6, -s * 1.05, 0, -s * 0.35);
@@ -197,7 +197,7 @@ function drawHeart(ctx: CanvasRenderingContext2D, s: number): void {
   ctx.fill();
 }
 
-function drawMoon(ctx: CanvasRenderingContext2D, s: number): void {
+export function drawMoon(ctx: CanvasRenderingContext2D, s: number): void {
   // A crescent drawn as one shape (outer arc, then the inner bite back), plus a tiny star, so it
   // looks right over the liquid as well as the dark glass.
   ctx.beginPath();
@@ -210,7 +210,7 @@ function drawMoon(ctx: CanvasRenderingContext2D, s: number): void {
   ctx.fill();
 }
 
-function drawBubbles(ctx: CanvasRenderingContext2D, s: number): void {
+export function drawBubbles(ctx: CanvasRenderingContext2D, s: number): void {
   ctx.lineWidth = s * 0.14;
   for (const [x, y, r] of [
     [-0.25, 0.2, 0.55],
@@ -225,4 +225,12 @@ function drawBubbles(ctx: CanvasRenderingContext2D, s: number): void {
     ctx.arc((x - r * 0.35) * s, (y - r * 0.35) * s, r * s * 0.22, 0, Math.PI * 2);
     ctx.fill();
   }
+}
+
+/** Draws a need's icon (white, about 2s across) at the current origin. */
+export function drawNeedIcon(ctx: CanvasRenderingContext2D, name: NeedName, s: number): void {
+  if (name === "fullness") drawBowl(ctx, s);
+  else if (name === "happiness") drawHeart(ctx, s);
+  else if (name === "energy") drawMoon(ctx, s);
+  else drawBubbles(ctx, s);
 }

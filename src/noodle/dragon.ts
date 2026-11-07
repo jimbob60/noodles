@@ -1,6 +1,8 @@
 import type { FoodId } from "../care/food";
 import { favoriteFood } from "../care/food";
 import { tickleSpots } from "../care/petting";
+import { needOf, PACE, type Mood } from "../care/mood";
+import { drawNeedIcon } from "../ui/needsBar";
 import type { PointerState } from "../engine/input";
 import { FOOD_COLOR } from "../ui/foodArt";
 import { Follower } from "../follower";
@@ -75,6 +77,20 @@ export class Dragon {
   /** Being petted: hold still, purr (0–1) and maybe giggle (seconds left). */
   pet = { active: false, purr: 0, giggle: 0 };
   private petAnchor: Point | null = null;
+  /** How it feels (set from its needs each frame). */
+  private _mood: Mood = "content";
+  /** 0–1: how grubby it looks (dust smudges). */
+  grime = 0;
+  /** Where the food tray is, for hungry glances. */
+  foodTrayAt: Point | null = null;
+  private moodClock = 0;
+  private nextMoodBeat = 4;
+  private rumbleLeft = 0;
+  private scratchLeft = 0;
+  private glanceLeft = 0;
+  /** Thought bubble: seconds left showing. */
+  private thinkLeft = 0;
+  private thinkClock = 0;
   private bits: Bit[] = [];
 
   constructor(
@@ -215,6 +231,74 @@ export class Dragon {
     return this.brain.inBed;
   }
 
+  get mood(): Mood {
+    return this._mood;
+  }
+
+  set mood(m: Mood) {
+    this._mood = m;
+    this.brain.pace = PACE[m];
+  }
+
+  /** Free to show its mood: not asleep, held, petted, eating or chasing. */
+  private get free(): boolean {
+    return !this.asleep && !this.held && !this.pet.active && !this.lure && this.face.chewLeft === 0;
+  }
+
+  /** Every few seconds, a little something that shows how it feels. */
+  private updateMood(dt: number): void {
+    this.rumbleLeft = Math.max(0, this.rumbleLeft - dt);
+    this.scratchLeft = Math.max(0, this.scratchLeft - dt);
+    this.glanceLeft = Math.max(0, this.glanceLeft - dt);
+    this.thinkLeft = Math.max(0, this.thinkLeft - dt);
+    const m = this._mood;
+    const f = this.face;
+    // Faces follow the mood smoothly.
+    const droopTo = m === "tired" && !this.asleep ? 0.5 : 0;
+    f.droop += (droopTo - f.droop) * (1 - Math.exp(-3 * dt));
+    f.mouthShape = m === "happy" ? "smile" : m === "hungry" || m === "lonely" ? "pout" : "w";
+    f.pleading = m === "lonely" && !this.asleep;
+    if (!this.free) return;
+
+    this.moodClock += dt;
+    if (this.moodClock >= this.nextMoodBeat) {
+      this.moodClock = 0;
+      this.nextMoodBeat = 4 + Math.random() * 4;
+      if (m === "tired") f.yawnLeft = YAWN_TIME;
+      else if (m === "hungry") {
+        this.rumbleLeft = 0.6;
+        this.glanceLeft = 1.5;
+      } else if (m === "grubby") this.scratchLeft = 0.8;
+      else if (m === "happy") {
+        const h = this.spine.head;
+        for (let i = 0; i < 3; i++) this.sparkle(h.x + (Math.random() - 0.5) * 60, h.y - 20);
+      }
+    }
+    // A thought bubble now and then shows what it wants.
+    if (needOf(m)) {
+      this.thinkClock += dt;
+      if (this.thinkClock > 9) {
+        this.thinkClock = 0;
+        this.thinkLeft = 2.4;
+      }
+    } else {
+      this.thinkClock = 0;
+    }
+  }
+
+  /** The need shown in its thought bubble right now, or null. */
+  get thinkingOf(): string | null {
+    return this.thinkLeft > 0 ? needOf(this._mood) : null;
+  }
+
+  /** Where the eyes look while showing a mood, or null for the usual. */
+  private moodLook(): Point | null {
+    if (this.glanceLeft > 0 && this.foodTrayAt) return this.foodTrayAt;
+    // Lonely: big eyes looking straight out at you.
+    if (this.face.pleading) return this.spine.head;
+    return null;
+  }
+
   /** The middle of the body (so the bed can sit under the curled-up dragon). */
   get centre(): Point {
     const p = this.spine.points;
@@ -318,14 +402,20 @@ export class Dragon {
       this.head.y = this.swimmer.y;
     }
 
+    if (this.scratchLeft > 0) {
+      // A quick scratch: a little side-to-side shimmy.
+      this.head.x += Math.sin(this.time * 32) * this.halfWidth * 0.12;
+    }
     this.spine.follow(this.head.x, this.head.y);
     const [head, neck] = this.spine.points;
     // Eyes follow the finger; otherwise they look where the dragon is heading.
     const target = this.lure
       ? this.lure
-      : input.down
-        ? { x: input.x, y: input.y }
-        : { x: head.x + (head.x - neck.x) * 6, y: head.y + (head.y - neck.y) * 6 };
+      : this.free && this.moodLook()
+        ? this.moodLook()!
+        : input.down
+          ? { x: input.x, y: input.y }
+          : { x: head.x + (head.x - neck.x) * 6, y: head.y + (head.y - neck.y) * 6 };
     this.face.asleep = this.asleep;
     this.face.happy = this.pet.active && (this.pet.purr > 0.3 || this.pet.giggle > 0);
     this.face.update(dt, head, neck, target, this.halfWidth * 6);
@@ -333,6 +423,7 @@ export class Dragon {
     this.whiskers.update(dt, head, this.headRadius, this.face);
     this.updateZees(dt);
     this.updateBits(dt);
+    this.updateMood(dt);
   }
 
   draw(ctx: CanvasRenderingContext2D): void {
@@ -341,6 +432,10 @@ export class Dragon {
     const hw = this.halfWidth * puff;
     const purr = this.pet.purr;
     ctx.save();
+    if (this.rumbleLeft > 0) {
+      // Tummy rumble: a quick little shake.
+      ctx.translate(Math.sin(this.time * 70) * 1.6, 0);
+    }
     if (purr > 0) {
       // Purring: a tiny happy vibration, and a warm glow that pulses around the body.
       ctx.translate(Math.sin(this.time * 55) * purr * 0.9, Math.cos(this.time * 47) * purr * 0.7);
@@ -354,6 +449,7 @@ export class Dragon {
     }
     drawLegs(ctx, this.legs, this.spine.points, this.sizes, this.look);
     drawBody(ctx, this.spine, this.look, puff);
+    if (this.grime > 0) this.drawGrime(ctx, hw);
     drawTailTuft(ctx, this.spine.points, hw, this.asleep ? this.time * 0.3 : this.time, this.look);
     // Whiskers before the head, so they hang out from under the snout instead of over the eyes.
     drawWhiskers(ctx, this.whiskers, hw);
@@ -361,8 +457,56 @@ export class Dragon {
     if (purr > 0.25) this.drawPurr(ctx, purr);
     if (this.asleep) this.drawSnoreBubble(ctx);
     ctx.restore();
+    if (this.thinkLeft > 0) this.drawThought(ctx);
     this.drawZees(ctx);
     this.drawBits(ctx);
+  }
+
+  /** Grubby: soft grey-brown smudges and specks along the body. */
+  private drawGrime(ctx: CanvasRenderingContext2D, hw: number): void {
+    const p = this.spine.points;
+    ctx.fillStyle = `rgba(90,70,60,${(0.4 * this.grime).toFixed(3)})`;
+    for (let i = 3; i < p.length - 2; i += 3) {
+      const t = i / (p.length - 1);
+      const w = hw * bodyProfile(t);
+      const side = ((i * 7) % 5) / 5 - 0.4;
+      ctx.beginPath();
+      ctx.ellipse(p[i].x + side * w, p[i].y - side * w * 0.6, w * 0.32, w * 0.2, i, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(p[i].x - side * w * 0.8, p[i].y + w * 0.3, w * 0.09, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  /** A little thought bubble above the head with the icon of what it wants. */
+  private drawThought(ctx: CanvasRenderingContext2D): void {
+    const need = needOf(this._mood);
+    if (!need) return;
+    const r = this.headRadius;
+    const h = this.spine.head;
+    const appear = Math.min(1, (2.4 - this.thinkLeft) * 4, this.thinkLeft * 4);
+    const bx = h.x + r * 1.1;
+    const by = h.y - r * 2.4 + Math.sin(this.time * 2) * 3;
+    ctx.save();
+    ctx.globalAlpha = appear;
+    ctx.fillStyle = "rgba(255,255,255,0.92)";
+    for (const [dx, dy, rr] of [
+      [0.35, 1.55, 0.12],
+      [0.6, 1.1, 0.2],
+    ]) {
+      ctx.beginPath();
+      ctx.arc(h.x + r * dx, h.y - r * dy, r * rr, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.beginPath();
+    ctx.arc(bx, by, r * 0.85, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.translate(bx, by);
+    ctx.fillStyle = "#4b3a8a";
+    ctx.strokeStyle = "#4b3a8a";
+    drawNeedIcon(ctx, need, r * 0.42);
+    ctx.restore();
   }
 
   /** A little bubble at the nose that grows and shrinks with each snore. */

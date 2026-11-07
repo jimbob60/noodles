@@ -1,3 +1,4 @@
+import { PACE, type Pace } from "../care/mood";
 import type { Swimmer } from "./swimmer";
 
 export type Mode = "wander" | "float" | "rest";
@@ -28,6 +29,8 @@ export class IdleBrain {
   /** Seconds into the current mood. */
   clock = 0;
   asleep = false;
+  /** Set from the dragon's mood: how fast and wiggly it swims, and how often it naps. */
+  pace: Pace = PACE.content;
   private length: number;
   private target = { x: 0, y: 0 };
   private floatCenter = { x: 0, y: 0 };
@@ -85,9 +88,9 @@ export class IdleBrain {
         this.target = this.randomSpot(world);
       }
       swimmer.swimTo(dt, this.target.x, this.target.y, {
-        speed: u * 9,
+        speed: u * 9 * this.pace.speed,
         turnRate: 2.4,
-        swayAmp: 0.35,
+        swayAmp: 0.35 * this.pace.sway,
         swayFreq: 4,
         slowRadius: u * 4,
       });
@@ -98,9 +101,9 @@ export class IdleBrain {
       const ty = this.floatCenter.y + Math.sin(t * 2) * u * 3;
       const safe = this.clampToScreen({ x: tx, y: ty }, world, 0.12);
       swimmer.swimTo(dt, safe.x, safe.y, {
-        speed: u * 3.2,
+        speed: u * 3.2 * this.pace.speed,
         turnRate: 1.4,
-        swayAmp: 0.6,
+        swayAmp: 0.6 * this.pace.sway,
         swayFreq: 1.6,
         slowRadius: u * 2,
       });
@@ -141,8 +144,10 @@ export class IdleBrain {
   private nextMode(): Mode {
     const r = this.random();
     if (this.mode === "rest") return r < 0.6 ? "wander" : "float";
-    if (r < 0.45) return this.mode === "wander" ? "float" : "wander";
-    if (r < 0.75) return "rest";
+    // A tired dragon naps far more often; a happy one hardly wants to stop.
+    if (r < this.pace.napChance) return "rest";
+    const r2 = this.random();
+    if (r2 < 0.65) return this.mode === "wander" ? "float" : "wander";
     return this.mode;
   }
 

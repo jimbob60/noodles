@@ -13,6 +13,7 @@ import { Feeding } from "./ui/feeding";
 import { Toys } from "./ui/toys";
 import { feedEffect } from "./care/food";
 import { Petting } from "./care/petting";
+import { moodFrom } from "./care/mood";
 import { bedRefill, rested, sleepy } from "./care/bedtime";
 import { bedSpot, drawBed, drawBedButton, drawNight, onBedButton } from "./ui/bedtime";
 import { drawTitle, TITLE_FONT } from "./title";
@@ -231,6 +232,11 @@ async function main(): Promise<void> {
       // For automated checks: how many foods are floating about right now.
       const floating = String(feeding.floating.length);
       if (document.body.dataset.floating !== floating) document.body.dataset.floating = floating;
+      // How it feels comes from its needs; it shows on its face and in how it moves.
+      dragon.mood = moodFrom(needs.values);
+      dragon.grime = Math.min(1, Math.max(0, (40 - needs.values.cleanliness) / 25));
+      const tray0 = feeding.slots()[0];
+      dragon.foodTrayAt = tray0 ? { x: tray0.x, y: tray0.y } : null;
       dragon.update(dt, finger, world());
       modeSeconds += dt;
       needs = advance(needs, needsNow(), dragon.asleep);
@@ -260,6 +266,8 @@ async function main(): Promise<void> {
       }
       // The current mood on the page, so automated checks can find naps and walks.
       const mood = dragon.asleep ? "asleep" : dragon.brain.mode;
+      if (document.body.dataset.feeling !== dragon.mood)
+        document.body.dataset.feeling = dragon.mood;
       if (document.body.dataset.mood !== mood) document.body.dataset.mood = mood;
     },
     render() {

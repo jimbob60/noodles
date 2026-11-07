@@ -57,6 +57,12 @@ export class Face {
   shakeLeft = 0;
   /** Seconds of yawn left (one big slow open-and-close). */
   yawnLeft = 0;
+  /** How droopy the eyelids are (0 wide awake, about 0.55 very tired). */
+  droop = 0;
+  /** The mouth when it isn't eating or yawning. */
+  mouthShape: "w" | "smile" | "pout" = "w";
+  /** Big pleading puppy eyes (when lonely). */
+  pleading = false;
   private blinkClock = 0;
   private nextBlinkIn: number;
   private blinksLeft = 0;

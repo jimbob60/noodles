@@ -93,6 +93,25 @@ export function drawHead(
     ctx.ellipse(r * 0.72, r * 0.6 + r * 0.08 * open, r * 0.12, r * 0.06 * open, 0, 0, Math.PI * 2);
     ctx.fillStyle = "#ff8fb1";
     ctx.fill();
+  } else if (face.mouthShape === "smile") {
+    // Happy: a big open smile with a pink tongue.
+    ctx.beginPath();
+    ctx.moveTo(r * 0.52, r * 0.47);
+    ctx.quadraticCurveTo(r * 0.72, r * 0.85, r * 0.92, r * 0.47);
+    ctx.closePath();
+    ctx.fillStyle = c.eye;
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(r * 0.72, r * 0.6, r * 0.1, r * 0.05, 0, 0, Math.PI * 2);
+    ctx.fillStyle = "#ff8fb1";
+    ctx.fill();
+  } else if (face.mouthShape === "pout") {
+    // Hungry or sad: a little downturned pout.
+    ctx.beginPath();
+    ctx.arc(r * 0.72, r * 0.68, r * 0.13, Math.PI * 1.2, Math.PI * 1.8);
+    ctx.strokeStyle = c.eye;
+    ctx.lineWidth = Math.max(1.2, r * 0.07);
+    ctx.stroke();
   } else {
     // Tiny "w" mouth under the snout.
     ctx.beginPath();
@@ -105,7 +124,7 @@ export function drawHead(
   }
 
   // Cheek blush between eye and snout; puffed up while chewing.
-  const puff = face.chewLeft > 0 ? 1.45 : 1;
+  const puff = face.chewLeft > 0 ? 1.45 : face.mouthShape === "smile" ? 1.2 : 1;
   ctx.fillStyle = c.cheek;
   ctx.beginPath();
   ctx.ellipse(r * 0.2, r * 0.42, r * 0.18 * puff, r * 0.1 * puff, 0, 0, Math.PI * 2);
@@ -114,8 +133,32 @@ export function drawHead(
   // Eyes: the far one a bit smaller and further back, for a three-quarter view.
   // Looking is in screen space, so undo the mirroring for the x offset.
   const lookX = face.look.x * face.facing;
-  drawEye(ctx, r * 0.3, -r * 0.16, r * 0.34, lookX, face.look.y, face.blink, c, face.asleep);
-  drawEye(ctx, -r * 0.36, -r * 0.2, r * 0.28, lookX, face.look.y, face.blink, c, face.asleep);
+  drawEye(
+    ctx,
+    r * 0.3,
+    -r * 0.16,
+    r * 0.34,
+    lookX,
+    face.look.y,
+    face.blink,
+    c,
+    face.asleep,
+    face.droop,
+    face.pleading,
+  );
+  drawEye(
+    ctx,
+    -r * 0.36,
+    -r * 0.2,
+    r * 0.28,
+    lookX,
+    face.look.y,
+    face.blink,
+    c,
+    face.asleep,
+    face.droop,
+    face.pleading,
+  );
 
   ctx.restore();
 }
@@ -130,6 +173,8 @@ function drawEye(
   blink: number,
   c: HeadColors,
   sleeping = false,
+  droop = 0,
+  pleading = false,
 ): void {
   if (blink > 0.75) {
     // Shut: a happy "^" curve for a blink, a droopy "︶" curve while asleep.
@@ -156,13 +201,41 @@ function drawEye(
   ctx.ellipse(ix, iy, size * 0.72, size * 0.9, 0, 0, Math.PI * 2);
   ctx.fillStyle = c.eye;
   ctx.fill();
-  // Sparkles: one big, one small.
+  // Sparkles: one big, one small (extra big and shiny for pleading puppy eyes).
+  const shine = pleading ? 1.45 : 1;
   ctx.fillStyle = "#ffffff";
   ctx.beginPath();
-  ctx.arc(ix + size * 0.22, iy - size * 0.32, size * 0.27, 0, Math.PI * 2);
+  ctx.arc(ix + size * 0.22, iy - size * 0.32, size * 0.27 * shine, 0, Math.PI * 2);
   ctx.fill();
   ctx.beginPath();
-  ctx.arc(ix - size * 0.24, iy + size * 0.3, size * 0.12, 0, Math.PI * 2);
+  ctx.arc(ix - size * 0.24, iy + size * 0.3, size * 0.12 * shine, 0, Math.PI * 2);
   ctx.fill();
+  if (pleading) {
+    ctx.beginPath();
+    ctx.arc(ix + size * 0.3, iy + size * 0.15, size * 0.08, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  if (droop > 0.02) {
+    // Tired: heavy eyelids in the head color slide down over the top of the eye.
+    ctx.save();
+    ctx.beginPath();
+    ctx.ellipse(0, 0, size * 0.95, size * 1.15, 0, 0, Math.PI * 2);
+    ctx.clip();
+    ctx.fillStyle = c.head;
+    const lid = -size * 1.15 + size * 2.3 * droop;
+    ctx.fillRect(-size, -size * 1.2, size * 2, lid + size * 1.2);
+    ctx.restore();
+    ctx.beginPath();
+    ctx.moveTo(-size * 0.9, -size * 1.15 + size * 2.3 * droop);
+    ctx.quadraticCurveTo(
+      0,
+      -size * 1.0 + size * 2.3 * droop,
+      size * 0.9,
+      -size * 1.15 + size * 2.3 * droop,
+    );
+    ctx.strokeStyle = c.rim;
+    ctx.lineWidth = Math.max(1.2, size * 0.14);
+    ctx.stroke();
+  }
   ctx.restore();
 }

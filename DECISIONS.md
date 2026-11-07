@@ -2,6 +2,12 @@
 
 Newest first. Each entry says what we decided, why, and what it affects.
 
+## 2026-11-07: Moods come from needs
+
+- **Decision:** the lowest need under 40 sets the mood: hungry (Food), lonely (Love), tired (Energy) or grubby (Hygiene). Otherwise it's happy when every need is 70+, else content. Happy: big smile, rosier cheeks, faster and wigglier swimming, sparkles, fewer naps. Hungry: pout, tummy rumbles, glances at the food tray. Tired: droopy eyelids, slow swimming, yawns, naps much more often (70% vs 15–30%). Lonely: pout and big pleading eyes looking at the player. Grubby: dust smudges and the odd scratch. With a low need, a thought bubble shows its icon every ~9 s. Nothing is sad or scary: a pout at worst.
+- **Why:** phase 19 ("moods match needs"), told with faces and icons instead of words.
+- **Affects:** phase 20 (cozy check). Open: nothing raises Hygiene yet; a bath or brush is needed.
+
 ## 2026-11-07: Bedtime — lights down, a cushion, sleep until rested
 
 - **Decision:** a moon button above the toy tray starts bedtime (only when Energy is below 90; otherwise "not sleepy"). The screen dims, the food and toys are put away, and the dragon swims to a cushion, curls up and sleeps with z's, a snore bubble and slow breathing; the cushion slides under wherever it curls. Asleep in bed with the app open, Energy refills 0.35 a second (low to full in about 4 minutes) and it wakes by itself at 100 with a big yawn; the sun button wakes it early. Bedtime is saved, so time away while in bed counts as sleep (Energy +40 an hour, hunger slowed). It can still be petted while asleep. Presses are now counted, so even a tap shorter than a frame always registers.
