@@ -9,6 +9,8 @@ import { Dragon } from "./noodle/dragon";
 import { makeLook } from "./noodle/look";
 import { palette } from "./palette";
 import { NeedsBar } from "./ui/needsBar";
+import { Feeding } from "./ui/feeding";
+import { feedEffect } from "./care/food";
 import { drawTitle, TITLE_FONT } from "./title";
 
 /** Fixed star positions (0–1 of the screen), so the sky looks the same every time. */
@@ -86,6 +88,7 @@ async function main(): Promise<void> {
   let needs = loadNeeds(Date.now());
   let sinceSave = 0;
   const needsBar = new NeedsBar();
+  const feeding = new Feeding();
   const persist = () => {
     if (mode === "play") saveNeeds(needs);
   };
@@ -133,12 +136,22 @@ async function main(): Promise<void> {
         enterMode(MODES[(MODES.indexOf(mode) + 1) % MODES.length]);
       }
       if (!input.down) swallowing = false;
-      const finger = swallowing ? noFinger : input;
 
       if (mode === "gallery" && gallery) {
-        gallery.update(dt, finger);
+        gallery.update(dt, swallowing ? noFinger : input);
         return;
       }
+      // The food tray gets first say over a press; while it holds food, the finger is busy.
+      const tray = swallowing
+        ? { busy: false, event: null }
+        : feeding.update(dt, input, pressed, dragon, needs.values, screen.width, screen.height);
+      if (tray.event) {
+        const favorite = tray.event.ate === dragon.favorite;
+        needs = change(needs, feedEffect(tray.event.ate, favorite));
+        // For automated checks: how many snacks have been eaten this visit.
+        document.body.dataset.fed = String(Number(document.body.dataset.fed ?? 0) + 1);
+      }
+      const finger = swallowing || tray.busy ? noFinger : input;
       dragon.update(dt, finger, world());
       modeSeconds += dt;
       needs = advance(needs, needsNow(), dragon.asleep);
@@ -160,6 +173,7 @@ async function main(): Promise<void> {
         ctx.drawImage(backdrop, 0, 0, screen.width, screen.height);
         dragon.draw(ctx);
         needsBar.draw(ctx, screen.width, screen.height);
+        feeding.draw(ctx);
       }
 
       if (showNumbers() && mode !== "gallery") {
@@ -187,6 +201,7 @@ async function main(): Promise<void> {
       ctx.fillText(label, screen.width - 16, screen.height - 19);
     },
   });
+  document.body.dataset.favorite = dragon.favorite;
   document.body.dataset.ready = "true";
 }
 

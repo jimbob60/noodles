@@ -1,15 +1,18 @@
+import type { FoodId } from "../care/food";
+import { favoriteFood } from "../care/food";
 import type { PointerState } from "../engine/input";
+import { FOOD_COLOR } from "../ui/foodArt";
 import { Follower } from "../follower";
 import { bodyHalfWidth, drawBody } from "./drawBody";
 import { drawLegs, drawTailTuft, drawWhiskers } from "./drawExtras";
 import { drawHead, headColors, type HeadColors } from "./drawHead";
-import { Face } from "./face";
+import { CHEW_TIME, Face, SHAKE_TIME } from "./face";
 import { IdleBrain, type World } from "./idleBrain";
 import { legSizes, makeLegs, updateLegs, type Leg, type LegSizes } from "./legs";
 import { CLASSIC_LOOK, type DragonLook } from "./look";
-import { Spine } from "./spine";
+import { Spine, type Point } from "./spine";
 import { Swimmer } from "./swimmer";
-import { Whiskers } from "./whiskers";
+import { headToWorld, Whiskers } from "./whiskers";
 
 const SPINE_POINTS = 26;
 /** Seconds after the finger lets go before the dragon goes back to doing its own thing. */
@@ -20,6 +23,21 @@ interface Zee {
   y: number;
   age: number;
 }
+
+/** Little bits that fly off while eating: crumbs fall, hearts float up. */
+interface Bit {
+  kind: "crumb" | "heart";
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  age: number;
+  life: number;
+  color: string;
+}
+
+/** How quickly the head swims toward held-out food (slower than following a finger: it reaches). */
+const LURE_RATE = 4;
 
 /** One noodle dragon: its body parts, and who is steering it (the finger or its idle brain). */
 export class Dragon {
@@ -38,6 +56,10 @@ export class Dragon {
   private zees: Zee[] = [];
   private zeeClock = 0;
   private headPalette: HeadColors;
+  /** Food being held out to the dragon; it swims over to reach it. */
+  lure: Point | null = null;
+  readonly favorite: FoodId;
+  private bits: Bit[] = [];
 
   constructor(
     x: number,
@@ -48,6 +70,7 @@ export class Dragon {
     random = Math.random,
   ) {
     this.headPalette = headColors(look);
+    this.favorite = favoriteFood(look.seed);
     this.spine = new Spine(x, y, SPINE_POINTS, segment);
     this.head = new Follower(x, y);
     this.swimmer = new Swimmer(x, y, -Math.PI / 2);
@@ -70,6 +93,51 @@ export class Dragon {
     return this.brain.asleep && !this.held;
   }
 
+  /** Where the mouth is right now (just under the snout). */
+  get mouth(): Point {
+    const r = this.headRadius;
+    return headToWorld(this.spine.head, this.face, { x: r * 0.72, y: r * 0.56 });
+  }
+
+  /** Munch! Chomps, crumbs, and hearts if it's the favorite. */
+  eat(food: FoodId): void {
+    this.face.chewLeft = CHEW_TIME;
+    this.face.shakeLeft = 0;
+    const m = this.mouth;
+    const u = this.halfWidth;
+    for (let i = 0; i < 10; i++) {
+      this.bits.push({
+        kind: "crumb",
+        x: m.x,
+        y: m.y,
+        vx: (Math.random() - 0.5) * u * 6,
+        vy: Math.random() * u * 1.5, // crumbs fall from the mouth, away from the eyes
+        age: 0,
+        life: 0.9,
+        color: FOOD_COLOR[food],
+      });
+    }
+    if (food === this.favorite) {
+      for (let i = 0; i < 7; i++) {
+        this.bits.push({
+          kind: "heart",
+          x: m.x + (Math.random() - 0.5) * u * 2,
+          y: m.y - u,
+          vx: (Math.random() - 0.5) * u * 2,
+          vy: -u * (2.5 + Math.random() * 2),
+          age: -i * 0.08,
+          life: 1.6,
+          color: "#ff8ad8",
+        });
+      }
+    }
+  }
+
+  /** A polite head shake: "no thanks, I'm full". */
+  refuse(): void {
+    if (this.face.chewLeft <= 0) this.face.shakeLeft = SHAKE_TIME;
+  }
+
   resize(segment: number): void {
     this.spine.resize(segment);
     this.sizes = legSizes(this.halfWidth);
@@ -79,7 +147,15 @@ export class Dragon {
 
   update(dt: number, input: PointerState, world: World): void {
     this.time += dt;
-    if (input.down) {
+    if (this.lure) {
+      // Food is being held out: wake up and swim over so the mouth meets it.
+      this.held = true;
+      this.sinceTouch = 0;
+      const r = this.headRadius;
+      const tx = this.lure.x - this.face.facing * r * 0.72;
+      const ty = this.lure.y - r * 0.56;
+      this.head.update(dt, tx, ty, LURE_RATE);
+    } else if (input.down) {
       // The finger is in charge: wake up and follow it.
       this.held = true;
       this.sinceTouch = 0;
@@ -103,14 +179,17 @@ export class Dragon {
     this.spine.follow(this.head.x, this.head.y);
     const [head, neck] = this.spine.points;
     // Eyes follow the finger; otherwise they look where the dragon is heading.
-    const target = input.down
-      ? { x: input.x, y: input.y }
-      : { x: head.x + (head.x - neck.x) * 6, y: head.y + (head.y - neck.y) * 6 };
+    const target = this.lure
+      ? this.lure
+      : input.down
+        ? { x: input.x, y: input.y }
+        : { x: head.x + (head.x - neck.x) * 6, y: head.y + (head.y - neck.y) * 6 };
     this.face.asleep = this.asleep;
     this.face.update(dt, head, neck, target, this.halfWidth * 6);
     updateLegs(this.legs, this.spine.points, this.sizes, dt);
     this.whiskers.update(dt, head, this.headRadius, this.face);
     this.updateZees(dt);
+    this.updateBits(dt);
   }
 
   draw(ctx: CanvasRenderingContext2D): void {
@@ -124,6 +203,56 @@ export class Dragon {
     drawWhiskers(ctx, this.whiskers, hw);
     drawHead(ctx, this.spine.head, this.headRadius * puff, this.face, this.headPalette);
     this.drawZees(ctx);
+    this.drawBits(ctx);
+  }
+
+  private updateBits(dt: number): void {
+    const u = this.halfWidth;
+    for (const b of this.bits) {
+      b.age += dt;
+      if (b.age < 0) continue;
+      b.x += b.vx * dt;
+      b.y += b.vy * dt;
+      if (b.kind === "crumb") b.vy += u * 14 * dt;
+      else b.vx *= 1 - dt;
+    }
+    this.bits = this.bits.filter((b) => b.age < b.life);
+  }
+
+  private drawBits(ctx: CanvasRenderingContext2D): void {
+    const u = this.halfWidth;
+    for (const b of this.bits) {
+      if (b.age < 0) continue;
+      ctx.globalAlpha = Math.min(1, Math.max(0, 1.3 * (1 - b.age / b.life)));
+      ctx.fillStyle = b.color;
+      if (b.kind === "crumb") {
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, u * 0.16, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        const s = u * (0.55 + b.age * 0.25);
+        ctx.beginPath();
+        ctx.moveTo(b.x, b.y + s * 0.8);
+        ctx.bezierCurveTo(
+          b.x - s * 1.3,
+          b.y - s * 0.1,
+          b.x - s * 0.6,
+          b.y - s * 1.05,
+          b.x,
+          b.y - s * 0.35,
+        );
+        ctx.bezierCurveTo(
+          b.x + s * 0.6,
+          b.y - s * 1.05,
+          b.x + s * 1.3,
+          b.y - s * 0.1,
+          b.x,
+          b.y + s * 0.8,
+        );
+        ctx.fill();
+      }
+    }
+    ctx.globalAlpha = 1;
   }
 
   private updateZees(dt: number): void {

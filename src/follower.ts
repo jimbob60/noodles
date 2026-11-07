@@ -26,12 +26,12 @@ export class Follower {
     this.y = y;
   }
 
-  update(dt: number, targetX: number, targetY: number): void {
+  update(dt: number, targetX: number, targetY: number, rate = FOLLOW_RATE): void {
     this.time += dt;
     const px = this.x;
     const py = this.y;
-    this.x = ease(this.x, targetX, FOLLOW_RATE, dt);
-    this.y = ease(this.y, targetY, FOLLOW_RATE, dt);
+    this.x = ease(this.x, targetX, rate, dt);
+    this.y = ease(this.y, targetY, rate, dt);
     // Drop sparkles along the path, more when moving fast.
     const speed = Math.hypot(this.x - px, this.y - py) / dt;
     if (speed > 30 || Math.floor(this.time * 20) !== Math.floor((this.time - dt) * 20)) {

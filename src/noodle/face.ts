@@ -1,5 +1,10 @@
 import type { Point } from "./spine";
 
+/** Seconds of chewing per snack, and how many chomps fit in it. */
+export const CHEW_TIME = 1.2;
+export const CHOMPS = 3;
+/** Seconds of the "no thanks" head shake. */
+export const SHAKE_TIME = 0.8;
 /** Seconds a blink takes, closing and opening. */
 export const BLINK_TIME = 0.18;
 /** How much sideways movement it takes to turn the face the other way (stops flickering). */
@@ -42,6 +47,10 @@ export class Face {
   blink = 0;
   /** While asleep the eyes stay shut. */
   asleep = false;
+  /** Seconds of chewing left (three big chomps). */
+  chewLeft = 0;
+  /** Seconds of "no thanks" head shake left. */
+  shakeLeft = 0;
   private blinkClock = 0;
   private nextBlinkIn: number;
   private blinksLeft = 0;
@@ -86,6 +95,22 @@ export class Face {
       this.blink = 0;
     }
     if (this.asleep) this.blink = 1;
+    this.chewLeft = Math.max(0, this.chewLeft - dt);
+    this.shakeLeft = Math.max(0, this.shakeLeft - dt);
+  }
+
+  /** How open the mouth is (0 shut, 1 wide) while chewing. */
+  get mouthOpen(): number {
+    if (this.chewLeft <= 0) return 0;
+    const t = CHEW_TIME - this.chewLeft;
+    return Math.max(0, Math.sin(t * Math.PI * (CHOMPS / CHEW_TIME)));
+  }
+
+  /** Side-to-side head turn (radians) for a polite "no thanks". */
+  get shakeAngle(): number {
+    if (this.shakeLeft <= 0) return 0;
+    const t = SHAKE_TIME - this.shakeLeft;
+    return Math.sin(t * Math.PI * 6) * 0.3 * (this.shakeLeft / SHAKE_TIME);
   }
 
   private blinkGap(): number {

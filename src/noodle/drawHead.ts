@@ -38,7 +38,7 @@ export function drawHead(
   ctx.save();
   ctx.translate(at.x, at.y);
   ctx.scale(face.facing, 1);
-  ctx.rotate(face.tilt);
+  ctx.rotate(face.tilt + face.shakeAngle);
   const rimWidth = Math.max(1.5, r * 0.09);
   ctx.lineWidth = rimWidth;
   ctx.lineJoin = "round";
@@ -82,19 +82,33 @@ export function drawHead(
     ctx.fill();
   }
 
-  // Tiny "w" mouth under the snout.
-  ctx.beginPath();
-  ctx.moveTo(r * 0.55, r * 0.5);
-  ctx.quadraticCurveTo(r * 0.64, r * 0.62, r * 0.72, r * 0.5);
-  ctx.quadraticCurveTo(r * 0.8, r * 0.62, r * 0.89, r * 0.5);
-  ctx.strokeStyle = c.eye;
-  ctx.lineWidth = Math.max(1.2, r * 0.07);
-  ctx.stroke();
+  const open = face.mouthOpen;
+  if (open > 0.08) {
+    // Chomping: a round open mouth with a pink tongue.
+    ctx.beginPath();
+    ctx.ellipse(r * 0.72, r * 0.56, r * 0.2, r * 0.05 + r * 0.17 * open, 0, 0, Math.PI * 2);
+    ctx.fillStyle = c.eye;
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(r * 0.72, r * 0.6 + r * 0.08 * open, r * 0.12, r * 0.06 * open, 0, 0, Math.PI * 2);
+    ctx.fillStyle = "#ff8fb1";
+    ctx.fill();
+  } else {
+    // Tiny "w" mouth under the snout.
+    ctx.beginPath();
+    ctx.moveTo(r * 0.55, r * 0.5);
+    ctx.quadraticCurveTo(r * 0.64, r * 0.62, r * 0.72, r * 0.5);
+    ctx.quadraticCurveTo(r * 0.8, r * 0.62, r * 0.89, r * 0.5);
+    ctx.strokeStyle = c.eye;
+    ctx.lineWidth = Math.max(1.2, r * 0.07);
+    ctx.stroke();
+  }
 
-  // Cheek blush between eye and snout.
+  // Cheek blush between eye and snout; puffed up while chewing.
+  const puff = face.chewLeft > 0 ? 1.45 : 1;
   ctx.fillStyle = c.cheek;
   ctx.beginPath();
-  ctx.ellipse(r * 0.2, r * 0.42, r * 0.18, r * 0.1, 0, 0, Math.PI * 2);
+  ctx.ellipse(r * 0.2, r * 0.42, r * 0.18 * puff, r * 0.1 * puff, 0, 0, Math.PI * 2);
   ctx.fill();
 
   // Eyes: the far one a bit smaller and further back, for a three-quarter view.
