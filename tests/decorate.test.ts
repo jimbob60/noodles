@@ -63,3 +63,24 @@ describe("decorating", () => {
     expect(gesture(d, [], lantern, [{ x: 640, y: 300 }])).toHaveLength(0);
   });
 });
+
+describe("the decoration drawer", () => {
+  it("fits on screen, in one row on a tablet and wrapped into rows on a phone", () => {
+    const d = new Decorator();
+    for (const [w, h] of [
+      [1280, 800],
+      [800, 1280],
+      [400, 860],
+    ]) {
+      const slots = d.slots(w, h);
+      expect(slots).toHaveLength(10);
+      for (const s of slots) {
+        expect(s.x - s.r).toBeGreaterThanOrEqual(0);
+        expect(s.x + s.r).toBeLessThanOrEqual(w);
+      }
+      const rows = new Set(slots.map((s) => Math.round(s.y))).size;
+      if (w === 1280) expect(rows).toBe(1);
+      if (w === 400) expect(rows).toBeGreaterThan(1);
+    }
+  });
+});

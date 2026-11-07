@@ -5,6 +5,8 @@ import {
   moveDecor,
   recolorDecor,
   removeDecor,
+  ON_FLOOR,
+  WIDTH,
   type DecorItem,
   type DecorKind,
 } from "../den/decor";
@@ -44,25 +46,44 @@ export class Decorator {
 
   /**
    * The drawer's slots, centred along the top of the screen so the whole floor stays free to
-   * decorate (below the need orbs on narrow phones).
+   * decorate. It wraps into rows on narrow screens.
    */
   slots(w: number, h: number): { kind: DecorKind; x: number; y: number; r: number }[] {
-    const r = Math.max(22, Math.min(32, Math.min(w, h) * 0.04));
+    const r = Math.max(22, Math.min(30, Math.min(w, h) * 0.04));
     const gap = r * 0.5;
-    const total = DECOR_KINDS.length * 2 * r + (DECOR_KINDS.length - 1) * gap;
-    return DECOR_KINDS.map((kind, i) => ({
-      kind,
-      x: w / 2 - total / 2 + r + i * (2 * r + gap),
-      y: (w < 760 ? 112 : 18) + r,
-      r,
-    }));
+    const n = DECOR_KINDS.length;
+    const cols = Math.min(n, Math.max(3, Math.floor((w - 60 + gap) / (2 * r + gap))));
+    // Below the need orbs and the mode tag, so nothing is covered.
+    const top = (w < 760 ? 132 : 112) + r * 1.4;
+    return DECOR_KINDS.map((kind, i) => {
+      const row = Math.floor(i / cols);
+      const inRow = Math.min(cols, n - row * cols);
+      const rowWidth = inRow * 2 * r + (inRow - 1) * gap;
+      return {
+        kind,
+        x: w / 2 - rowWidth / 2 + r + (i % cols) * (2 * r + gap),
+        y: top + row * (2 * r + gap),
+        r,
+      };
+    });
+  }
+
+  /** The drawer's outline (around all its slots). */
+  private box(w: number, h: number): { left: number; right: number; top: number; bottom: number } {
+    const s = this.slots(w, h);
+    const pad = s[0].r * 1.4;
+    return {
+      left: Math.min(...s.map((q) => q.x)) - pad,
+      right: Math.max(...s.map((q) => q.x)) + pad,
+      top: Math.min(...s.map((q) => q.y)) - pad,
+      bottom: Math.max(...s.map((q) => q.y)) + pad,
+    };
   }
 
   /** True if a point is over the drawer (dropping a decoration there puts it away). */
   overDrawer(p: Point, w: number, h: number): boolean {
-    const s = this.slots(w, h);
-    const r = s[0].r * 1.4;
-    return p.y > s[0].y - r && p.y < s[0].y + r && p.x > s[0].x - r && p.x < s[s.length - 1].x + r;
+    const b = this.box(w, h);
+    return p.x > b.left && p.x < b.right && p.y > b.top && p.y < b.bottom;
   }
 
   /** The placed decoration under a point, topmost first, or null. */
@@ -70,7 +91,7 @@ export class Decorator {
     const s = decorSize(w, h);
     for (let i = items.length - 1; i >= 0; i--) {
       const it = items[i];
-      const wide = it.kind === "rug" ? 2 : 1;
+      const wide = WIDTH[it.kind];
       if (Math.abs(p.x - it.x * w) < s * 1.1 * wide && Math.abs(p.y - it.y * h) < s * 1.1) return i;
     }
     return null;
@@ -146,26 +167,27 @@ export class Decorator {
     const overBin =
       dragging?.index !== null && dragging?.moved && this.overDrawer(dragging.at, w, h);
     // The drawer: a soft tray behind the slots that glows pink when an item can be dropped in.
-    const left = slots[0].x - slots[0].r * 1.4;
-    const right = slots[slots.length - 1].x + slots[0].r * 1.4;
-    const top = slots[0].y - slots[0].r * 1.4;
-    ctx.fillStyle = overBin ? "rgba(255,138,216,0.35)" : "rgba(20,14,60,0.75)";
+    const box = this.box(w, h);
+    const top = box.top;
+    ctx.fillStyle = overBin ? "rgba(255,138,216,0.35)" : "rgba(20,14,60,0.8)";
     ctx.strokeStyle = overBin ? "#ff8ad8" : "rgba(183,160,255,0.6)";
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.roundRect(left, top, right - left, slots[0].r * 2.8, 22);
+    ctx.roundRect(box.left, box.top, box.right - box.left, box.bottom - box.top, 22);
     ctx.fill();
     ctx.stroke();
     const full = items.length >= MAX_DECOR;
     for (const s of slots) {
       ctx.globalAlpha = full ? 0.35 : 1;
+      // Wide things (rug, fairy lights) are shrunk to fit their slot.
+      const size = (s.r * 0.6) / Math.max(1, WIDTH[s.kind] * 0.75);
       drawDecorAt(
         ctx,
         s.kind,
         0,
         s.x,
-        s.y + (s.kind === "lantern" ? s.r * 0.15 : 0),
-        s.r * 0.55,
+        s.y + (ON_FLOOR[s.kind] ? -size * 0.1 : size * 0.15),
+        size,
         dark,
         this.time,
       );
@@ -176,7 +198,7 @@ export class Decorator {
       ctx.strokeStyle = "#ffffff";
       ctx.lineWidth = 3;
       ctx.beginPath();
-      const below = top + slots[0].r * 2.8;
+      const below = box.bottom;
       ctx.moveTo(w / 2, below + 30);
       ctx.lineTo(w / 2, below + 8);
       ctx.moveTo(w / 2 - 8, below + 16);
@@ -203,7 +225,7 @@ export class Decorator {
     ctx.strokeStyle = "rgba(255,255,255,0.45)";
     ctx.lineWidth = 1.5;
     for (const it of items) {
-      const wide = it.kind === "rug" ? 2 : 1;
+      const wide = WIDTH[it.kind];
       ctx.beginPath();
       ctx.roundRect(it.x * w - s * 1.1 * wide, it.y * h - s * 1.1, s * 2.2 * wide, s * 2.2, 10);
       ctx.stroke();

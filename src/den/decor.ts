@@ -1,8 +1,29 @@
-export type DecorKind = "lantern" | "cushion" | "plant" | "jar" | "rug";
-export const DECOR_KINDS: DecorKind[] = ["lantern", "cushion", "plant", "jar", "rug"];
+export type DecorKind =
+  | "lantern"
+  | "cushion"
+  | "plant"
+  | "jar"
+  | "rug"
+  | "lights"
+  | "crystal"
+  | "stool"
+  | "mobile"
+  | "tea";
+export const DECOR_KINDS: DecorKind[] = [
+  "lantern",
+  "lights",
+  "mobile",
+  "jar",
+  "crystal",
+  "cushion",
+  "stool",
+  "plant",
+  "tea",
+  "rug",
+];
 
 /** How many decorations a den can hold, so it stays cozy rather than cluttered. */
-export const MAX_DECOR = 12;
+export const MAX_DECOR = 16;
 /** Each decoration comes in three colors; tapping one cycles through them. */
 export const COLORS_PER_KIND = 3;
 
@@ -21,6 +42,25 @@ export const ON_FLOOR: Record<DecorKind, boolean> = {
   plant: true,
   jar: false,
   rug: true,
+  lights: false,
+  crystal: true,
+  stool: true,
+  mobile: false,
+  tea: true,
+};
+
+/** How wide each decoration is, in decoration sizes (for grabbing it). */
+export const WIDTH: Record<DecorKind, number> = {
+  lantern: 1,
+  cushion: 1.3,
+  plant: 1,
+  jar: 1,
+  rug: 2,
+  lights: 2.6,
+  crystal: 1,
+  stool: 1,
+  mobile: 1.2,
+  tea: 1.4,
 };
 export const FLOOR_BAND: [number, number] = [0.8, 0.95];
 

@@ -61,6 +61,7 @@ describe("decorations", () => {
       { kind: "cushion", x: 0.5, y: 0.1, color: 99 },
     ]);
     expect(parsed.map((p) => p.kind)).toEqual(["lantern", "cushion"]);
+    expect(parseDecor([{ kind: "tea", x: 0.5, y: 0.9, color: 2 }])[0].kind).toBe("tea");
     expect(parsed[1].y).toBeGreaterThanOrEqual(FLOOR_BAND[0]);
     expect(parsed[1].color).toBeLessThan(3);
   });
