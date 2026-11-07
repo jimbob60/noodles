@@ -2,6 +2,7 @@
 
 Newest first. One line per finished phase.
 
+- **Phase 8 — Face (2b94df8, 2026-11-07):** upright chibi head with snout, horns, cheeks and a "w" mouth; big eyes that blink and follow the finger.
 - **Phase 7 — Body (2026-11-07):** chubby tapered body around the spine, with a soft glow, a rim and a shine on top.
 - **Phase 6 — Spine (2026-11-07):** a 26-point chain that trails behind the finger like a ribbon, with no sharp kinks.
 - **Phase 5 — Screen and game loop (2026-11-07):** full-screen canvas, fixed-step loop, touch and mouse input, a glowing dot that follows your finger.
