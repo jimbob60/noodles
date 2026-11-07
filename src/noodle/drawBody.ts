@@ -5,7 +5,7 @@ import type { Point, Spine } from "./spine";
 
 /** Half-width of the chubbiest part, from the spine spacing. */
 export function bodyHalfWidth(spine: Spine): number {
-  return spine.segment * 1.7;
+  return spine.segment * 1.95;
 }
 
 /** Darker rim color for a clear, cute outline. */

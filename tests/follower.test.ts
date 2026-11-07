@@ -9,9 +9,9 @@ describe("glowing dot", () => {
     for (let i = 0; i < 120; i++) fast = ease(fast, 100, 14, 1 / 120);
     expect(slow).toBeCloseTo(fast, 6);
   });
-  it("reaches the finger within half a second", () => {
+  it("reaches the finger within 0.7 seconds (lazy but not laggy)", () => {
     const dot = new Follower(0, 0);
-    for (let i = 0; i < 30; i++) dot.update(1 / 60, 300, 200);
+    for (let i = 0; i < 42; i++) dot.update(1 / 60, 300, 200);
     expect(Math.hypot(dot.x - 300, dot.y - 200)).toBeLessThan(2);
   });
   it("keeps the sparkle trail short", () => {

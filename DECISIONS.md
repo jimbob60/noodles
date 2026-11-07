@@ -2,6 +2,12 @@
 
 Newest first. Each entry says what we decided, why, and what it affects.
 
+## 2026-11-07: Phase 12 tuning — lazier chase, bigger dragon
+
+- **Decision:** the head follows the finger more lazily (catch-up rate 14 → 10; it reaches the finger in about 0.7 s instead of 0.5 s). The dragon is about 15% longer (spine spacing = shorter screen side ÷ 48, between 9 and 22 px) and 15% chubbier (body half-width 1.7 → 1.95 × spacing). Nap and wander timing stay as they were.
+- **Why:** Jacob's playtest: chase "a little fast but cool", size "bigger please", idle pace "just right". It ran at 60 fps on his phone inside Claude.
+- **Affects:** everything that scales with the dragon. A tablet speed check is still worth doing before phase 35's 50-dragon test.
+
 ## 2026-11-07: Dragon looks come from a seed number
 
 - **Decision:** every dragon's colors come from one seed number (same seed, same dragon). Bodies use 8 glowy hue bands (cyan, mint, sky, lavender, pink, rose, gold, peach) at high lightness; muddy yellow-greens and dull oranges are left out. Patterns are plain, stripes, spots, gradient or back stripe, in a harmonious hue at least 16 lightness points away from the body (mostly darker) so they always show. The game's dragon gets a random look each visit until saving arrives (phase 21). The preview with `#gallery` on the end shows 20 random dragons, and a tap rolls new ones.

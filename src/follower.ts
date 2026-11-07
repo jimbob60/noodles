@@ -1,5 +1,5 @@
 /** How quickly the dot catches up with the finger (higher = snappier). */
-export const FOLLOW_RATE = 14;
+export const FOLLOW_RATE = 10;
 
 /**
  * Moves `from` toward `to` by a frame-rate-independent fraction: the same feel at 30 or 120 fps.

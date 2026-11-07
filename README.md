@@ -38,7 +38,8 @@ The screenshot step needs Playwright with Chromium installed on the machine; it 
 
 ## Status
 
-| Stage          | Phases | Status      |
-| -------------- | ------ | ----------- |
-| A. Foundations | 1–5    | Done        |
-| B. The Noodle  | 6–12   | In progress |
+| Stage          | Phases | Status  |
+| -------------- | ------ | ------- |
+| A. Foundations | 1–5    | Done    |
+| B. The Noodle  | 6–12   | Done    |
+| C. Pet care    | 13–20  | Next up |

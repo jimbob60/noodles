@@ -2,6 +2,7 @@
 
 Newest first. One line per finished phase.
 
+- **Phase 12 — Gate: "It's alive" (2026-11-07):** 60 fps on Jacob's phone; lazier chase and a bigger, chubbier dragon after his playtest; a 14-second clip recorded.
 - **Phase 11 — Colors and patterns (60ada7d, 2026-11-07):** seeded glowy looks with 5 pattern styles; a 20-dragon gallery at #gallery.
 - **Phase 10 — Idle life (462ea59, 2026-11-07):** wanders, floats and curls up for naps on its own; a touch wakes it.
 - **Phase 9 — Legs, whiskers, tail (f7aa965, 2026-11-07):** four stubby stepping legs with toe beans, hanging whiskers, a swishing pink tail tuft.

@@ -41,7 +41,7 @@ function paintBackdrop(screen: Screen, backdrop: HTMLCanvasElement): void {
 
 /** Spine spacing scales with the screen so the noodle is the same size on any tablet. */
 function segmentFor(screen: Screen): number {
-  return Math.min(18, Math.max(8, Math.min(screen.width, screen.height) / 55));
+  return Math.min(22, Math.max(9, Math.min(screen.width, screen.height) / 48));
 }
 
 async function main(): Promise<void> {
