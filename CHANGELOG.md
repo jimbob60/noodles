@@ -2,6 +2,7 @@
 
 Newest first. One line per finished phase.
 
+- **Phase 17 — Play (db19593, 2026-11-07):** throw a bouncy ball for the dragon to boop, or wave a ribbon wand for it to chase; play raises Love and uses Energy.
 - **Phase 16 — Petting (64d3e32, 2026-11-07):** touch the dragon to pet it; it purrs, glows and sparkles, and giggles at its secret tickle spots.
 - **Phase 15 — Feeding (311d406, 2026-11-07):** drag noodles, dumplings or fish to its mouth or let them float; a hungry dragon chases floating food, a full one shakes its head; favorite foods burst hearts.
 - **Phase 14 — Needs display (a39fff7, 2026-11-07):** glowing potion orbs that drain from 100% to 1%, labelled Food, Love, Energy, Hygiene; tap the build tag for play, fast and gallery modes.
