@@ -1,5 +1,5 @@
 import "@fontsource/pacifico/latin-400.css";
-import { advance, NEED_NAMES } from "./care/needs";
+import { advance, change, freshNeeds, NEED_NAMES } from "./care/needs";
 import { loadNeeds, saveNeeds } from "./care/storage";
 import { Input } from "./engine/input";
 import { startLoop } from "./engine/loop";
@@ -67,13 +67,23 @@ async function main(): Promise<void> {
   );
   const gallery = location.hash === "#gallery" ? new Gallery(screen) : null;
   window.addEventListener("hashchange", () => location.reload());
-  const debug = location.hash === "#debug";
+  // #fast: a demo where needs time runs 600× faster (an hour every 6 seconds), starting full.
+  // It never saves, so the real dragon's needs are untouched.
+  const fast = location.hash === "#fast";
+  const debug = location.hash === "#debug" || fast;
+  const startedAt = Date.now();
+  let gameSeconds = 0;
+  const needsNow = () => (fast ? startedAt + gameSeconds * 600_000 : Date.now());
 
   // Needs follow the real clock, so they keep changing while the app is closed.
-  let needs = loadNeeds(Date.now());
+  let needs = fast
+    ? change(freshNeeds(startedAt), { fullness: 10, happiness: 10, energy: 10, cleanliness: 10 })
+    : loadNeeds(startedAt);
   let sinceSave = 0;
   const needsBar = new NeedsBar();
-  const persist = () => saveNeeds(needs);
+  const persist = () => {
+    if (!fast) saveNeeds(needs);
+  };
   window.addEventListener("pagehide", persist);
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) persist();
@@ -90,7 +100,8 @@ async function main(): Promise<void> {
         return;
       }
       dragon.update(dt, input, world());
-      needs = advance(needs, Date.now(), dragon.asleep);
+      gameSeconds += dt;
+      needs = advance(needs, needsNow(), dragon.asleep);
       needsBar.update(dt, needs.values);
       sinceSave += dt;
       if (sinceSave > 5) {
@@ -112,7 +123,7 @@ async function main(): Promise<void> {
       }
 
       if (debug) {
-        // Hidden readout (#debug) until the real needs display arrives in phase 14.
+        // Exact numbers for checking (#debug and #fast).
         ctx.font = "13px system-ui, sans-serif";
         ctx.textAlign = "left";
         ctx.textBaseline = "top";

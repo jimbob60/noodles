@@ -1,4 +1,4 @@
-import { MAX, NEED_NAMES, type NeedName, type Needs } from "../care/needs";
+import { FLOOR, MAX, NEED_NAMES, type NeedName, type Needs } from "../care/needs";
 
 /** Below this, a need gently asks for attention (a soft wobble every few seconds). */
 export const LOW = 40;
@@ -12,9 +12,13 @@ const COLORS: Record<NeedName, { glow: string; ring: string; icon: string }> = {
   cleanliness: { glow: "122,243,255", ring: "#7af3ff", icon: "#bff9ff" },
 };
 
-/** How full the bubble's liquid is (0–1) for a need value. */
+/**
+ * How full the orb's liquid is, in whole-percent stages from 1% to 100%. The cozy floor shows
+ * as a 1% puddle (never fully empty) and a perfectly cared-for need as 100%.
+ */
 export function fillLevel(value: number): number {
-  return Math.min(1, Math.max(0, value / MAX));
+  const t = Math.min(1, Math.max(0, (value - FLOOR) / (MAX - FLOOR)));
+  return Math.round(1 + t * 99) / 100;
 }
 
 /** Height of the liquid surface inside a bubble of radius r (r = bottom, -r = top). */

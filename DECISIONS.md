@@ -2,6 +2,12 @@
 
 Newest first. Each entry says what we decided, why, and what it affects.
 
+## 2026-11-07: Needs display — draining potion orbs, 1%–100%
+
+- **Decision:** each need is a glass orb of glowing liquid that drains downward in whole 1% stages: 100% when perfectly cared for, down to a 1% puddle at the cozy floor (15), never fully empty. No numbers, no words, no red; low orbs dim slightly and wobble softly every 4 s. `#fast` on the preview runs needs time 600× faster from full (an hour every 6 s) and never saves, so the drain can be watched in about a minute.
+- **Why:** Jacob asked for draining instead of filling rings, with stages from 100% to 1%.
+- **Affects:** phase 15 onward (care actions top the orbs back up).
+
 ## 2026-11-07: Needs — gentle, real-clock, never zero
 
 - **Decision:** four needs from 0 to 100, where 100 is perfectly cared for: fullness, happiness, energy, cleanliness. Awake they drop 10, 8, 6 and 5 an hour; asleep, energy refills at 40 an hour and the others drop at half speed or less. They never go below 15, and time away counts for at most 12 hours. They are kept on the device (localStorage) with the time you left, read back carefully so broken or future-dated data can't cause harm. `#debug` on the preview link shows the numbers.

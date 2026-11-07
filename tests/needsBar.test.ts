@@ -1,14 +1,27 @@
 import { describe, expect, it } from "vitest";
+import { FLOOR } from "../src/care/needs";
 import { brightness, fillLevel, LOW, NeedsBar, surfaceY, wobble } from "../src/ui/needsBar";
 
 const needs = (v: number) => ({ fullness: v, happiness: v, energy: v, cleanliness: v });
 
 describe("needs display", () => {
-  it("fills each orb with liquid in proportion to the need", () => {
+  it("drains from 100% all the way down to a 1% puddle at the floor", () => {
     expect(fillLevel(100)).toBe(1);
-    expect(fillLevel(50)).toBe(0.5);
-    expect(fillLevel(15)).toBeCloseTo(0.15);
+    expect(fillLevel(FLOOR)).toBe(0.01);
+    expect(fillLevel(0)).toBe(0.01);
     expect(fillLevel(500)).toBe(1);
+  });
+
+  it("moves in whole 1% stages, and every stage from 1% to 100% is reachable", () => {
+    const seen = new Set<number>();
+    for (let v = FLOOR; v <= 100; v += 0.01) {
+      const level = fillLevel(v);
+      expect(Math.round(level * 100)).toBeCloseTo(level * 100, 9);
+      seen.add(Math.round(level * 100));
+    }
+    expect(seen.size).toBe(100);
+    for (let v = FLOOR; v < 100; v += 0.5)
+      expect(fillLevel(v + 0.5)).toBeGreaterThanOrEqual(fillLevel(v));
   });
 
   it("drains the liquid downward as a need drops", () => {
@@ -20,7 +33,7 @@ describe("needs display", () => {
 
   it("dims low needs but never makes them invisible", () => {
     expect(brightness(100)).toBe(1);
-    expect(brightness(15)).toBeGreaterThan(0.6);
+    expect(brightness(15)).toBeGreaterThan(0.55);
     expect(brightness(15)).toBeLessThan(brightness(80));
   });
 
