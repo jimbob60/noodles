@@ -59,3 +59,48 @@ describe("petting the dragon", () => {
     expect(settled().tickles.length).toBeGreaterThan(0);
   });
 });
+
+describe("after a good petting", () => {
+  it("gets excited: a loop-de-loop with a big smile and hearts", () => {
+    const d = settled();
+    d.pet = { active: true, purr: 0.9, giggle: 0 };
+    for (let i = 0; i < 30; i++) d.update(1 / 60, noFinger, world);
+    d.pet = { active: false, purr: 0.9, giggle: 0 };
+    const start = { ...d.spine.head };
+    d.update(1 / 60, noFinger, world);
+    expect(d.exciteLeft).toBeGreaterThan(0);
+    let farthest = 0;
+    let smiled = false;
+    for (let i = 0; i < 60; i++) {
+      d.update(1 / 60, noFinger, world);
+      farthest = Math.max(farthest, Math.hypot(d.spine.head.x - start.x, d.spine.head.y - start.y));
+      smiled ||= d.face.mouthShape === "smile" && d.face.happy;
+    }
+    expect(smiled).toBe(true);
+    expect(farthest).toBeGreaterThan(d.halfWidth * 3); // it really loops around
+    for (let i = 0; i < 60; i++) d.update(1 / 60, noFinger, world);
+    expect(d.exciteLeft).toBe(0);
+    expect(d.brain.mode).toBe("float"); // and then carries on with its day
+  });
+
+  it("doesn't for a quick little pat", () => {
+    const d = settled();
+    d.pet = { active: true, purr: 0.2, giggle: 0 };
+    for (let i = 0; i < 10; i++) d.update(1 / 60, noFinger, world);
+    d.pet = { active: false, purr: 0.2, giggle: 0 };
+    d.update(1 / 60, noFinger, world);
+    expect(d.exciteLeft).toBe(0);
+  });
+
+  it("doesn't wake a dragon that was petted in its sleep", () => {
+    const d = settled();
+    d.goToBed({ x: 640, y: 450 }, world);
+    for (let i = 0; i < 60 * 12; i++) d.update(1 / 60, noFinger, world);
+    d.pet = { active: true, purr: 0.9, giggle: 0 };
+    for (let i = 0; i < 30; i++) d.update(1 / 60, noFinger, world);
+    d.pet = { active: false, purr: 0.9, giggle: 0 };
+    d.update(1 / 60, noFinger, world);
+    expect(d.exciteLeft).toBe(0);
+    expect(d.inBed).toBe(true);
+  });
+});

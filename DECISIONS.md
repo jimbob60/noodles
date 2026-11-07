@@ -2,6 +2,12 @@
 
 Newest first. Each entry says what we decided, why, and what it affects.
 
+## 2026-11-07: An excited "thank you" after a good petting
+
+- **Decision:** when a petting got the purr to 60% or more, lifting the finger sets off 1.4 s of excitement: a burst of hearts and sparkles, a big smile with happy closed eyes, and a loop-de-loop up and over on the spot, then back to its moods. A quick pat doesn't trigger it, a bath (lighter purr) doesn't, and a dragon petted in its sleep keeps sleeping.
+- **Why:** Jacob asked for an excited animation at the end of petting.
+- **Affects:** phase 46 (juice) can build on it.
+
 ## 2026-11-07: Cozy check — a bath sponge, and neglect only means sleepy
 
 - **Decision:** a sponge button (beside the moon) gives baths: scrub the dragon and soap bubbles foam up, smudges fade and Hygiene fills (about +35 per 500 px, at most 20 a second). It holds still with happy eyes while the sponge is on it, and at 100 it does a squeaky-clean shake with droplets and sparkles (+3 Love). A dragon with three or more low needs is simply sleepy, never sad. Speed caps for petting and bathing now build up as an allowance between finger reports, so real fingers get the full speed.

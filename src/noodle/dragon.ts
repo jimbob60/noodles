@@ -40,6 +40,11 @@ interface Bit {
   color: string;
 }
 
+/** A petting that got the purr at least this deep ends in an excited loop-de-loop. */
+export const EXCITE_PURR = 0.6;
+/** Seconds of the excited loop-de-loop. */
+export const EXCITE_TIME = 1.4;
+
 /** How quickly the head swims toward held-out food (slower than following a finger: it reaches). */
 const LURE_RATE = 4;
 /** Top swimming speed toward food, in spine units per second, so you can watch it swim over. */
@@ -77,6 +82,11 @@ export class Dragon {
   /** Being petted: hold still, purr (0–1) and maybe giggle (seconds left). */
   pet = { active: false, purr: 0, giggle: 0 };
   private petAnchor: Point | null = null;
+  /** Deepest purr in the current petting, to decide if it ends in excitement. */
+  private petPeak = 0;
+  /** Seconds left of the excited loop-de-loop after a good petting. */
+  exciteLeft = 0;
+  private exciteCentre: Point = { x: 0, y: 0 };
   /** How it feels (set from its needs each frame). */
   private _mood: Mood = "content";
   /** 0–1: how grubby it looks (dust smudges). */
@@ -242,7 +252,14 @@ export class Dragon {
 
   /** Free to show its mood: not asleep, held, petted, eating or chasing. */
   private get free(): boolean {
-    return !this.asleep && !this.held && !this.pet.active && !this.lure && this.face.chewLeft === 0;
+    return (
+      !this.asleep &&
+      !this.held &&
+      !this.pet.active &&
+      !this.lure &&
+      this.face.chewLeft === 0 &&
+      this.exciteLeft === 0
+    );
   }
 
   /** Every few seconds, a little something that shows how it feels. */
@@ -256,7 +273,12 @@ export class Dragon {
     // Faces follow the mood smoothly.
     const droopTo = m === "tired" && !this.asleep ? 0.5 : 0;
     f.droop += (droopTo - f.droop) * (1 - Math.exp(-3 * dt));
-    f.mouthShape = m === "happy" ? "smile" : m === "hungry" || m === "lonely" ? "pout" : "w";
+    f.mouthShape =
+      m === "happy" || this.exciteLeft > 0
+        ? "smile"
+        : m === "hungry" || m === "lonely"
+          ? "pout"
+          : "w";
     f.pleading = m === "lonely" && !this.asleep;
     if (!this.free) return;
 
@@ -328,6 +350,29 @@ export class Dragon {
     this.brain.wake(this.swimmer, world);
   }
 
+  /** After a lovely petting: a burst of hearts and an excited loop-de-loop. */
+  getExcited(): void {
+    this.exciteLeft = EXCITE_TIME;
+    const R = this.halfWidth * 2.6;
+    // The loop starts where the head is and goes up and over a circle just behind it.
+    this.exciteCentre = { x: this.head.x - R, y: this.head.y };
+    const h = this.spine.head;
+    const u = this.halfWidth;
+    for (let i = 0; i < 9; i++) {
+      const a = -Math.PI / 2 + (i - 4) * 0.3;
+      this.bits.push({
+        kind: i % 3 === 1 ? "sparkle" : "heart",
+        x: h.x,
+        y: h.y - this.headRadius,
+        vx: Math.cos(a) * u * 5,
+        vy: Math.sin(a) * u * 5,
+        age: -i * 0.03,
+        life: 1.3,
+        color: i % 3 === 1 ? "#fff6c9" : hsl(this.look.accent),
+      });
+    }
+  }
+
   /** Squeaky clean! A happy shimmy that shakes droplets everywhere, with sparkles. */
   shakeDry(): void {
     this.scratchLeft = 0.9;
@@ -366,17 +411,34 @@ export class Dragon {
     if (this.pet.active) {
       // Being petted: hold still and lean into it. A giggle makes it squirm.
       if (!this.petAnchor) this.petAnchor = { x: this.head.x, y: this.head.y };
+      this.petPeak = Math.max(this.petPeak, this.pet.purr);
       const squirm = this.pet.giggle > 0 ? Math.sin(this.time * 28) * this.halfWidth * 0.35 : 0;
       this.head.update(dt, this.petAnchor.x + squirm, this.petAnchor.y, 12);
     } else if (wasPetted) {
       // Petting over: carry on from here (a sleeping dragon just keeps sleeping).
       this.petAnchor = null;
+      const loved = this.petPeak >= EXCITE_PURR;
+      this.petPeak = 0;
       if (!this.brain.asleep && !this.brain.inBed) {
         const [h, n] = this.spine.points;
         this.swimmer.reset(h.x, h.y, Math.atan2(h.y - n.y, h.x - n.x), 0);
         this.brain.start("float", this.swimmer, world);
+        if (loved) this.getExcited();
       } else {
         this.swimmer.reset(this.head.x, this.head.y, this.swimmer.heading, 0);
+      }
+    } else if (this.exciteLeft > 0) {
+      // Thank you! A happy loop-de-loop on the spot, up and over and back round.
+      this.exciteLeft = Math.max(0, this.exciteLeft - dt);
+      const a = (1 - this.exciteLeft / EXCITE_TIME) * Math.PI * 2;
+      const R = this.halfWidth * 2.6;
+      const c = this.exciteCentre;
+      this.head.update(dt, c.x + Math.cos(a) * R, c.y - Math.sin(a) * R, 14);
+      if (Math.random() < dt * 5) this.sparkle(this.head.x, this.head.y - this.headRadius);
+      if (this.exciteLeft === 0) {
+        const [h, n] = this.spine.points;
+        this.swimmer.reset(h.x, h.y, Math.atan2(h.y - n.y, h.x - n.x), 0);
+        this.brain.start("float", this.swimmer, world);
       }
     } else if (this.lure) {
       // Food is being held out: wake up and swim over so the mouth meets it.
@@ -437,7 +499,8 @@ export class Dragon {
           ? { x: input.x, y: input.y }
           : { x: head.x + (head.x - neck.x) * 6, y: head.y + (head.y - neck.y) * 6 };
     this.face.asleep = this.asleep;
-    this.face.happy = this.pet.active && (this.pet.purr > 0.3 || this.pet.giggle > 0);
+    this.face.happy =
+      (this.pet.active && (this.pet.purr > 0.3 || this.pet.giggle > 0)) || this.exciteLeft > 0;
     this.face.update(dt, head, neck, target, this.halfWidth * 6);
     updateLegs(this.legs, this.spine.points, this.sizes, dt);
     this.whiskers.update(dt, head, this.headRadius, this.face);
