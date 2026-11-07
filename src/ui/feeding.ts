@@ -129,6 +129,8 @@ export class Feeding {
       });
       this.held = null;
       dragon.lure = null;
+      // Full: a clear "no thanks" so it's obvious why it isn't chasing the food.
+      if (!hungry) this.refuse(dragon);
       return { busy: false, event: null };
     }
 
@@ -152,12 +154,17 @@ export class Feeding {
         dragon.lure = null;
         return { busy: true, event: { ate: food } };
       }
-      if (this.time - this.refusedAt > 1.2) {
-        this.refusedAt = this.time;
-        dragon.refuse();
-      }
+      this.refuse(dragon);
     }
     return { busy: true, event: null };
+  }
+
+  /** A polite head shake, at most once every 1.2 s. */
+  private refuse(dragon: Feedable): void {
+    if (this.time - this.refusedAt > 1.2) {
+      this.refusedAt = this.time;
+      dragon.refuse();
+    }
   }
 
   private reaches(food: Point, dragon: Feedable): boolean {

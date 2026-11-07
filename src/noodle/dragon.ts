@@ -60,6 +60,13 @@ export class Dragon {
   private headPalette: HeadColors;
   /** Food being held out to the dragon; it swims over to reach it. */
   lure: Point | null = null;
+  /** True while (or right after) going after food, as opposed to being steered by a finger. */
+  private wasLured = false;
+  /**
+   * Where the finger last pressed. After a drag the dragon settles there; a mouse that merely
+   * hovers afterwards must not steer it.
+   */
+  private lastPress: Point = { x: 0, y: 0 };
   readonly favorite: FoodId;
   private bits: Bit[] = [];
 
@@ -152,6 +159,7 @@ export class Dragon {
     if (this.lure) {
       // Food is being held out: wake up and swim over so the mouth meets it.
       this.held = true;
+      this.wasLured = true;
       this.sinceTouch = 0;
       const r = this.headRadius;
       const tx = this.lure.x - this.face.facing * r * 0.72;
@@ -169,12 +177,17 @@ export class Dragon {
     } else if (input.down) {
       // The finger is in charge: wake up and follow it.
       this.held = true;
+      this.wasLured = false;
       this.sinceTouch = 0;
+      this.lastPress = { x: input.x, y: input.y };
       this.head.update(dt, input.x, input.y);
     } else if (this.held) {
       this.sinceTouch += dt;
-      this.head.update(dt, input.x, input.y);
-      if (this.sinceTouch > CALM_DOWN) {
+      // Settle where the finger last was (not wherever a hovering mouse goes). After food,
+      // there is nothing to settle on: go straight back to its own moods.
+      if (!this.wasLured) this.head.update(dt, this.lastPress.x, this.lastPress.y);
+      if (this.sinceTouch > CALM_DOWN || this.wasLured) {
+        this.wasLured = false;
         // Let go: carry on from here, with a dreamy float first.
         this.held = false;
         const [h, n] = this.spine.points;

@@ -84,12 +84,13 @@ describe("feeding", () => {
       tray.update(1 / 60, { x: 300, y: 334, down: false }, null, dragon, stuffed, W, H);
     step();
     expect(dragon.lure).toBeNull(); // not interested
+    expect(dragon.log).toEqual(["refuse"]); // and says so with a head shake
     for (let i = 0; i < 60 * (LINGER_TIME + RETURN_TIME / 2); i++) step();
     expect(tray.floating).toHaveLength(1); // still on its slow way home
     expect(tray.floating[0].home).not.toBeNull();
     for (let i = 0; i < 60 * RETURN_TIME; i++) step();
     expect(tray.floating).toHaveLength(0); // home
-    expect(dragon.log).toEqual([]);
+    expect(dragon.log).toEqual(["refuse"]);
   });
 
   it("keeps floating food on screen even when flung hard", () => {
