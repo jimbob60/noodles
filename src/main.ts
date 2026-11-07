@@ -3,6 +3,8 @@ import { Input } from "./engine/input";
 import { startLoop } from "./engine/loop";
 import { Screen } from "./engine/screen";
 import { Follower } from "./follower";
+import { drawSpine } from "./noodle/drawSpine";
+import { Spine } from "./noodle/spine";
 import { palette } from "./palette";
 import { drawTitle, TITLE_FONT } from "./title";
 
@@ -37,29 +39,10 @@ function paintBackdrop(screen: Screen, backdrop: HTMLCanvasElement): void {
   drawTitle(ctx, w, h);
 }
 
-function drawDot(ctx: CanvasRenderingContext2D, dot: Follower, pressed: boolean): void {
-  for (const s of dot.sparkles) {
-    ctx.fillStyle = `rgba(122,243,255,${s.life * 0.6})`;
-    ctx.beginPath();
-    ctx.arc(s.x, s.y, 2 + s.life * 6, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  const r = pressed ? 22 : 18;
-  const glow = ctx.createRadialGradient(dot.x, dot.y, 0, dot.x, dot.y, r * 2.6);
-  glow.addColorStop(0, "rgba(122,243,255,0.55)");
-  glow.addColorStop(1, "rgba(122,243,255,0)");
-  ctx.fillStyle = glow;
-  ctx.beginPath();
-  ctx.arc(dot.x, dot.y, r * 2.6, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = palette.glowCyan;
-  ctx.beginPath();
-  ctx.arc(dot.x, dot.y, r, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = "rgba(255,255,255,0.9)";
-  ctx.beginPath();
-  ctx.arc(dot.x - r * 0.3, dot.y - r * 0.3, r * 0.3, 0, Math.PI * 2);
-  ctx.fill();
+/** Spine spacing scales with the screen so the noodle is the same size on any tablet. */
+const SPINE_POINTS = 26;
+function segmentFor(screen: Screen): number {
+  return Math.min(18, Math.max(8, Math.min(screen.width, screen.height) / 55));
 }
 
 async function main(): Promise<void> {
@@ -70,9 +53,12 @@ async function main(): Promise<void> {
   const input = new Input(screen.canvas);
   const backdrop = document.createElement("canvas");
   paintBackdrop(screen, backdrop);
-  screen.onResize(() => paintBackdrop(screen, backdrop));
-
   const dot = new Follower(screen.width / 2, screen.height * 0.85);
+  const spine = new Spine(dot.x, dot.y, SPINE_POINTS, segmentFor(screen));
+  screen.onResize(() => {
+    paintBackdrop(screen, backdrop);
+    spine.resize(segmentFor(screen));
+  });
   let idleTime = 0;
 
   const loop = startLoop({
@@ -81,16 +67,17 @@ async function main(): Promise<void> {
       if (input.active) {
         dot.update(dt, input.x, input.y);
       } else {
-        // Before the first touch, the dot floats in a gentle loop near the bottom.
-        const cx = screen.width / 2 + Math.sin(idleTime * 0.9) * 40;
-        const cy = screen.height * 0.86 + Math.sin(idleTime * 1.8) * 10;
+        // Before the first touch, the head swims a lazy figure-eight near the bottom.
+        const cx = screen.width / 2 + Math.sin(idleTime * 0.7) * screen.width * 0.22;
+        const cy = screen.height * 0.84 + Math.sin(idleTime * 1.4) * screen.height * 0.05;
         dot.update(dt, cx, cy);
       }
+      spine.follow(dot.x, dot.y);
     },
     render() {
       const ctx = screen.begin();
       ctx.drawImage(backdrop, 0, 0, screen.width, screen.height);
-      drawDot(ctx, dot, input.down);
+      drawSpine(ctx, spine, input.down);
 
       // Build tag and frame rate in the corner, so Jacob can tell which build he is playing.
       ctx.font = "12px system-ui, sans-serif";

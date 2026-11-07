@@ -30,7 +30,14 @@ try {
     // Drag a "finger" across the screen so the screenshot shows the dot following it.
     await page.mouse.move(v.width * 0.3, v.height * 0.8);
     await page.mouse.down();
-    await page.mouse.move(v.width * 0.7, v.height * 0.65, { steps: 20 });
+    // An S-shaped swoop, so the noodle's body has some curves in it.
+    for (let i = 1; i <= 40; i++) {
+      const t = i / 40;
+      await page.mouse.move(
+        v.width * (0.3 + 0.4 * t),
+        v.height * (0.8 - 0.15 * t) + Math.sin(t * Math.PI * 2) * v.height * 0.08,
+      );
+    }
     await page.waitForTimeout(150);
     await page.screenshot({ path: `screenshots/${v.name}.png` });
     await page.mouse.up();
