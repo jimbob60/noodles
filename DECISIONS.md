@@ -2,6 +2,12 @@
 
 Newest first. Each entry says what we decided, why, and what it affects.
 
+## 2026-11-07: Title look — Pacifico font, dragons as the "o"s
+
+- **Decision:** the title uses the free Pacifico script font (OFL license, bundled so it works offline). Every "o" in "Noodle Dragons" is a tiny curled-up noodle dragon drawn by code, in cyan, gold (sleepy) and mint.
+- **Why:** Jacob asked for a fancier font with dragons in the letters.
+- **Affects:** the title screen now, and the menus in phase 44.
+
 ## 2026-11-07: Toolchain
 
 - **Decision:** TypeScript, Vite for builds, Vitest for tests, Prettier for code style, and Playwright to screenshot every build as a tablet in landscape and portrait.

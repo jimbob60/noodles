@@ -25,7 +25,8 @@ try {
     page.on("pageerror", (e) => errors.push(`${v.name}: ${e.message}`));
     page.on("console", (m) => m.type() === "error" && errors.push(`${v.name}: ${m.text()}`));
     await page.goto(url);
-    await page.waitForTimeout(500);
+    await page.waitForSelector("body[data-ready]", { timeout: 10000 });
+    await page.waitForTimeout(200);
     await page.screenshot({ path: `screenshots/${v.name}.png` });
     await page.close();
     console.log(`saved screenshots/${v.name}.png`);
