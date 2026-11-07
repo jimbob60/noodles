@@ -8,6 +8,7 @@ import { Gallery } from "./gallery";
 import { Dragon } from "./noodle/dragon";
 import { makeLook } from "./noodle/look";
 import { palette } from "./palette";
+import { NeedsBar } from "./ui/needsBar";
 import { drawTitle, TITLE_FONT } from "./title";
 
 /** Fixed star positions (0–1 of the screen), so the sky looks the same every time. */
@@ -71,6 +72,7 @@ async function main(): Promise<void> {
   // Needs follow the real clock, so they keep changing while the app is closed.
   let needs = loadNeeds(Date.now());
   let sinceSave = 0;
+  const needsBar = new NeedsBar();
   const persist = () => saveNeeds(needs);
   window.addEventListener("pagehide", persist);
   document.addEventListener("visibilitychange", () => {
@@ -89,6 +91,7 @@ async function main(): Promise<void> {
       }
       dragon.update(dt, input, world());
       needs = advance(needs, Date.now(), dragon.asleep);
+      needsBar.update(dt, needs.values);
       sinceSave += dt;
       if (sinceSave > 5) {
         sinceSave = 0;
@@ -105,6 +108,7 @@ async function main(): Promise<void> {
       } else {
         ctx.drawImage(backdrop, 0, 0, screen.width, screen.height);
         dragon.draw(ctx);
+        needsBar.draw(ctx, screen.width, screen.height);
       }
 
       if (debug) {
@@ -114,7 +118,7 @@ async function main(): Promise<void> {
         ctx.textBaseline = "top";
         ctx.fillStyle = "rgba(255,255,255,0.75)";
         NEED_NAMES.forEach((n, i) => {
-          ctx.fillText(`${n} ${needs.values[n].toFixed(2)}`, 10, 10 + i * 18);
+          ctx.fillText(`${n} ${needs.values[n].toFixed(2)}`, 10, 80 + i * 18);
         });
       }
 
