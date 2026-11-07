@@ -2,6 +2,12 @@
 
 Newest first. Each entry says what we decided, why, and what it affects.
 
+## 2026-11-07: Needs — gentle, real-clock, never zero
+
+- **Decision:** four needs from 0 to 100, where 100 is perfectly cared for: fullness, happiness, energy, cleanliness. Awake they drop 10, 8, 6 and 5 an hour; asleep, energy refills at 40 an hour and the others drop at half speed or less. They never go below 15, and time away counts for at most 12 hours. They are kept on the device (localStorage) with the time you left, read back carefully so broken or future-dated data can't cause harm. `#debug` on the preview link shows the numbers.
+- **Why:** phase 13, and the vision's "no stress, no timers, nothing sad": a pet you can leave for a week and come back to sleepy, not sick.
+- **Affects:** phases 14–20 (display, actions, moods, the cozy-check gate) and phase 21 (this becomes part of the full save).
+
 ## 2026-11-07: Phase 12 tuning — lazier chase, bigger dragon
 
 - **Decision:** the head follows the finger more lazily (catch-up rate 14 → 10; it reaches the finger in about 0.7 s instead of 0.5 s). The dragon is about 15% longer (spine spacing = shorter screen side ÷ 48, between 9 and 22 px) and 15% chubbier (body half-width 1.7 → 1.95 × spacing). Nap and wander timing stay as they were.

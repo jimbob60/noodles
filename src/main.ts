@@ -1,4 +1,6 @@
 import "@fontsource/pacifico/latin-400.css";
+import { advance, NEED_NAMES } from "./care/needs";
+import { loadNeeds, saveNeeds } from "./care/storage";
 import { Input } from "./engine/input";
 import { startLoop } from "./engine/loop";
 import { Screen } from "./engine/screen";
@@ -64,6 +66,16 @@ async function main(): Promise<void> {
   );
   const gallery = location.hash === "#gallery" ? new Gallery(screen) : null;
   window.addEventListener("hashchange", () => location.reload());
+  const debug = location.hash === "#debug";
+
+  // Needs follow the real clock, so they keep changing while the app is closed.
+  let needs = loadNeeds(Date.now());
+  let sinceSave = 0;
+  const persist = () => saveNeeds(needs);
+  window.addEventListener("pagehide", persist);
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) persist();
+  });
   screen.onResize(() => {
     paintBackdrop(screen, backdrop);
     dragon.resize(segmentFor(screen));
@@ -76,6 +88,12 @@ async function main(): Promise<void> {
         return;
       }
       dragon.update(dt, input, world());
+      needs = advance(needs, Date.now(), dragon.asleep);
+      sinceSave += dt;
+      if (sinceSave > 5) {
+        sinceSave = 0;
+        persist();
+      }
       // The current mood on the page, so automated checks can find naps and walks.
       const mood = dragon.asleep ? "asleep" : dragon.brain.mode;
       if (document.body.dataset.mood !== mood) document.body.dataset.mood = mood;
@@ -87,6 +105,17 @@ async function main(): Promise<void> {
       } else {
         ctx.drawImage(backdrop, 0, 0, screen.width, screen.height);
         dragon.draw(ctx);
+      }
+
+      if (debug) {
+        // Hidden readout (#debug) until the real needs display arrives in phase 14.
+        ctx.font = "13px system-ui, sans-serif";
+        ctx.textAlign = "left";
+        ctx.textBaseline = "top";
+        ctx.fillStyle = "rgba(255,255,255,0.75)";
+        NEED_NAMES.forEach((n, i) => {
+          ctx.fillText(`${n} ${needs.values[n].toFixed(2)}`, 10, 10 + i * 18);
+        });
       }
 
       // Build tag and frame rate in the corner, so Jacob can tell which build he is playing.
