@@ -3,7 +3,7 @@ import { Input } from "./engine/input";
 import { startLoop } from "./engine/loop";
 import { Screen } from "./engine/screen";
 import { Follower } from "./follower";
-import { drawSpine } from "./noodle/drawSpine";
+import { drawBody } from "./noodle/drawBody";
 import { Spine } from "./noodle/spine";
 import { palette } from "./palette";
 import { drawTitle, TITLE_FONT } from "./title";
@@ -77,7 +77,7 @@ async function main(): Promise<void> {
     render() {
       const ctx = screen.begin();
       ctx.drawImage(backdrop, 0, 0, screen.width, screen.height);
-      drawSpine(ctx, spine, input.down);
+      drawBody(ctx, spine);
 
       // Build tag and frame rate in the corner, so Jacob can tell which build he is playing.
       ctx.font = "12px system-ui, sans-serif";
