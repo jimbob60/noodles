@@ -1,14 +1,21 @@
 import { describe, expect, it } from "vitest";
-import { brightness, LOW, NeedsBar, ringFill, wobble } from "../src/ui/needsBar";
+import { brightness, fillLevel, LOW, NeedsBar, surfaceY, wobble } from "../src/ui/needsBar";
 
 const needs = (v: number) => ({ fullness: v, happiness: v, energy: v, cleanliness: v });
 
 describe("needs display", () => {
-  it("fills each ring in proportion to the need", () => {
-    expect(ringFill(100)).toBe(1);
-    expect(ringFill(50)).toBe(0.5);
-    expect(ringFill(15)).toBeCloseTo(0.15);
-    expect(ringFill(500)).toBe(1);
+  it("fills each orb with liquid in proportion to the need", () => {
+    expect(fillLevel(100)).toBe(1);
+    expect(fillLevel(50)).toBe(0.5);
+    expect(fillLevel(15)).toBeCloseTo(0.15);
+    expect(fillLevel(500)).toBe(1);
+  });
+
+  it("drains the liquid downward as a need drops", () => {
+    expect(surfaceY(1, 20)).toBe(-20); // full: surface at the top
+    expect(surfaceY(0.5, 20)).toBe(0); // half: surface in the middle
+    expect(surfaceY(0, 20)).toBe(20); // empty: surface at the bottom
+    expect(surfaceY(0.3, 20)).toBeGreaterThan(surfaceY(0.7, 20));
   });
 
   it("dims low needs but never makes them invisible", () => {

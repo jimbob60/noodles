@@ -2,7 +2,7 @@ import { MAX, NEED_NAMES, type NeedName, type Needs } from "../care/needs";
 
 /** Below this, a need gently asks for attention (a soft wobble every few seconds). */
 export const LOW = 40;
-/** How quickly the rings glide to new values (so a snack fills the ring smoothly). */
+/** How quickly the liquid glides to new levels (so a snack tops it up smoothly). */
 const GLIDE_RATE = 4;
 
 const COLORS: Record<NeedName, { glow: string; ring: string; icon: string }> = {
@@ -12,14 +12,19 @@ const COLORS: Record<NeedName, { glow: string; ring: string; icon: string }> = {
   cleanliness: { glow: "122,243,255", ring: "#7af3ff", icon: "#bff9ff" },
 };
 
-/** Ring fill (0–1) for a need value. */
-export function ringFill(value: number): number {
+/** How full the bubble's liquid is (0–1) for a need value. */
+export function fillLevel(value: number): number {
   return Math.min(1, Math.max(0, value / MAX));
+}
+
+/** Height of the liquid surface inside a bubble of radius r (r = bottom, -r = top). */
+export function surfaceY(level: number, r: number): number {
+  return r - 2 * r * level;
 }
 
 /** Brightness of a bubble: low needs look sleepier and dimmer, never alarming. */
 export function brightness(value: number): number {
-  return 0.55 + 0.45 * ringFill(value);
+  return 0.55 + 0.45 * fillLevel(value);
 }
 
 /** A soft side-to-side wobble for low needs: a short shake every 4 seconds, still otherwise. */
@@ -29,7 +34,10 @@ export function wobble(value: number, time: number, offset: number): number {
   return t < 0.6 ? Math.sin(t * Math.PI * 5) * (1 - t / 0.6) * 0.18 : 0;
 }
 
-/** The four need bubbles in the top-left corner. No numbers, no words, no red. */
+/**
+ * The four need bubbles in the top-left corner: little glass orbs of glowing liquid that drain
+ * as a need drops. No numbers, no words, no red.
+ */
 export class NeedsBar {
   private shown: Needs | null = null;
   private time = 0;
@@ -44,7 +52,7 @@ export class NeedsBar {
     for (const n of NEED_NAMES) this.shown[n] += (needs[n] - this.shown[n]) * k;
   }
 
-  /** Current on-screen value of a need (for tests and the gliding rings). */
+  /** Current on-screen value of a need (for tests and the gliding liquid). */
   shownValue(name: NeedName): number {
     return this.shown?.[name] ?? 0;
   }
@@ -76,38 +84,71 @@ export class NeedsBar {
     ctx.rotate(wobble(value, this.time, index * 0.9));
     ctx.globalAlpha = light;
 
-    // Soft glow, then the dark bubble the icon sits in.
+    // Soft glow outside the glass, brighter when fuller.
+    const level = fillLevel(value);
     const glow = ctx.createRadialGradient(0, 0, r * 0.6, 0, 0, r * 1.6);
-    glow.addColorStop(0, `rgba(${c.glow},${(0.35 * ringFill(value)).toFixed(3)})`);
+    glow.addColorStop(0, `rgba(${c.glow},${(0.35 * level).toFixed(3)})`);
     glow.addColorStop(1, `rgba(${c.glow},0)`);
     ctx.fillStyle = glow;
     ctx.beginPath();
     ctx.arc(0, 0, r * 1.6, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = "rgba(20,14,60,0.85)";
+
+    // The dark inside of the glass orb.
+    ctx.fillStyle = "rgba(20,14,60,0.88)";
     ctx.beginPath();
     ctx.arc(0, 0, r, 0, Math.PI * 2);
     ctx.fill();
 
-    // Ring: a faint track, then the filled part, starting at the top and going clockwise.
-    const ringW = r * 0.18;
-    ctx.lineCap = "round";
-    ctx.lineWidth = ringW;
-    ctx.strokeStyle = `rgba(${c.glow},0.18)`;
+    // Glowing liquid, clipped to the orb, with a gently rolling wave on top.
+    ctx.save();
     ctx.beginPath();
-    ctx.arc(0, 0, r - ringW / 2, 0, Math.PI * 2);
+    ctx.arc(0, 0, r * 0.94, 0, Math.PI * 2);
+    ctx.clip();
+    const top = surfaceY(level, r);
+    const wave = r * 0.07;
+    const phase = this.time * 2.2 + index * 1.3;
+    ctx.beginPath();
+    ctx.moveTo(-r, r);
+    for (let i = 0; i <= 12; i++) {
+      const x = -r + (2 * r * i) / 12;
+      ctx.lineTo(x, top + Math.sin(phase + i * 0.7) * wave);
+    }
+    ctx.lineTo(r, r);
+    ctx.closePath();
+    const liquid = ctx.createLinearGradient(0, top, 0, r);
+    liquid.addColorStop(0, `rgba(${c.glow},0.95)`);
+    liquid.addColorStop(1, `rgba(${c.glow},0.78)`);
+    ctx.fillStyle = liquid;
+    ctx.fill();
+    // A thin bright line on the surface.
+    ctx.strokeStyle = "rgba(255,255,255,0.55)";
+    ctx.lineWidth = Math.max(1, r * 0.06);
     ctx.stroke();
+    ctx.restore();
+
+    // Glass rim and a little shine, so it reads as a potion orb.
     ctx.strokeStyle = c.ring;
+    ctx.lineWidth = Math.max(1.5, r * 0.09);
     ctx.beginPath();
-    ctx.arc(0, 0, r - ringW / 2, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * ringFill(value));
+    ctx.arc(0, 0, r, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.strokeStyle = "rgba(255,255,255,0.6)";
+    ctx.lineCap = "round";
+    ctx.lineWidth = Math.max(1.2, r * 0.08);
+    ctx.beginPath();
+    ctx.arc(0, 0, r * 0.75, Math.PI * 1.1, Math.PI * 1.4);
     ctx.stroke();
 
-    ctx.fillStyle = c.icon;
-    ctx.strokeStyle = c.icon;
+    // Icon floats on top; a dark halo keeps it readable over the liquid.
+    ctx.shadowColor = "rgba(20,14,60,0.9)";
+    ctx.shadowBlur = r * 0.25;
+    ctx.fillStyle = "#ffffff";
+    ctx.strokeStyle = "#ffffff";
     const s = r * 0.5;
     if (name === "fullness") drawBowl(ctx, s);
     else if (name === "happiness") drawHeart(ctx, s);
-    else if (name === "energy") drawMoon(ctx, s, c.icon);
+    else if (name === "energy") drawMoon(ctx, s);
     else drawBubbles(ctx, s);
     ctx.restore();
   }
@@ -139,16 +180,14 @@ function drawHeart(ctx: CanvasRenderingContext2D, s: number): void {
   ctx.fill();
 }
 
-function drawMoon(ctx: CanvasRenderingContext2D, s: number, color: string): void {
-  // A crescent: a full circle with a dark circle bitten out, plus a tiny star.
+function drawMoon(ctx: CanvasRenderingContext2D, s: number): void {
+  // A crescent drawn as one shape (outer arc, then the inner bite back), plus a tiny star, so it
+  // looks right over the liquid as well as the dark glass.
   ctx.beginPath();
-  ctx.arc(-s * 0.1, 0, s * 0.85, 0, Math.PI * 2);
+  ctx.arc(-s * 0.1, 0, s * 0.85, -0.25 * Math.PI, 1.55 * Math.PI, false);
+  ctx.arc(s * 0.3, -s * 0.25, s * 0.7, 1.12 * Math.PI, 0.25 * Math.PI, true);
+  ctx.closePath();
   ctx.fill();
-  ctx.fillStyle = "rgba(20,14,60,1)";
-  ctx.beginPath();
-  ctx.arc(s * 0.3, -s * 0.25, s * 0.7, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = color;
   ctx.beginPath();
   ctx.arc(s * 0.6, s * 0.45, s * 0.14, 0, Math.PI * 2);
   ctx.fill();
