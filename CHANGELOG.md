@@ -2,6 +2,7 @@
 
 Newest first. One line per finished phase.
 
+- **Phase 21 — Saving (e9166c4, 2026-11-07):** the whole dragon saves on the device (versioned, with a spare); its look now stays; a 💾 backup code to copy and restore.
 - **Phase 20 — Gate: cozy check (31b9e80, 2026-11-07):** bath sponge for Hygiene; neglect only means sleepy; an excited loop-de-loop after a good petting; eating and playing are a little messy. Stage C done.
 - **Phase 19 — Moods (7b36d74, 2026-11-07):** happy, content, hungry, tired, lonely and grubby faces and body language, with thought bubbles for low needs.
 - **Phase 18 — Sleep (59e8903, 2026-11-07):** bedtime button dims the lights; it curls up on a cushion and sleeps until rested, and a night away counts as sleep.
