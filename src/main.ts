@@ -3,7 +3,9 @@ import { Input } from "./engine/input";
 import { startLoop } from "./engine/loop";
 import { Screen } from "./engine/screen";
 import { Follower } from "./follower";
-import { drawBody } from "./noodle/drawBody";
+import { bodyHalfWidth, drawBody } from "./noodle/drawBody";
+import { drawHead } from "./noodle/drawHead";
+import { Face } from "./noodle/face";
 import { Spine } from "./noodle/spine";
 import { palette } from "./palette";
 import { drawTitle, TITLE_FONT } from "./title";
@@ -59,6 +61,7 @@ async function main(): Promise<void> {
     paintBackdrop(screen, backdrop);
     spine.resize(segmentFor(screen));
   });
+  const face = new Face();
   let idleTime = 0;
 
   const loop = startLoop({
@@ -73,11 +76,18 @@ async function main(): Promise<void> {
         dot.update(dt, cx, cy);
       }
       spine.follow(dot.x, dot.y);
+      // Eyes follow the finger; with no finger down they look where the noodle is heading.
+      const [head, neck] = spine.points;
+      const target = input.down
+        ? { x: input.x, y: input.y }
+        : { x: head.x + (head.x - neck.x) * 6, y: head.y + (head.y - neck.y) * 6 };
+      face.update(dt, head, neck, target, bodyHalfWidth(spine) * 6);
     },
     render() {
       const ctx = screen.begin();
       ctx.drawImage(backdrop, 0, 0, screen.width, screen.height);
       drawBody(ctx, spine);
+      drawHead(ctx, spine.head, bodyHalfWidth(spine) * 1.3, face);
 
       // Build tag and frame rate in the corner, so Jacob can tell which build he is playing.
       ctx.font = "12px system-ui, sans-serif";
