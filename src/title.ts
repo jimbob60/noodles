@@ -3,6 +3,7 @@ import { drawRingDragon, type RingDragon } from "./ringDragon";
 
 export const TITLE_FONT = "Pacifico";
 const LINES = ["Noodle", "Dragons"];
+export const GREETING = "Hello, Noodle!";
 /** Each "o" in the title becomes a dragon; these give each one its own look. */
 const O_DRAGONS: Omit<RingDragon, "x" | "y" | "radius">[] = [
   { color: palette.glowCyan, headAngle: -Math.PI * 0.6, direction: 1 },
@@ -12,14 +13,15 @@ const O_DRAGONS: Omit<RingDragon, "x" | "y" | "radius">[] = [
 
 /** Draws the title centered in a w × h area: fancy glowing letters, with every "o" a curled dragon. */
 export function drawTitle(ctx: CanvasRenderingContext2D, w: number, h: number): void {
-  const size = Math.min(w / 4.6, h / 3.6);
+  const size = Math.min(w / 4.6, h / 4.3);
   ctx.save();
   ctx.font = `${size}px "${TITLE_FONT}", cursive`;
   ctx.textAlign = "left";
   ctx.textBaseline = "alphabetic";
   const xHeight = ctx.measureText("x").actualBoundingBoxAscent;
   const lineGap = size * 1.05;
-  const firstBaseline = h / 2 - lineGap / 2 + xHeight / 2;
+  // Shifted up a little to leave room for the greeting underneath.
+  const firstBaseline = h / 2 - lineGap / 2 + xHeight / 2 - size * 0.22;
 
   let dragon = 0;
   LINES.forEach((word, line) => {
@@ -49,6 +51,15 @@ export function drawTitle(ctx: CanvasRenderingContext2D, w: number, h: number): 
       });
     }
   });
+
+  // Greeting under the title, in a smaller cyan glow.
+  const greetSize = size * 0.32;
+  ctx.font = `${greetSize}px "${TITLE_FONT}", cursive`;
+  ctx.textAlign = "center";
+  ctx.shadowColor = palette.glowCyan;
+  ctx.shadowBlur = greetSize * 0.5;
+  ctx.fillStyle = palette.glowCyan;
+  ctx.fillText(GREETING, w / 2, firstBaseline + lineGap + size * 0.78);
   ctx.restore();
 }
 

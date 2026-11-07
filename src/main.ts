@@ -34,6 +34,13 @@ function draw(): void {
   }
 
   drawTitle(ctx, w, h);
+
+  // Build tag in the corner, so Jacob can tell which build he is playing.
+  ctx.font = "12px system-ui, sans-serif";
+  ctx.textAlign = "right";
+  ctx.textBaseline = "bottom";
+  ctx.fillStyle = "rgba(255,255,255,0.35)";
+  ctx.fillText(`build ${__BUILD__}`, w - 10, h - 8);
 }
 
 window.addEventListener("resize", draw);
