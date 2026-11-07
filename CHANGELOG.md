@@ -2,6 +2,7 @@
 
 Newest first. One line per finished phase.
 
+- **Phase 15 — Feeding (311d406, 2026-11-07):** drag noodles, dumplings or fish to its mouth or let them float; a hungry dragon chases floating food, a full one shakes its head; favorite foods burst hearts.
 - **Phase 14 — Needs display (a39fff7, 2026-11-07):** glowing potion orbs that drain from 100% to 1%, labelled Food, Love, Energy, Hygiene; tap the build tag for play, fast and gallery modes.
 - **Phase 13 — Needs (1e8891c, 2026-11-07):** fullness, happiness, energy and cleanliness follow the real clock, never below 15, time away capped at 12 h.
 - **Phase 12 — Gate: "It's alive" (2026-11-07):** 60 fps on Jacob's phone; lazier chase and a bigger, chubbier dragon after his playtest; a 14-second clip recorded.
