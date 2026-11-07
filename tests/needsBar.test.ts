@@ -6,8 +6,8 @@ const needs = (v: number) => ({ fullness: v, happiness: v, energy: v, cleanlines
 
 describe("needs display", () => {
   it("has one short word for every need", () => {
-    expect(Object.values(LABELS)).toEqual(["Food", "Love", "Energy", "Clean"]);
-    for (const word of Object.values(LABELS)) expect(word.length).toBeLessThanOrEqual(6);
+    expect(Object.values(LABELS)).toEqual(["Food", "Love", "Energy", "Hygiene"]);
+    for (const word of Object.values(LABELS)) expect(word.length).toBeLessThanOrEqual(7);
   });
 
   it("drains from 100% all the way down to a 1% puddle at the floor", () => {

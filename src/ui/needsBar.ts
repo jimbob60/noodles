@@ -5,7 +5,7 @@ export const LABELS: Record<NeedName, string> = {
   fullness: "Food",
   happiness: "Love",
   energy: "Energy",
-  cleanliness: "Clean",
+  cleanliness: "Hygiene",
 };
 
 /** Below this, a need gently asks for attention (a soft wobble every few seconds). */

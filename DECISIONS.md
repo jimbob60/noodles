@@ -4,7 +4,7 @@ Newest first. Each entry says what we decided, why, and what it affects.
 
 ## 2026-11-07: Needs display — draining potion orbs, 1%–100%
 
-- **Decision:** each need is a glass orb of glowing liquid that drains downward in whole 1% stages: 100% when perfectly cared for, down to a 1% puddle at the cozy floor (15), never fully empty. One short word sits under each orb (Food, Love, Energy, Clean). No numbers, no red; low orbs dim slightly and wobble softly every 4 s. Fast mode runs needs time 600× faster from full (an hour every 6 s) and never saves, so the drain can be watched in about a minute. Test modes (play → fast → gallery) are switched by tapping the build tag in the bottom-right corner, because Claude's app viewer can drop `#` links.
+- **Decision:** each need is a glass orb of glowing liquid that drains downward in whole 1% stages: 100% when perfectly cared for, down to a 1% puddle at the cozy floor (15), never fully empty. One short word sits under each orb (Food, Love, Energy, Hygiene). No numbers, no red; low orbs dim slightly and wobble softly every 4 s. Fast mode runs needs time 600× faster from full (an hour every 6 s) and never saves, so the drain can be watched in about a minute. Test modes (play → fast → gallery) are switched by tapping the build tag in the bottom-right corner, because Claude's app viewer can drop `#` links.
 - **Why:** Jacob asked for draining instead of filling rings, with stages from 100% to 1%.
 - **Affects:** phase 15 onward (care actions top the orbs back up).
 
