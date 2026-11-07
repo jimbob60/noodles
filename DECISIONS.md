@@ -26,6 +26,12 @@ Newest first. Each entry says what we decided, why, and what it affects.
 - **Why:** Jacob's ask, and it gives the bath sponge a reason to come out regularly.
 - **Affects:** phase 42 (balance).
 
+## 2026-11-07: Idea for later — a premium currency
+
+- **Idea:** Jacob's: a premium currency (say, gems 💎) bought with real money, alongside the free noodle coins.
+- **How it could work:** Google Play Billing (Capacitor has plugins for it); gems buy cosmetic extras like special decorations, accessories or rare patterns. Real-money sales need the Play Console's payments profile and tax info, a store listing that says "In-app purchases", and careful rules if children play (Play's Families policies). To keep the cozy, no-stress vision: never pay-to-win, never pressure, everything that matters still reachable with coins.
+- **When:** after launch (phase 64). Phase 24's coins stay earned-only, and nothing is built for gems yet, so no real money is anywhere in the game for now. This also answers part of the open question "free, or a small price?".
+
 ## 2026-11-07: Idea for later — the dragon as a live wallpaper
 
 - **Idea:** Jacob's "big brain idea": once it's an Android app, let the dragon swim on the phone's home screen, with no background, behind the app icons.

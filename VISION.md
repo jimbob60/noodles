@@ -43,4 +43,4 @@ Mini-games were not picked as a must-have. The one planned mini-game (phase 26, 
 
 ## Still open
 
-- Ads and real-money purchases were not ruled out in the vibe check. The current plan has none (coins are earned only by playing, phase 24). Jacob decides later, together with the open question "free game, or a small one-time price?".
+- Ads and real-money purchases were not ruled out in the vibe check. Jacob would like a premium currency (gems) after launch; see DECISIONS.md. The current plan has none (coins are earned only by playing, phase 24). Jacob decides later, together with the open question "free game, or a small one-time price?".
