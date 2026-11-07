@@ -1,0 +1,33 @@
+{
+  "name": "noodle-dragons",
+  "version": "0.0.1",
+  "description": "A cozy pet game about raising glowing noodle dragons",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "typecheck": "tsc",
+    "test": "vitest run",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "screenshot": "node scripts/screenshot.mjs",
+    "check": "npm run format:check && npm run build && npm test && npm run screenshot"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jimbob60/noodles.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jimbob60/noodles/issues"
+  },
+  "homepage": "https://github.com/jimbob60/noodles#readme",
+  "devDependencies": {
+    "prettier": "^3.9.10",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.6",
+    "vitest": "^5.1.0"
+  },
+  "private": true,
+  "type": "module"
+}
