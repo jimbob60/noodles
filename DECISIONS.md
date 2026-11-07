@@ -2,6 +2,18 @@
 
 Newest first. Each entry says what we decided, why, and what it affects.
 
+## 2026-11-07: Eating and playing are a little messy
+
+- **Decision:** each snack takes 4 off Hygiene, each ball boop 1.5, and chasing the ribbon 0.6 a second. A full care session still ends happy (bath before the ball game).
+- **Why:** Jacob's ask, and it gives the bath sponge a reason to come out regularly.
+- **Affects:** phase 42 (balance).
+
+## 2026-11-07: Idea for later — the dragon as a live wallpaper
+
+- **Idea:** Jacob's "big brain idea": once it's an Android app, let the dragon swim on the phone's home screen, with no background, behind the app icons.
+- **How it could work:** Android's live wallpaper feature. The drawing already works without the night background. The hard part is that a live wallpaper can't simply run our web game: the dragon's drawing would need to be ported to native Android code (or run in a hidden web view, which costs more battery). Taps on the home screen can reach the wallpaper, so simple petting could work. A floating pet drawn over other apps is also possible, but Google Play restricts that permission, so the wallpaper is the safer route.
+- **When:** after launch (added to phase 64, "What's next"). It needs a battery-friendly, low-frame-rate mode.
+
 ## 2026-11-07: An excited "thank you" after a good petting
 
 - **Decision:** when a petting got the purr to 60% or more, lifting the finger sets off 1.4 s of excitement: a burst of hearts and sparkles, a big smile with happy closed eyes, and a loop-de-loop up and over on the spot, then back to its moods. A quick pat doesn't trigger it, a bath (lighter purr) doesn't, and a dragon petted in its sleep keeps sleeping.

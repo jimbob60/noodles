@@ -23,6 +23,10 @@ describe("food", () => {
     }
   });
 
+  it("is a little messy: every snack takes a bit off Hygiene", () => {
+    for (const id of FOOD_IDS) expect(feedEffect(id, false).cleanliness).toBeLessThan(0);
+  });
+
   it("never overfills, and a full dragon says no thanks", () => {
     let s = freshNeeds(0);
     for (let i = 0; i < 10; i++) s = change(s, feedEffect("noodles", true));

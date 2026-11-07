@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   BOOP_ENERGY,
+  BOOP_GRIME,
   BOOP_LOVE,
   BOOPS_PER_GAME,
   PLAY_ENERGY,
@@ -79,6 +80,7 @@ describe("ball", () => {
     expect(d.log).toEqual(["boop"]);
     expect(r.love).toBe(BOOP_LOVE);
     expect(r.energy).toBe(-BOOP_ENERGY);
+    expect(r.grime).toBe(-BOOP_GRIME); // playing is a bit messy
     expect(toys.ball!.vy).toBeLessThan(0); // booped up into the air
   });
 

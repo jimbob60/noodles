@@ -9,6 +9,8 @@ export const FOOD_FULLNESS: Record<FoodId, number> = { noodles: 30, dumpling: 20
 export const SNACK_HAPPINESS = 4;
 /** Extra Love for a dragon's favorite food. */
 export const FAVORITE_HAPPINESS = 14;
+/** Eating is messy: each snack takes this much off Hygiene. */
+export const MESSY_EATING = 4;
 /** At or above this fullness the dragon politely says "no thanks". */
 export const FULL_ENOUGH = 97;
 
@@ -28,5 +30,6 @@ export function feedEffect(food: FoodId, favorite: boolean): Partial<Needs> {
   return {
     fullness: FOOD_FULLNESS[food],
     happiness: SNACK_HAPPINESS + (favorite ? FAVORITE_HAPPINESS : 0),
+    cleanliness: -MESSY_EATING,
   };
 }

@@ -10,6 +10,9 @@ export const PLAY_ENERGY = 25;
 /** Each boop of the ball: Love up, Energy down. */
 export const BOOP_LOVE = 4;
 export const BOOP_ENERGY = 1.5;
+/** Playing is messy too: Hygiene lost per boop, and per second of ribbon chasing. */
+export const BOOP_GRIME = 1.5;
+export const RIBBON_GRIME_PER_S = 0.6;
 /** Chasing the ribbon, per second: Love up, Energy down. */
 export const RIBBON_LOVE_PER_S = 3;
 export const RIBBON_ENERGY_PER_S = 1;
@@ -57,6 +60,8 @@ export interface PlayResult {
   busy: boolean;
   love: number;
   energy: number;
+  /** Hygiene change (negative: playing gets it a bit grubby). */
+  grime: number;
 }
 
 /**
@@ -113,7 +118,7 @@ export class Toys {
     this.width = width;
     this.height = height;
     this.boopCooldown = Math.max(0, this.boopCooldown - dt);
-    const result: PlayResult = { busy: false, love: 0, energy: 0 };
+    const result: PlayResult = { busy: false, love: 0, energy: 0, grime: 0 };
     const keen = wantsToPlay(needs);
 
     // Pick up: a toy from the tray, or the ball wherever it is.
@@ -157,6 +162,7 @@ export class Toys {
             if (moving && Math.hypot(tip.x - m.x, tip.y - m.y) < dragon.headRadius * 2) {
               result.love += RIBBON_LOVE_PER_S * dt;
               result.energy -= RIBBON_ENERGY_PER_S * dt;
+              result.grime -= RIBBON_GRIME_PER_S * dt;
             }
           }
         }
@@ -250,6 +256,7 @@ export class Toys {
         this.boopCooldown = 0.4;
         result.love += BOOP_LOVE;
         result.energy -= BOOP_ENERGY;
+        result.grime -= BOOP_GRIME;
         dragon.boop();
       }
     } else if (!keen && b.idle < dt * 1.5) {

@@ -211,8 +211,12 @@ async function main(): Promise<void> {
       // For automated checks: boops in the current ball game.
       const boops = String(toys.ball?.boops ?? "-");
       if (document.body.dataset.boops !== boops) document.body.dataset.boops = boops;
-      if (play.love !== 0 || play.energy !== 0) {
-        needs = change(needs, { happiness: play.love, energy: play.energy });
+      if (play.love !== 0 || play.energy !== 0 || play.grime !== 0) {
+        needs = change(needs, {
+          happiness: play.love,
+          energy: play.energy,
+          cleanliness: play.grime,
+        });
       }
       // Bath time: the sponge.
       const taken = swallowing || tray.busy || play.busy || inBed;
