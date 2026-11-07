@@ -2,6 +2,7 @@
 
 Newest first. One line per finished phase.
 
+- **Phase 22 — The den (0fe085a, 2026-11-07):** a glowing cave with an arched window, crystals, mushrooms, vines and fireflies; day and night follow the real clock.
 - **Phase 21 — Saving (e9166c4, 2026-11-07):** the whole dragon saves on the device (versioned, with a spare); its look now stays; a 💾 backup code to copy and restore.
 - **Phase 20 — Gate: cozy check (31b9e80, 2026-11-07):** bath sponge for Hygiene; neglect only means sleepy; an excited loop-de-loop after a good petting; eating and playing are a little messy. Stage C done.
 - **Phase 19 — Moods (7b36d74, 2026-11-07):** happy, content, hungry, tired, lonely and grubby faces and body language, with thought bubbles for low needs.
