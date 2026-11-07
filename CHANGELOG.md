@@ -2,6 +2,7 @@
 
 Newest first. One line per finished phase.
 
+- **Phase 19 — Moods (7b36d74, 2026-11-07):** happy, content, hungry, tired, lonely and grubby faces and body language, with thought bubbles for low needs.
 - **Phase 18 — Sleep (59e8903, 2026-11-07):** bedtime button dims the lights; it curls up on a cushion and sleeps until rested, and a night away counts as sleep.
 - **Phase 17 — Play (db19593, 2026-11-07):** throw a bouncy ball for the dragon to boop, or wave a ribbon wand for it to chase; play raises Love and uses Energy.
 - **Phase 16 — Petting (64d3e32, 2026-11-07):** touch the dragon to pet it; it purrs, glows and sparkles, and giggles at its secret tickle spots.
