@@ -3,6 +3,8 @@ import type { Point } from "./spine";
 /** Seconds of chewing per snack, and how many chomps fit in it. */
 export const CHEW_TIME = 1.2;
 export const CHOMPS = 3;
+/** Seconds of a big wake-up yawn. */
+export const YAWN_TIME = 1.6;
 /** Seconds of the "no thanks" head shake. */
 export const SHAKE_TIME = 0.8;
 /** Seconds a blink takes, closing and opening. */
@@ -53,6 +55,8 @@ export class Face {
   chewLeft = 0;
   /** Seconds of "no thanks" head shake left. */
   shakeLeft = 0;
+  /** Seconds of yawn left (one big slow open-and-close). */
+  yawnLeft = 0;
   private blinkClock = 0;
   private nextBlinkIn: number;
   private blinksLeft = 0;
@@ -99,10 +103,14 @@ export class Face {
     if (this.asleep || this.happy) this.blink = 1;
     this.chewLeft = Math.max(0, this.chewLeft - dt);
     this.shakeLeft = Math.max(0, this.shakeLeft - dt);
+    this.yawnLeft = Math.max(0, this.yawnLeft - dt);
+    if (this.yawnLeft > 0) this.blink = 1;
   }
 
   /** How open the mouth is (0 shut, 1 wide) while chewing. */
   get mouthOpen(): number {
+    if (this.yawnLeft > 0)
+      return Math.sin(((YAWN_TIME - this.yawnLeft) / YAWN_TIME) * Math.PI) * 1.3;
     if (this.chewLeft <= 0) return 0;
     const t = CHEW_TIME - this.chewLeft;
     return Math.max(0, Math.sin(t * Math.PI * (CHOMPS / CHEW_TIME)));

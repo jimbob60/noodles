@@ -12,6 +12,8 @@ export interface NeedsState {
   values: Needs;
   /** When the needs were last brought up to date (milliseconds since 1970). */
   lastSeen: number;
+  /** In bed for the night: time away counts as sleep (Energy refills). */
+  inBed?: boolean;
 }
 
 export const MAX = 100;
@@ -37,12 +39,12 @@ const clamp = (v: number) => Math.min(MAX, Math.max(FLOOR, v));
 export function advance(state: NeedsState, now: number, asleep = false): NeedsState {
   const elapsed = now - state.lastSeen;
   if (!Number.isFinite(elapsed) || elapsed <= 0)
-    return { values: { ...state.values }, lastSeen: now };
+    return { values: { ...state.values }, lastSeen: now, inBed: state.inBed };
   const hours = Math.min(elapsed / HOUR, OFFLINE_CAP_HOURS);
   const rates = asleep ? ASLEEP_RATES : AWAKE_RATES;
   const values = { ...state.values };
   for (const name of NEED_NAMES) values[name] = clamp(values[name] + rates[name] * hours);
-  return { values, lastSeen: now };
+  return { values, lastSeen: now, inBed: state.inBed };
 }
 
 /** Applies a care action's effects, e.g. { fullness: +25 } for a snack. */
@@ -52,7 +54,7 @@ export function change(state: NeedsState, deltas: Partial<Needs>): NeedsState {
     const d = deltas[name];
     if (d !== undefined) values[name] = clamp(values[name] + d);
   }
-  return { values, lastSeen: state.lastSeen };
+  return { values, lastSeen: state.lastSeen, inBed: state.inBed };
 }
 
 /** The need that most wants attention (lowest value), for moods and the display. */
@@ -67,7 +69,7 @@ export function lowestNeed(values: Needs): NeedName {
 export function parseNeeds(raw: unknown, now: number): NeedsState {
   const fresh = freshNeeds(now);
   if (!raw || typeof raw !== "object") return fresh;
-  const r = raw as { values?: Record<string, unknown>; lastSeen?: unknown };
+  const r = raw as { values?: Record<string, unknown>; lastSeen?: unknown; inBed?: unknown };
   const lastSeen =
     typeof r.lastSeen === "number" && Number.isFinite(r.lastSeen) && r.lastSeen <= now
       ? r.lastSeen
@@ -77,5 +79,5 @@ export function parseNeeds(raw: unknown, now: number): NeedsState {
     const v = r.values?.[name];
     if (typeof v === "number" && Number.isFinite(v)) values[name] = clamp(v);
   }
-  return { values, lastSeen };
+  return { values, lastSeen, inBed: r.inBed === true };
 }

@@ -73,9 +73,18 @@ describe("care actions", () => {
 });
 
 describe("saved needs", () => {
-  it("come back exactly as saved", () => {
-    const s = advance(full(), T0 + 2 * HOUR);
-    expect(parseNeeds(JSON.parse(JSON.stringify(s)), T0 + 3 * HOUR)).toEqual(s);
+  it("come back exactly as saved, including bedtime", () => {
+    for (const inBed of [false, true]) {
+      const s = { ...advance(full(), T0 + 2 * HOUR), inBed };
+      expect(parseNeeds(JSON.parse(JSON.stringify(s)), T0 + 3 * HOUR)).toEqual(s);
+    }
+  });
+
+  it("count a night away in bed as sleep: Energy refills", () => {
+    const tired: NeedsState = { ...full(), values: { ...full().values, energy: 20 }, inBed: true };
+    const morning = advance(tired, T0 + 8 * HOUR, tired.inBed);
+    expect(morning.values.energy).toBe(100);
+    expect(morning.inBed).toBe(true);
   });
 
   it("survive broken or tampered data", () => {

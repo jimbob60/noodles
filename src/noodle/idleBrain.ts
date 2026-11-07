@@ -54,6 +54,29 @@ export class IdleBrain {
     }
   }
 
+  /** True while in bed for the night (sleeps until woken, instead of a short nap). */
+  get inBed(): boolean {
+    return this.mode === "rest" && this.length === Infinity;
+  }
+
+  /** Bedtime: swim to the bed, curl up, and stay asleep until `wake`. */
+  bedtime(bed: { x: number; y: number }, swimmer: Swimmer, world: World): void {
+    this.start("rest", swimmer, world);
+    this.length = Infinity;
+    this.nest = {
+      x: bed.x,
+      y: bed.y,
+      dir: this.random() < 0.5 ? 1 : -1,
+      reached: false,
+      curlClock: 0,
+    };
+  }
+
+  /** Good morning: back to wandering. */
+  wake(swimmer: Swimmer, world: World): void {
+    this.start("wander", swimmer, world);
+  }
+
   update(dt: number, swimmer: Swimmer, world: World): void {
     this.clock += dt;
     const u = world.unit;

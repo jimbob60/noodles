@@ -2,6 +2,12 @@
 
 Newest first. Each entry says what we decided, why, and what it affects.
 
+## 2026-11-07: Bedtime — lights down, a cushion, sleep until rested
+
+- **Decision:** a moon button above the toy tray starts bedtime (only when Energy is below 90; otherwise "not sleepy"). The screen dims, the food and toys are put away, and the dragon swims to a cushion, curls up and sleeps with z's, a snore bubble and slow breathing; the cushion slides under wherever it curls. Asleep in bed with the app open, Energy refills 0.35 a second (low to full in about 4 minutes) and it wakes by itself at 100 with a big yawn; the sun button wakes it early. Bedtime is saved, so time away while in bed counts as sleep (Energy +40 an hour, hunger slowed). It can still be petted while asleep. Presses are now counted, so even a tap shorter than a frame always registers.
+- **Why:** phase 18 ("the sleep cycle works"), and the vision's cozy, no-stress nights.
+- **Affects:** phase 19 (tired moods), phase 21 (bedtime becomes part of the full save), phase 22 (real day and night).
+
 ## 2026-11-07: Play — a bouncy ball and a ribbon wand
 
 - **Decision:** a toy tray in the bottom-right corner (the mode button moved to the top-right). Throw the ball and it bounces about the screen; the dragon chases it and boops it back up with its nose (+4 Love, −1.5 Energy a boop). After 8 boops, or 6 s without one, the game ends and the ball drifts home. The ball can be grabbed again anywhere. Hold and wave the ribbon wand and the dragon chases the tip of its silky streamer (+3 Love, −1 Energy a second while it keeps up with a moving ribbon). Below 25 Energy it's too sleepy to play and shakes its head. Food takes priority over toys.

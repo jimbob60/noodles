@@ -13,6 +13,8 @@ import { Feeding } from "./ui/feeding";
 import { Toys } from "./ui/toys";
 import { feedEffect } from "./care/food";
 import { Petting } from "./care/petting";
+import { bedRefill, rested, sleepy } from "./care/bedtime";
+import { bedSpot, drawBed, drawBedButton, drawNight, onBedButton } from "./ui/bedtime";
 import { drawTitle, TITLE_FONT } from "./title";
 
 /** Fixed star positions (0–1 of the screen), so the sky looks the same every time. */
@@ -109,13 +111,32 @@ async function main(): Promise<void> {
     if (mode === "fast") {
       const full = { fullness: 100, happiness: 100, energy: 100, cleanliness: 100 };
       needs = change(freshNeeds(modeStartedAt), full);
+      dragon.wakeUp(world());
     } else if (mode === "play") {
-      needs = loadNeeds(Date.now());
+      // Time away counts as sleep if it was tucked in for the night.
+      const saved = loadNeeds(Date.now());
+      needs = advance(saved, Date.now(), saved.inBed === true);
     } else if (!gallery) {
       gallery = new Gallery(screen);
     }
   }
   enterMode(mode);
+
+  /** Bedtime on or off, how dim the lights are (0–1, eased), and where the cushion is. */
+  let night = 0;
+  let bedAt = bedSpot(screen.width, screen.height);
+  function setBedtime(on: boolean): void {
+    needs = { ...needs, inBed: on };
+    if (on) {
+      bedAt = bedSpot(screen.width, screen.height);
+      feeding.sendHome();
+      toys.sendHome();
+      dragon.goToBed(bedSpot(screen.width, screen.height), world());
+    } else {
+      dragon.wakeUp(world());
+    }
+  }
+  if (needs.inBed) setBedtime(true);
 
   screen.onResize(() => {
     paintBackdrop(screen, backdrop);
@@ -126,30 +147,45 @@ async function main(): Promise<void> {
   const TAG_W = 230;
   const TAG_H = 44;
   const onTag = (x: number, y: number) => x > screen.width - TAG_W && y < TAG_H;
-  let wasDown = false;
+  let seenPresses = 0;
   let swallowing = false;
   const noFinger = { x: 0, y: 0, down: false };
 
   const loop = startLoop({
     update(dt) {
       // A press that starts on the tag switches mode and doesn't steer anything.
-      const pressed = input.down && !wasDown;
-      wasDown = input.down;
+      // A new press since last frame, even a tap too quick to still be down now.
+      const pressed = input.presses !== seenPresses;
+      seenPresses = input.presses;
       const pressAt = pressed ? { x: input.pressX, y: input.pressY } : null;
       if (pressAt && onTag(pressAt.x, pressAt.y)) {
         swallowing = true;
         enterMode(MODES[(MODES.indexOf(mode) + 1) % MODES.length]);
       }
       if (!input.down) swallowing = false;
+      // The bedtime button: lights down, or good morning.
+      if (
+        pressAt &&
+        !swallowing &&
+        mode !== "gallery" &&
+        onBedButton(pressAt, screen.width, screen.height)
+      ) {
+        swallowing = true;
+        if (needs.inBed) setBedtime(false);
+        else if (sleepy(needs.values)) setBedtime(true);
+        else dragon.refuse(); // "not sleepy!"
+      }
+      const inBed = needs.inBed === true;
 
       if (mode === "gallery" && gallery) {
         gallery.update(dt, swallowing ? noFinger : input);
         return;
       }
       // The food tray gets first say over a press; while it holds food, the finger is busy.
-      const tray = swallowing
-        ? { busy: false, event: null }
-        : feeding.update(dt, input, pressAt, dragon, needs.values, screen.width, screen.height);
+      const tray =
+        swallowing || inBed
+          ? { busy: false, event: null }
+          : feeding.update(dt, input, pressAt, dragon, needs.values, screen.width, screen.height);
       if (tray.event) {
         const favorite = tray.event.ate === dragon.favorite;
         needs = change(needs, feedEffect(tray.event.ate, favorite));
@@ -160,14 +196,15 @@ async function main(): Promise<void> {
       const foodLure = dragon.lure;
       const play = toys.update(
         dt,
-        swallowing || tray.busy ? noFinger : input,
-        swallowing || tray.busy ? null : pressAt,
+        swallowing || tray.busy || inBed ? noFinger : input,
+        swallowing || tray.busy || inBed ? null : pressAt,
         dragon,
         needs.values,
         screen.width,
         screen.height,
       );
       if (foodLure) dragon.lure = foodLure;
+      if (inBed) dragon.lure = null; // nothing tempts it out of bed
       // For automated checks: boops in the current ball game.
       const boops = String(toys.ball?.boops ?? "-");
       if (document.body.dataset.boops !== boops) document.body.dataset.boops = boops;
@@ -190,13 +227,31 @@ async function main(): Promise<void> {
       // For automated checks: is it being petted, and how deep is the purr.
       const petState = pet.active ? petting.purr.toFixed(1) : "no";
       if (document.body.dataset.pet !== petState) document.body.dataset.pet = petState;
-      const finger = !free || pet.active ? noFinger : input;
+      const finger = !free || pet.active || inBed ? noFinger : input;
       // For automated checks: how many foods are floating about right now.
       const floating = String(feeding.floating.length);
       if (document.body.dataset.floating !== floating) document.body.dataset.floating = floating;
       dragon.update(dt, finger, world());
       modeSeconds += dt;
       needs = advance(needs, needsNow(), dragon.asleep);
+      // Sleeping in bed refills Energy fast enough to watch; rested, it wakes by itself.
+      const refill = bedRefill(dt, inBed && dragon.asleep);
+      if (refill > 0) needs = change(needs, { energy: refill });
+      if (inBed && dragon.asleep && rested(needs.values)) setBedtime(false);
+      night += ((inBed ? 1 : 0) - night) * (1 - Math.exp(-2 * dt));
+      // Once it starts curling up, the cushion slides gently under it.
+      if (
+        inBed &&
+        Math.hypot(dragon.spine.head.x - bedAt.x, dragon.spine.head.y - bedAt.y) <
+          dragon.halfWidth * 8
+      ) {
+        const c = dragon.centre;
+        const k = 1 - Math.exp(-1.5 * dt);
+        bedAt = {
+          x: bedAt.x + (c.x - bedAt.x) * k,
+          y: bedAt.y + (c.y + dragon.halfWidth * 0.6 - bedAt.y) * k,
+        };
+      }
       needsBar.update(dt, needs.values);
       sinceSave += dt;
       if (sinceSave > 5) {
@@ -213,10 +268,15 @@ async function main(): Promise<void> {
         gallery.draw(ctx);
       } else {
         ctx.drawImage(backdrop, 0, 0, screen.width, screen.height);
+        drawNight(ctx, screen.width, screen.height, night, bedAt);
+        drawBed(ctx, bedAt, dragon.halfWidth * 4.2, night);
         dragon.draw(ctx);
         needsBar.draw(ctx, screen.width, screen.height);
-        feeding.draw(ctx);
-        toys.draw(ctx);
+        if (!needs.inBed) {
+          feeding.draw(ctx);
+          toys.draw(ctx);
+        }
+        drawBedButton(ctx, screen.width, screen.height, needs.inBed === true, modeSeconds);
       }
 
       if (showNumbers() && mode !== "gallery") {

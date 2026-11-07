@@ -167,6 +167,15 @@ export class Toys {
     return result;
   }
 
+  /** Bedtime: put the toys away (the ball drifts home). */
+  sendHome(): void {
+    if (this.held?.toy === "ball") this.throwBall();
+    this.held = null;
+    this.streamer = null;
+    if (this.ball && !this.ball.home)
+      this.ball.home = { from: { x: this.ball.x, y: this.ball.y }, t: 0 };
+  }
+
   private trackHeld(dt: number, input: PointerState): void {
     const held = this.held!;
     held.x = input.x;

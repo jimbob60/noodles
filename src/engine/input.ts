@@ -22,6 +22,11 @@ export class Input implements PointerState {
    */
   pressX = 0;
   pressY = 0;
+  /**
+   * Counts every press. A quick tap can go down and up between two frames, so "is the finger
+   * down right now" can miss it; a changed count never does.
+   */
+  presses = 0;
   private pointerId: number | null = null;
 
   constructor(target: HTMLElement) {
@@ -33,6 +38,7 @@ export class Input implements PointerState {
       this.move(e);
       this.pressX = e.clientX;
       this.pressY = e.clientY;
+      this.presses++;
     });
     target.addEventListener("pointermove", (e) => {
       if (this.pointerId !== null && this.pointerId !== e.pointerId) return;

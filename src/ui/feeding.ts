@@ -159,6 +159,15 @@ export class Feeding {
     return { busy: true, event: null };
   }
 
+  /** Bedtime: drop whatever is held, and float every food home. */
+  sendHome(): void {
+    if (this.held) {
+      this.floating.push({ ...this.held, vx: 0, vy: 0, age: 0, home: null });
+      this.held = null;
+    }
+    for (const f of this.floating) if (!f.home) f.home = { from: { x: f.x, y: f.y }, t: 0 };
+  }
+
   /** A polite head shake, at most once every 1.2 s. */
   private refuse(dragon: Feedable): void {
     if (this.time - this.refusedAt > 1.2) {

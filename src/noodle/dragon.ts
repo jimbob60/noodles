@@ -8,7 +8,7 @@ import { bodyOutline, bodyProfile, traceSmoothLoop } from "./body";
 import { bodyHalfWidth, drawBody } from "./drawBody";
 import { drawLegs, drawTailTuft, drawWhiskers } from "./drawExtras";
 import { drawHead, headColors, type HeadColors } from "./drawHead";
-import { CHEW_TIME, Face, SHAKE_TIME } from "./face";
+import { CHEW_TIME, Face, SHAKE_TIME, YAWN_TIME } from "./face";
 import { IdleBrain, type World } from "./idleBrain";
 import { legSizes, makeLegs, updateLegs, type Leg, type LegSizes } from "./legs";
 import { CLASSIC_LOOK, hsl, type DragonLook } from "./look";
@@ -211,6 +211,39 @@ export class Dragon {
     }
   }
 
+  get inBed(): boolean {
+    return this.brain.inBed;
+  }
+
+  /** The middle of the body (so the bed can sit under the curled-up dragon). */
+  get centre(): Point {
+    const p = this.spine.points;
+    let x = 0;
+    let y = 0;
+    for (const q of p) {
+      x += q.x;
+      y += q.y;
+    }
+    return { x: x / p.length, y: y / p.length };
+  }
+
+  /** Bedtime: swim to the bed and curl up for the night. */
+  goToBed(bed: Point, world: World): void {
+    this.held = false;
+    this.lure = null;
+    this.wasLured = false;
+    this.swimmer.reset(this.head.x, this.head.y, this.swimmer.heading, this.swimmer.speed);
+    this.brain.bedtime(bed, this.swimmer, world);
+  }
+
+  /** Good morning! A big yawn, then off to wander. */
+  wakeUp(world: World): void {
+    if (!this.brain.inBed) return;
+    this.face.yawnLeft = YAWN_TIME;
+    this.swimmer.reset(this.head.x, this.head.y, this.swimmer.heading, 0);
+    this.brain.wake(this.swimmer, world);
+  }
+
   /** A polite head shake: "no thanks, I'm full". */
   refuse(): void {
     if (this.face.chewLeft <= 0) this.face.shakeLeft = SHAKE_TIME;
@@ -234,7 +267,7 @@ export class Dragon {
     } else if (wasPetted) {
       // Petting over: carry on from here (a sleeping dragon just keeps sleeping).
       this.petAnchor = null;
-      if (!this.brain.asleep) {
+      if (!this.brain.asleep && !this.brain.inBed) {
         const [h, n] = this.spine.points;
         this.swimmer.reset(h.x, h.y, Math.atan2(h.y - n.y, h.x - n.x), 0);
         this.brain.start("float", this.swimmer, world);
@@ -326,9 +359,30 @@ export class Dragon {
     drawWhiskers(ctx, this.whiskers, hw);
     drawHead(ctx, this.spine.head, this.headRadius * puff, this.face, this.headPalette);
     if (purr > 0.25) this.drawPurr(ctx, purr);
+    if (this.asleep) this.drawSnoreBubble(ctx);
     ctx.restore();
     this.drawZees(ctx);
     this.drawBits(ctx);
+  }
+
+  /** A little bubble at the nose that grows and shrinks with each snore. */
+  private drawSnoreBubble(ctx: CanvasRenderingContext2D): void {
+    const r = this.headRadius;
+    const breath = (Math.sin(this.time * 1.8) + 1) / 2;
+    if (breath < 0.15) return; // it pops at the end of each breath out
+    const nose = headToWorld(this.spine.head, this.face, { x: r * 1.15, y: r * 0.05 });
+    const br = r * (0.08 + 0.32 * breath);
+    ctx.fillStyle = "rgba(190,240,255,0.35)";
+    ctx.strokeStyle = "rgba(220,250,255,0.85)";
+    ctx.lineWidth = Math.max(1, r * 0.05);
+    ctx.beginPath();
+    ctx.arc(nose.x + this.face.facing * br * 0.8, nose.y - br * 0.2, br, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = "rgba(255,255,255,0.8)";
+    ctx.beginPath();
+    ctx.arc(nose.x + this.face.facing * br * 0.5, nose.y - br * 0.55, br * 0.22, 0, Math.PI * 2);
+    ctx.fill();
   }
 
   /** Little ")))" purr waves rolling out from behind the head. */
