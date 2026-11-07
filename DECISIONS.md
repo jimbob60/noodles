@@ -2,6 +2,12 @@
 
 Newest first. Each entry says what we decided, why, and what it affects.
 
+## 2026-11-07: Preview builds are one self-contained page
+
+- **Decision:** every build is a single `index.html` with the code and font inlined (vite-plugin-singlefile, MIT). It is published to one private preview page that Claude republishes after each phase, and a build tag (commit and date) shows in the corner.
+- **Why:** the preview page runs in a sandboxed frame where separate files may not load. One file also works offline and inside the Android app.
+- **Affects:** every phase from here on. If the game outgrows one file (big sounds in phase 43), we revisit this.
+
 ## 2026-11-07: Title look — Pacifico font, dragons as the "o"s
 
 - **Decision:** the title uses the free Pacifico script font (OFL license, bundled so it works offline). Every "o" in "Noodle Dragons" is a tiny curled-up noodle dragon drawn by code, in cyan, gold (sleepy) and mint.

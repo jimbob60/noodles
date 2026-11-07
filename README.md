@@ -12,6 +12,10 @@ The game is built as a web game first (TypeScript and an HTML canvas). Later it 
 | [DECISIONS.md](DECISIONS.md) | Every big choice we made, and why                         |
 | [CHANGELOG.md](CHANGELOG.md) | One line per finished phase                               |
 
+## Play the latest build
+
+**[Noodle Dragons preview](https://claude.ai/artifact/Lj5vZ5pjRLpFKhJ7ENxiwv)**: a private page that always holds the newest build. The build tag in the bottom-right corner shows which commit you are playing.
+
 ## The plan
 
 The full 64-phase build plan lives in the [Noodle Dragons build plan doc](https://claude.ai/artifact/GkdCoG2KwLT2AGN5Ny5pzF). We build one phase per session, and every phase ends in something Jacob can play on his tablet.
