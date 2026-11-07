@@ -1,4 +1,6 @@
+import { rimOf } from "./drawBody";
 import type { Face } from "./face";
+import { CLASSIC_LOOK, hsl, shade, type DragonLook } from "./look";
 import type { Point } from "./spine";
 
 export interface HeadColors {
@@ -10,14 +12,17 @@ export interface HeadColors {
   cheek: string;
 }
 
-export const CYAN_HEAD: HeadColors = {
-  head: "#7af3ff",
-  rim: "#2fb4cc",
-  snout: "#c4fbff",
-  horn: "#fff3c9",
-  eye: "#1a1040",
-  cheek: "rgba(255,120,190,0.6)",
-};
+/** Head colors that match a dragon's look. */
+export function headColors(look: DragonLook): HeadColors {
+  return {
+    head: hsl(look.body),
+    rim: hsl(rimOf(look.body)),
+    snout: hsl(shade(look.body, 14, -10)),
+    horn: hsl(look.horn),
+    eye: "#1a1040",
+    cheek: hsl(look.accent, 0.6),
+  };
+}
 
 /**
  * Phase 8 look: a round chibi head, always upright, with the snout on the side it is heading.
@@ -28,7 +33,7 @@ export function drawHead(
   at: Point,
   r: number,
   face: Face,
-  c = CYAN_HEAD,
+  c = headColors(CLASSIC_LOOK),
 ): void {
   ctx.save();
   ctx.translate(at.x, at.y);

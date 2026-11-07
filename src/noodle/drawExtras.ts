@@ -1,6 +1,7 @@
 import { bodyProfile } from "./body";
-import { CYAN_BODY } from "./drawBody";
+import { rimOf } from "./drawBody";
 import { forwardAt, liftOf, type Leg, type LegSizes } from "./legs";
+import { hsl, shade, type DragonLook } from "./look";
 import type { Point } from "./spine";
 import type { Whiskers } from "./whiskers";
 
@@ -10,8 +11,11 @@ export function drawLegs(
   legs: Leg[],
   spine: Point[],
   s: LegSizes,
+  look: DragonLook,
 ): void {
   const hw = s.bodyHalf;
+  const body = hsl(look.body);
+  const rim = hsl(rimOf(look.body));
   ctx.lineCap = "round";
   for (const leg of legs) {
     const hipPt = spine[leg.hip];
@@ -20,10 +24,10 @@ export function drawLegs(
     const hip = { x: hipPt.x - f.y * tuck * leg.side, y: hipPt.y + f.x * tuck * leg.side };
     const lift = liftOf(leg);
 
-    ctx.strokeStyle = CYAN_BODY.rim;
+    ctx.strokeStyle = rim;
     ctx.lineWidth = hw * 0.8;
     line(ctx, hip, leg.foot);
-    ctx.strokeStyle = CYAN_BODY.body;
+    ctx.strokeStyle = body;
     ctx.lineWidth = hw * 0.64;
     line(ctx, hip, leg.foot);
 
@@ -31,9 +35,9 @@ export function drawLegs(
     const pr = hw * (0.4 + lift * 0.08);
     ctx.beginPath();
     ctx.arc(leg.foot.x, leg.foot.y, pr, 0, Math.PI * 2);
-    ctx.fillStyle = CYAN_BODY.body;
+    ctx.fillStyle = body;
     ctx.fill();
-    ctx.strokeStyle = CYAN_BODY.rim;
+    ctx.strokeStyle = rim;
     ctx.lineWidth = Math.max(1.5, hw * 0.1);
     ctx.stroke();
 
@@ -41,7 +45,7 @@ export function drawLegs(
     const dx = leg.foot.x - hip.x;
     const dy = leg.foot.y - hip.y;
     const a = Math.atan2(dy, dx);
-    ctx.fillStyle = "rgba(255,138,216,0.9)";
+    ctx.fillStyle = hsl(look.accent, 0.9);
     for (const spread of [-0.6, 0, 0.6]) {
       ctx.beginPath();
       ctx.arc(
@@ -62,6 +66,7 @@ export function drawTailTuft(
   spine: Point[],
   hw: number,
   time: number,
+  look: DragonLook,
 ): void {
   const n = spine.length;
   const tip = spine[n - 1];
@@ -90,7 +95,7 @@ export function drawTailTuft(
         0,
         Math.PI * 2,
       );
-      ctx.fillStyle = pass === "rim" ? "#d9549f" : "#ff8ad8";
+      ctx.fillStyle = hsl(pass === "rim" ? shade(look.accent, -22, -10) : look.accent);
       ctx.fill();
     }
   }

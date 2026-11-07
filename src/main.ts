@@ -2,7 +2,9 @@ import "@fontsource/pacifico/latin-400.css";
 import { Input } from "./engine/input";
 import { startLoop } from "./engine/loop";
 import { Screen } from "./engine/screen";
+import { Gallery } from "./gallery";
 import { Dragon } from "./noodle/dragon";
+import { makeLook } from "./noodle/look";
 import { palette } from "./palette";
 import { drawTitle, TITLE_FONT } from "./title";
 
@@ -51,7 +53,17 @@ async function main(): Promise<void> {
   const backdrop = document.createElement("canvas");
   paintBackdrop(screen, backdrop);
   const world = () => ({ width: screen.width, height: screen.height, unit: segmentFor(screen) });
-  const dragon = new Dragon(screen.width / 2, screen.height * 0.8, segmentFor(screen), world());
+  // A new random look each visit, until saving arrives in phase 21.
+  const look = makeLook(Math.floor(Math.random() * 1e9));
+  const dragon = new Dragon(
+    screen.width / 2,
+    screen.height * 0.8,
+    segmentFor(screen),
+    world(),
+    look,
+  );
+  const gallery = location.hash === "#gallery" ? new Gallery(screen) : null;
+  window.addEventListener("hashchange", () => location.reload());
   screen.onResize(() => {
     paintBackdrop(screen, backdrop);
     dragon.resize(segmentFor(screen));
@@ -59,6 +71,10 @@ async function main(): Promise<void> {
 
   const loop = startLoop({
     update(dt) {
+      if (gallery) {
+        gallery.update(dt, input);
+        return;
+      }
       dragon.update(dt, input, world());
       // The current mood on the page, so automated checks can find naps and walks.
       const mood = dragon.asleep ? "asleep" : dragon.brain.mode;
@@ -66,8 +82,12 @@ async function main(): Promise<void> {
     },
     render() {
       const ctx = screen.begin();
-      ctx.drawImage(backdrop, 0, 0, screen.width, screen.height);
-      dragon.draw(ctx);
+      if (gallery) {
+        gallery.draw(ctx);
+      } else {
+        ctx.drawImage(backdrop, 0, 0, screen.width, screen.height);
+        dragon.draw(ctx);
+      }
 
       // Build tag and frame rate in the corner, so Jacob can tell which build he is playing.
       ctx.font = "12px system-ui, sans-serif";

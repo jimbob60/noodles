@@ -1,11 +1,12 @@
-import type { Input } from "../engine/input";
+import type { PointerState } from "../engine/input";
 import { Follower } from "../follower";
 import { bodyHalfWidth, drawBody } from "./drawBody";
 import { drawLegs, drawTailTuft, drawWhiskers } from "./drawExtras";
-import { drawHead } from "./drawHead";
+import { drawHead, headColors, type HeadColors } from "./drawHead";
 import { Face } from "./face";
 import { IdleBrain, type World } from "./idleBrain";
 import { legSizes, makeLegs, updateLegs, type Leg, type LegSizes } from "./legs";
+import { CLASSIC_LOOK, type DragonLook } from "./look";
 import { Spine } from "./spine";
 import { Swimmer } from "./swimmer";
 import { Whiskers } from "./whiskers";
@@ -36,8 +37,17 @@ export class Dragon {
   private time = 0;
   private zees: Zee[] = [];
   private zeeClock = 0;
+  private headPalette: HeadColors;
 
-  constructor(x: number, y: number, segment: number, world: World, random = Math.random) {
+  constructor(
+    x: number,
+    y: number,
+    segment: number,
+    world: World,
+    public look: DragonLook = CLASSIC_LOOK,
+    random = Math.random,
+  ) {
+    this.headPalette = headColors(look);
     this.spine = new Spine(x, y, SPINE_POINTS, segment);
     this.head = new Follower(x, y);
     this.swimmer = new Swimmer(x, y, -Math.PI / 2);
@@ -67,7 +77,7 @@ export class Dragon {
     this.whiskers.resize(segment * 0.95);
   }
 
-  update(dt: number, input: Input, world: World): void {
+  update(dt: number, input: PointerState, world: World): void {
     this.time += dt;
     if (input.down) {
       // The finger is in charge: wake up and follow it.
@@ -107,12 +117,12 @@ export class Dragon {
     // Slow breathing while asleep.
     const puff = this.asleep ? 1 + Math.sin(this.time * 1.8) * 0.04 : 1;
     const hw = this.halfWidth * puff;
-    drawLegs(ctx, this.legs, this.spine.points, this.sizes);
-    drawBody(ctx, this.spine, undefined, puff);
-    drawTailTuft(ctx, this.spine.points, hw, this.asleep ? this.time * 0.3 : this.time);
+    drawLegs(ctx, this.legs, this.spine.points, this.sizes, this.look);
+    drawBody(ctx, this.spine, this.look, puff);
+    drawTailTuft(ctx, this.spine.points, hw, this.asleep ? this.time * 0.3 : this.time, this.look);
     // Whiskers before the head, so they hang out from under the snout instead of over the eyes.
     drawWhiskers(ctx, this.whiskers, hw);
-    drawHead(ctx, this.spine.head, this.headRadius * puff, this.face);
+    drawHead(ctx, this.spine.head, this.headRadius * puff, this.face, this.headPalette);
     this.drawZees(ctx);
   }
 

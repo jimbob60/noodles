@@ -1,8 +1,15 @@
+/** What anything steered by a finger needs to know. */
+export interface PointerState {
+  x: number;
+  y: number;
+  down: boolean;
+}
+
 /**
  * One input system for touch, pen and mouse (pointer events). Follows the first finger down;
  * a mouse counts as a pointer even without a button pressed, so the dot follows it too.
  */
-export class Input {
+export class Input implements PointerState {
   x = 0;
   y = 0;
   /** True while a finger is on the screen or a mouse button is held. */
