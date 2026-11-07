@@ -2,6 +2,7 @@
 
 Newest first. One line per finished phase.
 
+- **Phase 13 — Needs (1e8891c, 2026-11-07):** fullness, happiness, energy and cleanliness follow the real clock, never below 15, time away capped at 12 h.
 - **Phase 12 — Gate: "It's alive" (2026-11-07):** 60 fps on Jacob's phone; lazier chase and a bigger, chubbier dragon after his playtest; a 14-second clip recorded.
 - **Phase 11 — Colors and patterns (60ada7d, 2026-11-07):** seeded glowy looks with 5 pattern styles; a 20-dragon gallery at #gallery.
 - **Phase 10 — Idle life (462ea59, 2026-11-07):** wanders, floats and curls up for naps on its own; a touch wakes it.
