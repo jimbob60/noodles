@@ -2,6 +2,12 @@
 
 Newest first. Each entry says what we decided, why, and what it affects.
 
+## 2026-11-07: Petting — touch the dragon to pet, empty space to steer
+
+- **Decision:** a press that starts on the dragon (head or body) pets it; anywhere else still steers it. While rubbed it holds still, closes its eyes happily, purrs (a tiny vibration and ")))" waves), glows in its accent color, and sparkles and hearts pop where you rub. Love grows about +10 per 600 px of rubbing, at most 8 a second. Each dragon has 1–2 secret tickle spots along its body (from its seed); rubbing one sets off a giggle and a squirm (+3 Love). A sleeping dragon can be petted without waking. The purr only fades after 0.3 s without rubbing, because fingers report movement less often than the game updates.
+- **Why:** phase 16, and petting is one of Jacob's must-haves.
+- **Affects:** phase 19 (moods), phase 31 (personalities may change how much they like it), phase 43 (a real purr sound).
+
 ## 2026-11-07: Feeding — drag to the mouth, or let food float
 
 - **Decision:** three foods in a bottom-left tray (noodles +30, dumpling +20, fish +25 Food; +4 Love each, +14 more for the dragon's favorite, picked from its seed). Drag a food to the mouth to feed it, or let go and the food floats, drifting and bobbing with a little of the throw. A hungry dragon swims after floating food (at most 16 spine units a second, so it's watchable) and eats it; a full one (Food 97+) shakes its head, and the food lingers 1.2 s, then drifts slowly home to its bubble over 2.5 s. After food is eaten or dropped the dragon goes straight back to its own moods; after a finger drag it settles where the finger last pressed, never following a mouse that only hovers. The tray is an endless pantry: a bubble always has its food. Grabs are judged by where the press began, so a quick flick still picks up the food.

@@ -11,6 +11,7 @@ import { palette } from "./palette";
 import { NeedsBar } from "./ui/needsBar";
 import { Feeding } from "./ui/feeding";
 import { feedEffect } from "./care/food";
+import { Petting } from "./care/petting";
 import { drawTitle, TITLE_FONT } from "./title";
 
 /** Fixed star positions (0–1 of the screen), so the sky looks the same every time. */
@@ -89,6 +90,7 @@ async function main(): Promise<void> {
   let sinceSave = 0;
   const needsBar = new NeedsBar();
   const feeding = new Feeding();
+  const petting = new Petting();
   const persist = () => {
     if (mode === "play") saveNeeds(needs);
   };
@@ -152,7 +154,23 @@ async function main(): Promise<void> {
         // For automated checks: how many snacks have been eaten this visit.
         document.body.dataset.fed = String(Number(document.body.dataset.fed ?? 0) + 1);
       }
-      const finger = swallowing || tray.busy ? noFinger : input;
+      // Next, a press that lands on the dragon itself pets it instead of steering it.
+      const free = !swallowing && !tray.busy;
+      const pet = petting.update(
+        dt,
+        free ? input : noFinger,
+        free ? pressAt : null,
+        (x, y) => dragon.spotAt(x, y),
+        dragon.tickles,
+      );
+      if (pet.love > 0) needs = change(needs, { happiness: pet.love });
+      for (const sp of pet.sparkles) dragon.sparkle(sp.x, sp.y);
+      if (pet.tickled) dragon.giggle();
+      dragon.pet = { active: pet.active, purr: petting.purr, giggle: petting.giggle };
+      // For automated checks: is it being petted, and how deep is the purr.
+      const petState = pet.active ? petting.purr.toFixed(1) : "no";
+      if (document.body.dataset.pet !== petState) document.body.dataset.pet = petState;
+      const finger = !free || pet.active ? noFinger : input;
       // For automated checks: how many foods are floating about right now.
       const floating = String(feeding.floating.length);
       if (document.body.dataset.floating !== floating) document.body.dataset.floating = floating;

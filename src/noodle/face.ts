@@ -47,6 +47,8 @@ export class Face {
   blink = 0;
   /** While asleep the eyes stay shut. */
   asleep = false;
+  /** While being petted: happy closed "^ ^" eyes. */
+  happy = false;
   /** Seconds of chewing left (three big chomps). */
   chewLeft = 0;
   /** Seconds of "no thanks" head shake left. */
@@ -94,7 +96,7 @@ export class Face {
     } else {
       this.blink = 0;
     }
-    if (this.asleep) this.blink = 1;
+    if (this.asleep || this.happy) this.blink = 1;
     this.chewLeft = Math.max(0, this.chewLeft - dt);
     this.shakeLeft = Math.max(0, this.shakeLeft - dt);
   }
