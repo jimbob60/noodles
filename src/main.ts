@@ -20,7 +20,10 @@ import { bedRefill, rested, sleepy } from "./care/bedtime";
 import { bedSpot, drawBed, drawBedButton, drawNight, onBedButton } from "./ui/bedtime";
 import { TITLE_FONT } from "./title";
 import { Den } from "./den/den";
-import { hourOf } from "./den/timeOfDay";
+import { hourOf, skyAt } from "./den/timeOfDay";
+import { drawOrder, type DecorItem } from "./den/decor";
+import { drawDecor } from "./den/decorArt";
+import { Decorator, drawDecorateButton, onDecorateButton } from "./ui/decorate";
 
 /** Spine spacing scales with the screen so the noodle is the same size on any tablet. */
 function segmentFor(screen: Screen): number {
@@ -43,6 +46,9 @@ async function main(): Promise<void> {
   const makeDragon = () =>
     new Dragon(screen.width / 2, screen.height * 0.8, segmentFor(screen), world(), makeLook(seed));
   let dragon = makeDragon();
+  /** The den's decorations (saved with the dragon). */
+  let decor: DecorItem[] = loaded.save?.decor ?? [];
+  const decorator = new Decorator();
   /**
    * Test modes, switched by tapping the build tag in the bottom-right corner (links with #fast
    * or #gallery also work in a normal browser, but Claude's app viewer can drop the #):
@@ -72,7 +78,7 @@ async function main(): Promise<void> {
   const bath = new Bath();
   /** Saves on this device (only the real game: fast mode and the gallery never save). */
   const persist = () => {
-    if (mode === "play") storeGame(store, makeSave(seed, needs, Date.now()));
+    if (mode === "play") storeGame(store, makeSave(seed, needs, Date.now(), decor));
   };
   window.addEventListener("pagehide", persist);
   document.addEventListener("visibilitychange", () => {
@@ -122,6 +128,7 @@ async function main(): Promise<void> {
     seed = save.seed;
     dragon = makeDragon();
     needs = fromSave(save);
+    decor = save.decor;
     if (needs.inBed) setBedtime(true);
     document.body.dataset.favorite = dragon.favorite;
     document.body.dataset.seed = String(seed);
@@ -130,7 +137,11 @@ async function main(): Promise<void> {
   }
   const showBackup = () => {
     persist();
-    openBackupPanel(encodeBackup(makeSave(seed, needs, Date.now())), restore, store !== null);
+    openBackupPanel(
+      encodeBackup(makeSave(seed, needs, Date.now(), decor)),
+      restore,
+      store !== null,
+    );
   };
 
   screen.onResize(() => {
@@ -162,14 +173,38 @@ async function main(): Promise<void> {
         swallowing = true;
         showBackup();
       }
+      // The decorate button (top right, under the backup button): decorating mode on or off.
+      if (pressAt && !swallowing && mode === "play" && onDecorateButton(pressAt, screen.width)) {
+        swallowing = true;
+        decorator.active = !decorator.active;
+        if (decorator.active) {
+          feeding.sendHome();
+          toys.sendHome();
+        } else {
+          persist();
+        }
+      }
+      // While decorating, the finger moves decorations and nothing else.
+      const decorating = decorator.active && mode === "play";
+      decor = decorator.update(
+        dt,
+        swallowing ? noFinger : input,
+        swallowing ? null : pressAt,
+        decor,
+        screen.width,
+        screen.height,
+      );
+      // Decorating blocks everything else, for this frame only (so the decorator keeps the finger).
+      let blocked = swallowing || decorating;
       // The bedtime button: lights down, or good morning.
       if (
         pressAt &&
-        !swallowing &&
+        !blocked &&
         mode !== "gallery" &&
         onBedButton(pressAt, screen.width, screen.height)
       ) {
         swallowing = true;
+        blocked = true;
         if (needs.inBed) setBedtime(false);
         else if (sleepy(needs.values)) setBedtime(true);
         else dragon.refuse(); // "not sleepy!"
@@ -177,12 +212,12 @@ async function main(): Promise<void> {
       const inBed = needs.inBed === true;
 
       if (mode === "gallery" && gallery) {
-        gallery.update(dt, swallowing ? noFinger : input);
+        gallery.update(dt, blocked ? noFinger : input);
         return;
       }
       // The food tray gets first say over a press; while it holds food, the finger is busy.
       const tray =
-        swallowing || inBed
+        blocked || inBed
           ? { busy: false, event: null }
           : feeding.update(dt, input, pressAt, dragon, needs.values, screen.width, screen.height);
       if (tray.event) {
@@ -195,8 +230,8 @@ async function main(): Promise<void> {
       const foodLure = dragon.lure;
       const play = toys.update(
         dt,
-        swallowing || tray.busy || inBed ? noFinger : input,
-        swallowing || tray.busy || inBed ? null : pressAt,
+        blocked || tray.busy || inBed ? noFinger : input,
+        blocked || tray.busy || inBed ? null : pressAt,
         dragon,
         needs.values,
         screen.width,
@@ -215,7 +250,7 @@ async function main(): Promise<void> {
         });
       }
       // Bath time: the sponge.
-      const taken = swallowing || tray.busy || play.busy || inBed;
+      const taken = blocked || tray.busy || play.busy || inBed;
       const wash = bath.update(
         dt,
         taken ? noFinger : input,
@@ -231,7 +266,7 @@ async function main(): Promise<void> {
         dragon.shakeDry();
       }
       // Next, a press that lands on the dragon itself pets it instead of steering it.
-      const free = !swallowing && !tray.busy && !play.busy && !wash.busy;
+      const free = !blocked && !tray.busy && !play.busy && !wash.busy;
       const pet = petting.update(
         dt,
         free ? input : noFinger,
@@ -296,26 +331,29 @@ async function main(): Promise<void> {
         gallery.draw(ctx);
       } else {
         // The den, with the sky outside following the real clock (sped up in fast mode).
-        den.draw(
-          ctx,
-          screen.width,
-          screen.height,
-          screen.dpr,
-          hourOf(needsNow()),
-          dragon.centre,
-          modeSeconds,
-        );
+        const hour = hourOf(needsNow());
+        den.draw(ctx, screen.width, screen.height, screen.dpr, hour, dragon.centre, modeSeconds);
+        const dark = skyAt(hour).dark;
+        for (const i of drawOrder(decor))
+          drawDecor(ctx, decor[i], screen.width, screen.height, dark, modeSeconds);
         drawNight(ctx, screen.width, screen.height, night, bedAt);
         drawBed(ctx, bedAt, dragon.halfWidth * 4.2, night);
         dragon.draw(ctx);
         needsBar.draw(ctx, screen.width, screen.height);
-        if (!needs.inBed) {
-          feeding.draw(ctx);
-          toys.draw(ctx);
-          bath.draw(ctx, screen.width, screen.height);
+        if (decorator.active) {
+          decorator.draw(ctx, decor, screen.width, screen.height, dark);
+        } else {
+          if (!needs.inBed) {
+            feeding.draw(ctx);
+            toys.draw(ctx);
+            bath.draw(ctx, screen.width, screen.height);
+          }
+          drawBedButton(ctx, screen.width, screen.height, needs.inBed === true, modeSeconds);
         }
-        drawBedButton(ctx, screen.width, screen.height, needs.inBed === true, modeSeconds);
-        if (mode === "play") drawBackupButton(ctx, screen.width);
+        if (mode === "play") {
+          drawBackupButton(ctx, screen.width);
+          drawDecorateButton(ctx, screen.width, decorator.active, dark, modeSeconds);
+        }
       }
 
       if (showNumbers() && mode !== "gallery") {

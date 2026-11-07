@@ -1,25 +1,36 @@
 import { freshNeeds, parseNeeds, type NeedsState } from "../care/needs";
+import { parseDecor, type DecorItem } from "../den/decor";
 
 /** The save format version. Bump it (and add a migration below) whenever the format changes. */
-export const SAVE_VERSION = 1;
+export const SAVE_VERSION = 2;
 
-/** Everything that makes your dragon yours. */
-export interface SaveV1 {
-  version: 1;
+/**
+ * Everything that makes your dragon yours.
+ * - Version 1 (phase 21): seed and needs.
+ * - Version 2 (phase 23): plus the den's decorations.
+ */
+export interface SaveV2 {
+  version: 2;
   /** When this was saved (milliseconds since 1970). */
   savedAt: number;
   /** The seed its look comes from (and its favorite food and tickle spots). */
   seed: number;
   needs: NeedsState;
+  decor: DecorItem[];
 }
-export type Save = SaveV1;
+export type Save = SaveV2;
 
 export function newSave(seed: number, now: number): Save {
-  return { version: 1, savedAt: now, seed, needs: freshNeeds(now) };
+  return { version: 2, savedAt: now, seed, needs: freshNeeds(now), decor: [] };
 }
 
-export function makeSave(seed: number, needs: NeedsState, now: number): Save {
-  return { version: 1, savedAt: now, seed, needs };
+export function makeSave(
+  seed: number,
+  needs: NeedsState,
+  now: number,
+  decor: DecorItem[] = [],
+): Save {
+  return { version: 2, savedAt: now, seed, needs, decor };
 }
 
 const validSeed = (v: unknown): v is number =>
@@ -31,11 +42,18 @@ const validSeed = (v: unknown): v is number =>
  */
 export function parseSave(raw: unknown, now: number): Save | null {
   if (!raw || typeof raw !== "object") return null;
-  const r = raw as { version?: unknown; seed?: unknown; needs?: unknown; savedAt?: unknown };
+  const r = raw as {
+    version?: unknown;
+    seed?: unknown;
+    needs?: unknown;
+    savedAt?: unknown;
+    decor?: unknown;
+  };
   if (typeof r.version !== "number" || r.version < 1 || !validSeed(r.seed)) return null;
-  // Version 1 is the first format, so there is nothing to migrate from yet.
   const savedAt = typeof r.savedAt === "number" && r.savedAt <= now ? r.savedAt : now;
-  return { version: 1, savedAt, seed: r.seed, needs: parseNeeds(r.needs, now) };
+  // Version 1 had no decorations: it upgrades with an empty den.
+  const decor = r.version >= 2 ? parseDecor(r.decor) : [];
+  return { version: 2, savedAt, seed: r.seed, needs: parseNeeds(r.needs, now), decor };
 }
 
 // ---- Backup codes: a save as text that can be copied out and pasted back in. ----

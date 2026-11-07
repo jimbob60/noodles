@@ -2,6 +2,12 @@
 
 Newest first. Each entry says what we decided, why, and what it affects.
 
+## 2026-11-07: Decorations — drag, tap, put away; saved as save version 2
+
+- **Decision:** a decorate button (top right, under 💾) opens a drawer along the top with five code-drawn decorations: a paper lantern, a cushion, a potted plant, a firefly jar and a round rug. Drag one out to place it, drag placed ones to move them, tap one to cycle through its three colors, and drag one onto the drawer to put it away. Cushions, plants and rugs stay on the floor; lanterns and jars can float, and they glow more at night. At most 12. Positions are kept as a share of the screen so they fit any size. The save format is now version 2 (adds the decorations); version 1 saves upgrade with an empty den. While decorating, food, toys and care buttons step aside. The drawer sits at the top so the whole floor is free.
+- **Why:** phase 23 ("Jacob can decorate").
+- **Affects:** phases 24–25 (the shop can sell more decorations), phase 44 (menus).
+
 ## 2026-11-07: The den — a cave with a window on a real-clock sky
 
 - **Decision:** the play screen is now the den: rounded rock walls with glowing crystals frame a big arched opening onto two rows of hills and the sky; a mossy floor with grass and glowing mushrooms; vines with lantern bulbs; fireflies. Layers are painted once (again on resize and every 15 minutes of sky time) and drift slightly at different speeds as the dragon moves (parallax). The sky follows the device's local clock through night (stars, moon), dawn (pink), day (a soft twilight, never above 62% lightness) and dusk (peach), blending smoothly; crystals, mushrooms and fireflies glow brighter in the dark. Fast mode runs the day 600× too. The title leaves the play screen until the title screen in phase 44. The bed sits lower, on the den floor.

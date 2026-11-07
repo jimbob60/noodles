@@ -84,8 +84,29 @@ describe("saving", () => {
 
   it("starts new dragons with comfortable needs", () => {
     const s = newSave(9, T0);
-    expect(s.version).toBe(1);
+    expect(s.version).toBe(2);
+    expect(s.decor).toEqual([]);
     expect(s.needs.values.fullness).toBeGreaterThan(50);
+  });
+});
+
+describe("save versions", () => {
+  it("upgrade a version 1 save (phase 21) with an empty den", () => {
+    const v1 = { version: 1, savedAt: T0, seed: 55, needs: sample().needs };
+    const up = parseSave(JSON.parse(JSON.stringify(v1)), T0 + HOUR)!;
+    expect(up.version).toBe(2);
+    expect(up.seed).toBe(55);
+    expect(up.decor).toEqual([]);
+  });
+
+  it("keep the den's decorations through a save and a backup code", () => {
+    const decor = [
+      { kind: "lantern" as const, x: 0.3, y: 0.4, color: 2 },
+      { kind: "rug" as const, x: 0.5, y: 0.9, color: 1 },
+    ];
+    const save = makeSave(7, sample().needs, T0 + 2 * HOUR, decor);
+    expect(parseSave(JSON.parse(JSON.stringify(save)), T0 + 3 * HOUR)?.decor).toEqual(decor);
+    expect(decodeBackup(encodeBackup(save), T0 + 3 * HOUR)?.decor).toEqual(decor);
   });
 });
 
