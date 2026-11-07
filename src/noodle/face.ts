@@ -40,6 +40,8 @@ export class Face {
   tilt = 0;
   look: Point = { x: 0, y: 0 };
   blink = 0;
+  /** While asleep the eyes stay shut. */
+  asleep = false;
   private blinkClock = 0;
   private nextBlinkIn: number;
   private blinksLeft = 0;
@@ -83,6 +85,7 @@ export class Face {
     } else {
       this.blink = 0;
     }
+    if (this.asleep) this.blink = 1;
   }
 
   private blinkGap(): number {

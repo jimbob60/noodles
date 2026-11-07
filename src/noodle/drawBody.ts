@@ -23,8 +23,13 @@ export function bodyHalfWidth(spine: Spine): number {
 }
 
 /** Phase 7 look: a chubby tapered body with a soft glowing edge, a rim and a shine. */
-export function drawBody(ctx: CanvasRenderingContext2D, spine: Spine, colors = CYAN_BODY): void {
-  const hw = bodyHalfWidth(spine);
+export function drawBody(
+  ctx: CanvasRenderingContext2D,
+  spine: Spine,
+  colors = CYAN_BODY,
+  puff = 1,
+): void {
+  const hw = bodyHalfWidth(spine) * puff;
   const outline = bodyOutline(spine.points, hw);
 
   ctx.lineJoin = "round";

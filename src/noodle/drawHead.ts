@@ -95,8 +95,8 @@ export function drawHead(
   // Eyes: the far one a bit smaller and further back, for a three-quarter view.
   // Looking is in screen space, so undo the mirroring for the x offset.
   const lookX = face.look.x * face.facing;
-  drawEye(ctx, r * 0.3, -r * 0.16, r * 0.34, lookX, face.look.y, face.blink, c);
-  drawEye(ctx, -r * 0.36, -r * 0.2, r * 0.28, lookX, face.look.y, face.blink, c);
+  drawEye(ctx, r * 0.3, -r * 0.16, r * 0.34, lookX, face.look.y, face.blink, c, face.asleep);
+  drawEye(ctx, -r * 0.36, -r * 0.2, r * 0.28, lookX, face.look.y, face.blink, c, face.asleep);
 
   ctx.restore();
 }
@@ -110,11 +110,13 @@ function drawEye(
   lookY: number,
   blink: number,
   c: HeadColors,
+  sleeping = false,
 ): void {
   if (blink > 0.75) {
-    // Shut: a happy closed-eye curve.
+    // Shut: a happy "^" curve for a blink, a droopy "︶" curve while asleep.
     ctx.beginPath();
-    ctx.arc(x, y + size * 0.15, size * 0.75, Math.PI * 1.15, Math.PI * 1.85);
+    if (sleeping) ctx.arc(x, y - size * 0.25, size * 0.75, Math.PI * 0.15, Math.PI * 0.85);
+    else ctx.arc(x, y + size * 0.15, size * 0.75, Math.PI * 1.15, Math.PI * 1.85);
     ctx.strokeStyle = c.eye;
     ctx.lineWidth = Math.max(1.5, size * 0.28);
     ctx.stroke();

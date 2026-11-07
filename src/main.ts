@@ -2,14 +2,7 @@ import "@fontsource/pacifico/latin-400.css";
 import { Input } from "./engine/input";
 import { startLoop } from "./engine/loop";
 import { Screen } from "./engine/screen";
-import { Follower } from "./follower";
-import { bodyHalfWidth, drawBody } from "./noodle/drawBody";
-import { drawLegs, drawTailTuft, drawWhiskers } from "./noodle/drawExtras";
-import { drawHead } from "./noodle/drawHead";
-import { Face } from "./noodle/face";
-import { legSizes, makeLegs, updateLegs } from "./noodle/legs";
-import { Whiskers } from "./noodle/whiskers";
-import { Spine } from "./noodle/spine";
+import { Dragon } from "./noodle/dragon";
 import { palette } from "./palette";
 import { drawTitle, TITLE_FONT } from "./title";
 
@@ -45,7 +38,6 @@ function paintBackdrop(screen: Screen, backdrop: HTMLCanvasElement): void {
 }
 
 /** Spine spacing scales with the screen so the noodle is the same size on any tablet. */
-const SPINE_POINTS = 26;
 function segmentFor(screen: Screen): number {
   return Math.min(18, Math.max(8, Math.min(screen.width, screen.height) / 55));
 }
@@ -58,52 +50,24 @@ async function main(): Promise<void> {
   const input = new Input(screen.canvas);
   const backdrop = document.createElement("canvas");
   paintBackdrop(screen, backdrop);
-  const dot = new Follower(screen.width / 2, screen.height * 0.85);
-  const spine = new Spine(dot.x, dot.y, SPINE_POINTS, segmentFor(screen));
-  const headRadius = () => bodyHalfWidth(spine) * 1.3;
-  let sizes = legSizes(bodyHalfWidth(spine));
-  let legs = makeLegs(spine.points, sizes);
-  const whiskers = new Whiskers(spine.head, spine.segment * 0.95);
+  const world = () => ({ width: screen.width, height: screen.height, unit: segmentFor(screen) });
+  const dragon = new Dragon(screen.width / 2, screen.height * 0.8, segmentFor(screen), world());
   screen.onResize(() => {
     paintBackdrop(screen, backdrop);
-    spine.resize(segmentFor(screen));
-    sizes = legSizes(bodyHalfWidth(spine));
-    legs = makeLegs(spine.points, sizes);
-    whiskers.resize(spine.segment * 0.95);
+    dragon.resize(segmentFor(screen));
   });
-  const face = new Face();
-  let idleTime = 0;
 
   const loop = startLoop({
     update(dt) {
-      idleTime += dt;
-      if (input.active) {
-        dot.update(dt, input.x, input.y);
-      } else {
-        // Before the first touch, the head swims a lazy figure-eight near the bottom.
-        const cx = screen.width / 2 + Math.sin(idleTime * 0.7) * screen.width * 0.22;
-        const cy = screen.height * 0.84 + Math.sin(idleTime * 1.4) * screen.height * 0.05;
-        dot.update(dt, cx, cy);
-      }
-      spine.follow(dot.x, dot.y);
-      // Eyes follow the finger; with no finger down they look where the noodle is heading.
-      const [head, neck] = spine.points;
-      const target = input.down
-        ? { x: input.x, y: input.y }
-        : { x: head.x + (head.x - neck.x) * 6, y: head.y + (head.y - neck.y) * 6 };
-      face.update(dt, head, neck, target, bodyHalfWidth(spine) * 6);
-      updateLegs(legs, spine.points, sizes, dt);
-      whiskers.update(dt, head, headRadius(), face);
+      dragon.update(dt, input, world());
+      // The current mood on the page, so automated checks can find naps and walks.
+      const mood = dragon.asleep ? "asleep" : dragon.brain.mode;
+      if (document.body.dataset.mood !== mood) document.body.dataset.mood = mood;
     },
     render() {
       const ctx = screen.begin();
       ctx.drawImage(backdrop, 0, 0, screen.width, screen.height);
-      drawLegs(ctx, legs, spine.points, sizes);
-      drawBody(ctx, spine);
-      drawTailTuft(ctx, spine.points, bodyHalfWidth(spine), idleTime);
-      // Whiskers before the head, so they hang out from under the snout instead of over the eyes.
-      drawWhiskers(ctx, whiskers, bodyHalfWidth(spine));
-      drawHead(ctx, spine.head, headRadius(), face);
+      dragon.draw(ctx);
 
       // Build tag and frame rate in the corner, so Jacob can tell which build he is playing.
       ctx.font = "12px system-ui, sans-serif";

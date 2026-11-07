@@ -26,7 +26,7 @@ export class Whiskers {
   private time = 0;
 
   constructor(at: Point, segment: number) {
-    this.strands = ROOTS.map(() => new Spine(at.x, at.y, 8, segment, Math.PI / 5));
+    this.strands = ROOTS.map(() => new Spine(at.x, at.y, 7, segment, Math.PI / 5));
   }
 
   resize(segment: number): void {
@@ -45,8 +45,10 @@ export class Whiskers {
       const sway = Math.sin(this.time * 2.2 + k * 1.7) * 0.6;
       for (let i = 1; i < strand.points.length; i++) {
         const p = strand.points[i];
-        p.x += -face.facing * drift * (0.3 + sway * 0.25);
-        p.y += drift * (0.9 + k * 0.1);
+        // Points further out drift back more, so the whisker curves instead of hanging straight.
+        const out = i / strand.points.length;
+        p.x += -face.facing * drift * (0.25 + out * 0.9 + sway * 0.25);
+        p.y += drift * (0.8 + k * 0.1 - out * 0.35);
       }
       strand.follow(root.x, root.y);
     });

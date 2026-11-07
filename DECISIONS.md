@@ -2,6 +2,12 @@
 
 Newest first. Each entry says what we decided, why, and what it affects.
 
+## 2026-11-07: Idle life — three moods, finger always wins
+
+- **Decision:** when nobody is touching it, the dragon picks its own mood: wander (6–10 s), float (6–9 s) or nap (10–15 s, curling into a coil, eyes shut, breathing, floating "z"s). A touch always takes over and wakes it; 2.5 s after the finger lets go it goes back to its moods, starting with a float. A mouse only steers while its button is held.
+- **Why:** it should be fun to just watch (phase 10), and naps fit the cozy, no-stress vision.
+- **Affects:** phases 13–20 (needs and moods will change how often it naps and wanders).
+
 ## 2026-11-07: Engine basics — fixed-step loop, pointer input, cached backdrop
 
 - **Decision:** game logic runs in fixed 1/60-second steps (catching up at most 0.25 s, pausing while the app is hidden). Touch, pen and mouse all go through one pointer-event input that follows the first finger. Sharpness is capped at 2× pixel density. Things that only change on resize (sky, stars, title) are drawn once to a hidden canvas and copied each frame.
