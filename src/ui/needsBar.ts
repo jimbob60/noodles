@@ -1,5 +1,13 @@
 import { FLOOR, MAX, NEED_NAMES, type NeedName, type Needs } from "../care/needs";
 
+/** One short word under each orb (Jacob's choice). */
+export const LABELS: Record<NeedName, string> = {
+  fullness: "Food",
+  happiness: "Love",
+  energy: "Energy",
+  cleanliness: "Clean",
+};
+
 /** Below this, a need gently asks for attention (a soft wobble every few seconds). */
 export const LOW = 40;
 /** How quickly the liquid glides to new levels (so a snack tops it up smoothly). */
@@ -40,7 +48,7 @@ export function wobble(value: number, time: number, offset: number): number {
 
 /**
  * The four need bubbles in the top-left corner: little glass orbs of glowing liquid that drain
- * as a need drops. No numbers, no words, no red.
+ * as a need drops, each with one short word under it. No numbers, no red.
  */
 export class NeedsBar {
   private shown: Needs | null = null;
@@ -64,11 +72,16 @@ export class NeedsBar {
   draw(ctx: CanvasRenderingContext2D, screenW: number, screenH: number): void {
     if (!this.shown) return;
     const r = Math.max(17, Math.min(26, Math.min(screenW, screenH) * 0.032));
-    const gap = r * 0.75;
+    const gap = r * 0.9;
+    ctx.font = `600 ${Math.round(r * 0.55)}px system-ui, sans-serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
     NEED_NAMES.forEach((name, i) => {
       const x = 14 + r + i * (r * 2 + gap);
       const y = 14 + r;
       this.drawBubble(ctx, name, x, y, r, this.shown![name], i);
+      ctx.fillStyle = COLORS[name].icon;
+      ctx.fillText(LABELS[name], x, y + r + 6);
     });
   }
 

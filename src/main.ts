@@ -169,7 +169,7 @@ async function main(): Promise<void> {
         ctx.textBaseline = "top";
         ctx.fillStyle = "rgba(255,255,255,0.75)";
         NEED_NAMES.forEach((n, i) => {
-          ctx.fillText(`${n} ${needs.values[n].toFixed(2)}`, 10, 80 + i * 18);
+          ctx.fillText(`${n} ${needs.values[n].toFixed(2)}`, 10, 100 + i * 18);
         });
       }
 
