@@ -11,6 +11,7 @@ import { palette } from "./palette";
 import { NeedsBar } from "./ui/needsBar";
 import { Feeding } from "./ui/feeding";
 import { Toys } from "./ui/toys";
+import { Bath } from "./ui/bath";
 import { feedEffect } from "./care/food";
 import { Petting } from "./care/petting";
 import { moodFrom } from "./care/mood";
@@ -96,6 +97,7 @@ async function main(): Promise<void> {
   const feeding = new Feeding();
   const petting = new Petting();
   const toys = new Toys();
+  const bath = new Bath();
   const persist = () => {
     if (mode === "play") saveNeeds(needs);
   };
@@ -212,8 +214,24 @@ async function main(): Promise<void> {
       if (play.love !== 0 || play.energy !== 0) {
         needs = change(needs, { happiness: play.love, energy: play.energy });
       }
+      // Bath time: the sponge.
+      const taken = swallowing || tray.busy || play.busy || inBed;
+      const wash = bath.update(
+        dt,
+        taken ? noFinger : input,
+        taken ? null : pressAt,
+        dragon,
+        needs.values,
+        screen.width,
+        screen.height,
+      );
+      if (wash.clean > 0) needs = change(needs, { cleanliness: wash.clean });
+      if (wash.squeaky) {
+        needs = change(needs, { happiness: 3 });
+        dragon.shakeDry();
+      }
       // Next, a press that lands on the dragon itself pets it instead of steering it.
-      const free = !swallowing && !tray.busy && !play.busy;
+      const free = !swallowing && !tray.busy && !play.busy && !wash.busy;
       const pet = petting.update(
         dt,
         free ? input : noFinger,
@@ -225,6 +243,8 @@ async function main(): Promise<void> {
       for (const sp of pet.sparkles) dragon.sparkle(sp.x, sp.y);
       if (pet.tickled) dragon.giggle();
       dragon.pet = { active: pet.active, purr: petting.purr, giggle: petting.giggle };
+      // With the sponge in hand it holds still for its bath, eyes happily shut while scrubbed.
+      if (wash.busy) dragon.pet = { active: true, purr: wash.scrubbing ? 0.45 : 0, giggle: 0 };
       // For automated checks: is it being petted, and how deep is the purr.
       const petState = pet.active ? petting.purr.toFixed(1) : "no";
       if (document.body.dataset.pet !== petState) document.body.dataset.pet = petState;
@@ -283,6 +303,7 @@ async function main(): Promise<void> {
         if (!needs.inBed) {
           feeding.draw(ctx);
           toys.draw(ctx);
+          bath.draw(ctx, screen.width, screen.height);
         }
         drawBedButton(ctx, screen.width, screen.height, needs.inBed === true, modeSeconds);
       }

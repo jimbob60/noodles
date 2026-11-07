@@ -14,11 +14,17 @@ const MOOD_FOR: Record<NeedName, Mood> = {
   cleanliness: "grubby",
 };
 
+/** With this many needs low at once, the dragon has been left a while: it's just sleepy. */
+export const NEGLECTED_COUNT = 3;
+
 /**
- * How the dragon feels, from its needs. The lowest need under LOW_NEED wins (ties go in order:
- * hungry, lonely, tired, grubby); otherwise it's happy when everything is high, else content.
+ * How the dragon feels, from its needs. A dragon left alone a long time (three or more low needs)
+ * is simply sleepy, never sad. Otherwise the lowest need under LOW_NEED wins (ties go in order:
+ * hungry, lonely, tired, grubby); with no low needs it's happy when everything is high, else
+ * content.
  */
 export function moodFrom(needs: Needs): Mood {
+  if (NEED_NAMES.filter((n) => needs[n] < LOW_NEED).length >= NEGLECTED_COUNT) return "tired";
   let low: NeedName | null = null;
   for (const n of NEED_NAMES) {
     if (needs[n] < LOW_NEED && (low === null || needs[n] < needs[low])) low = n;

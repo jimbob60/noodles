@@ -15,9 +15,14 @@ describe("moods", () => {
     expect(moodFrom({ ...fine, cleanliness: 15 })).toBe("grubby");
   });
 
-  it("follow the lowest need when several are low", () => {
-    expect(moodFrom({ fullness: 35, happiness: 80, energy: 20, cleanliness: 30 })).toBe("tired");
-    expect(moodFrom({ fullness: 15, happiness: 15, energy: 15, cleanliness: 15 })).toBe("hungry");
+  it("follow the lowest need when two are low", () => {
+    expect(moodFrom({ fullness: 35, happiness: 80, energy: 70, cleanliness: 30 })).toBe("grubby");
+    expect(moodFrom({ fullness: 20, happiness: 30, energy: 80, cleanliness: 80 })).toBe("hungry");
+  });
+
+  it("make a long-neglected dragon simply sleepy, never sad", () => {
+    expect(moodFrom({ fullness: 15, happiness: 15, energy: 15, cleanliness: 15 })).toBe("tired");
+    expect(moodFrom({ fullness: 20, happiness: 25, energy: 80, cleanliness: 30 })).toBe("tired");
   });
 
   it("know which need each mood is about", () => {

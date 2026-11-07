@@ -56,6 +56,8 @@ export class Petting {
   private tickleRub = 0;
   private sparkleRub = 0;
   private sinceRub = Infinity;
+  /** Love allowed but not yet given (builds between finger reports; see the bath sponge). */
+  private allowance = 0;
 
   /**
    * @param spotAt where on the body a point is (0 nose – 1 tail), or null if it isn't on the dragon
@@ -70,6 +72,10 @@ export class Petting {
   ): PetResult {
     const result: PetResult = { active: false, love: 0, sparkles: [], tickled: false };
     this.giggle = Math.max(0, this.giggle - dt);
+    this.allowance = Math.min(
+      this.allowance + MAX_LOVE_PER_SECOND * dt,
+      MAX_LOVE_PER_SECOND * 0.25,
+    );
     if (pressAt && spotAt(pressAt.x, pressAt.y) !== null) {
       this.active = true;
       this.last = { x: input.x, y: input.y };
@@ -84,7 +90,8 @@ export class Petting {
       const spot = spotAt(input.x, input.y);
       if (spot !== null && d > 0) {
         rubbed = d;
-        result.love = Math.min(d * LOVE_PER_PX, MAX_LOVE_PER_SECOND * dt);
+        result.love = Math.min(d * LOVE_PER_PX, this.allowance);
+        this.allowance -= result.love;
         this.purr = Math.min(1, this.purr + d * PURR_PER_PX);
         this.sparkleRub += d;
         while (this.sparkleRub >= SPARKLE_EVERY) {

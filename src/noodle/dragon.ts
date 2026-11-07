@@ -328,6 +328,26 @@ export class Dragon {
     this.brain.wake(this.swimmer, world);
   }
 
+  /** Squeaky clean! A happy shimmy that shakes droplets everywhere, with sparkles. */
+  shakeDry(): void {
+    this.scratchLeft = 0.9;
+    const h = this.centre;
+    const u = this.halfWidth;
+    for (let i = 0; i < 18; i++) {
+      const a = Math.random() * Math.PI * 2;
+      this.bits.push({
+        kind: i % 3 === 0 ? "sparkle" : "crumb",
+        x: h.x + Math.cos(a) * u * 2,
+        y: h.y + Math.sin(a) * u,
+        vx: Math.cos(a) * u * 8,
+        vy: Math.sin(a) * u * 6 - u * 4,
+        age: 0,
+        life: 0.9,
+        color: i % 3 === 0 ? "#fff6c9" : "#9fe9ff",
+      });
+    }
+  }
+
   /** A polite head shake: "no thanks, I'm full". */
   refuse(): void {
     if (this.face.chewLeft <= 0) this.face.shakeLeft = SHAKE_TIME;

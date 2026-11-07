@@ -2,11 +2,17 @@
 
 Newest first. Each entry says what we decided, why, and what it affects.
 
+## 2026-11-07: Cozy check — a bath sponge, and neglect only means sleepy
+
+- **Decision:** a sponge button (beside the moon) gives baths: scrub the dragon and soap bubbles foam up, smudges fade and Hygiene fills (about +35 per 500 px, at most 20 a second). It holds still with happy eyes while the sponge is on it, and at 100 it does a squeaky-clean shake with droplets and sparkles (+3 Love). A dragon with three or more low needs is simply sleepy, never sad. Speed caps for petting and bathing now build up as an allowance between finger reports, so real fingers get the full speed.
+- **Why:** phase 20 (the cozy-check gate), and Jacob's go-ahead for a bath, since nothing raised Hygiene before. A test takes a fully neglected dragon back to happy in about 5 minutes of gentle care, most of it a nap.
+- **Affects:** stage D onward (the den could get a real bathtub later; the shop could sell bubble bath).
+
 ## 2026-11-07: Moods come from needs
 
 - **Decision:** the lowest need under 40 sets the mood: hungry (Food), lonely (Love), tired (Energy) or grubby (Hygiene). Otherwise it's happy when every need is 70+, else content. Happy: big smile, rosier cheeks, faster and wigglier swimming, sparkles, fewer naps. Hungry: pout, tummy rumbles, glances at the food tray. Tired: droopy eyelids, slow swimming, yawns, naps much more often (70% vs 15–30%). Lonely: pout and big pleading eyes looking at the player. Grubby: dust smudges and the odd scratch. With a low need, a thought bubble shows its icon every ~9 s. Nothing is sad or scary: a pout at worst.
 - **Why:** phase 19 ("moods match needs"), told with faces and icons instead of words.
-- **Affects:** phase 20 (cozy check). Open: nothing raises Hygiene yet; a bath or brush is needed.
+- **Affects:** phase 20 (cozy check), where the bath sponge was added for Hygiene.
 
 ## 2026-11-07: Bedtime — lights down, a cushion, sleep until rested
 
