@@ -27,7 +27,13 @@ try {
     await page.goto(url);
     await page.waitForSelector("body[data-ready]", { timeout: 10000 });
     await page.waitForTimeout(200);
+    // Drag a "finger" across the screen so the screenshot shows the dot following it.
+    await page.mouse.move(v.width * 0.3, v.height * 0.8);
+    await page.mouse.down();
+    await page.mouse.move(v.width * 0.7, v.height * 0.65, { steps: 20 });
+    await page.waitForTimeout(150);
     await page.screenshot({ path: `screenshots/${v.name}.png` });
+    await page.mouse.up();
     await page.close();
     console.log(`saved screenshots/${v.name}.png`);
   }
