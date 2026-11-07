@@ -1,6 +1,8 @@
 import "@fontsource/pacifico/latin-400.css";
 import { advance, change, freshNeeds, NEED_NAMES } from "./care/needs";
-import { loadNeeds, saveNeeds } from "./care/storage";
+import { deviceStore, loadGame, storeGame } from "./save/storage";
+import { decodeBackup, encodeBackup, makeSave, type Save } from "./save/saveGame";
+import { drawBackupButton, onBackupButton, openBackupPanel } from "./ui/backupPanel";
 import { Input } from "./engine/input";
 import { startLoop } from "./engine/loop";
 import { Screen } from "./engine/screen";
@@ -64,15 +66,14 @@ async function main(): Promise<void> {
   const backdrop = document.createElement("canvas");
   paintBackdrop(screen, backdrop);
   const world = () => ({ width: screen.width, height: screen.height, unit: segmentFor(screen) });
-  // A new random look each visit, until saving arrives in phase 21.
-  const look = makeLook(Math.floor(Math.random() * 1e9));
-  const dragon = new Dragon(
-    screen.width / 2,
-    screen.height * 0.8,
-    segmentFor(screen),
-    world(),
-    look,
-  );
+  // Your dragon: its look comes from the saved seed (a brand-new dragon if there's no save).
+  const store = deviceStore();
+  const randomSeed = () => Math.floor(Math.random() * 2 ** 32);
+  const loaded = loadGame(store, Date.now(), randomSeed);
+  let seed = loaded.save?.seed ?? randomSeed();
+  const makeDragon = () =>
+    new Dragon(screen.width / 2, screen.height * 0.8, segmentFor(screen), world(), makeLook(seed));
+  let dragon = makeDragon();
   /**
    * Test modes, switched by tapping the build tag in the bottom-right corner (links with #fast
    * or #gallery also work in a normal browser, but Claude's app viewer can drop the #):
@@ -90,16 +91,19 @@ async function main(): Promise<void> {
   let modeSeconds = 0;
   const needsNow = () => (mode === "fast" ? modeStartedAt + modeSeconds * 600_000 : Date.now());
 
-  // Needs follow the real clock, so they keep changing while the app is closed.
-  let needs = loadNeeds(Date.now());
+  // Needs follow the real clock, so they keep changing while the app is closed. Time away
+  // counts as sleep if it was tucked in for the night.
+  const fromSave = (save: Save) => advance(save.needs, Date.now(), save.needs.inBed === true);
+  let needs = loaded.save ? fromSave(loaded.save) : freshNeeds(Date.now());
   let sinceSave = 0;
   const needsBar = new NeedsBar();
   const feeding = new Feeding();
   const petting = new Petting();
   const toys = new Toys();
   const bath = new Bath();
+  /** Saves on this device (only the real game: fast mode and the gallery never save). */
   const persist = () => {
-    if (mode === "play") saveNeeds(needs);
+    if (mode === "play") storeGame(store, makeSave(seed, needs, Date.now()));
   };
   window.addEventListener("pagehide", persist);
   document.addEventListener("visibilitychange", () => {
@@ -116,9 +120,9 @@ async function main(): Promise<void> {
       needs = change(freshNeeds(modeStartedAt), full);
       dragon.wakeUp(world());
     } else if (mode === "play") {
-      // Time away counts as sleep if it was tucked in for the night.
-      const saved = loadNeeds(Date.now());
-      needs = advance(saved, Date.now(), saved.inBed === true);
+      // Back from a test mode: pick up the real dragon's needs again.
+      const again = loadGame(store, Date.now(), randomSeed).save;
+      if (again && again.seed === seed) needs = fromSave(again);
     } else if (!gallery) {
       gallery = new Gallery(screen);
     }
@@ -140,6 +144,25 @@ async function main(): Promise<void> {
     }
   }
   if (needs.inBed) setBedtime(true);
+
+  /** Restores a dragon from a backup code. Returns false if the code doesn't work. */
+  function restore(code: string): boolean {
+    const save = decodeBackup(code, Date.now());
+    if (!save) return false;
+    if (mode !== "play") enterMode("play");
+    seed = save.seed;
+    dragon = makeDragon();
+    needs = fromSave(save);
+    if (needs.inBed) setBedtime(true);
+    document.body.dataset.favorite = dragon.favorite;
+    document.body.dataset.seed = String(seed);
+    persist();
+    return true;
+  }
+  const showBackup = () => {
+    persist();
+    openBackupPanel(encodeBackup(makeSave(seed, needs, Date.now())), restore, store !== null);
+  };
 
   screen.onResize(() => {
     paintBackdrop(screen, backdrop);
@@ -166,6 +189,11 @@ async function main(): Promise<void> {
         enterMode(MODES[(MODES.indexOf(mode) + 1) % MODES.length]);
       }
       if (!input.down) swallowing = false;
+      // The backup button (top right, under the mode tag).
+      if (pressAt && !swallowing && mode === "play" && onBackupButton(pressAt, screen.width)) {
+        swallowing = true;
+        showBackup();
+      }
       // The bedtime button: lights down, or good morning.
       if (
         pressAt &&
@@ -310,6 +338,7 @@ async function main(): Promise<void> {
           bath.draw(ctx, screen.width, screen.height);
         }
         drawBedButton(ctx, screen.width, screen.height, needs.inBed === true, modeSeconds);
+        if (mode === "play") drawBackupButton(ctx, screen.width);
       }
 
       if (showNumbers() && mode !== "gallery") {
@@ -338,6 +367,7 @@ async function main(): Promise<void> {
     },
   });
   document.body.dataset.favorite = dragon.favorite;
+  document.body.dataset.seed = String(seed);
   document.body.dataset.ready = "true";
 }
 

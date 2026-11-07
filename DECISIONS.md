@@ -2,6 +2,12 @@
 
 Newest first. Each entry says what we decided, why, and what it affects.
 
+## 2026-11-07: Saving — one versioned save, a spare, and backup codes
+
+- **Decision:** the whole dragon (its seed, needs and bedtime) is one save, stamped `version: 1`, stored on the device (`noodle-dragons.save`) every 5 s and when the app is hidden or closed. Before each write the last good save is kept as a spare (`noodle-dragons.save.previous`), used if the latest is ever damaged. Needs saved by the phase 13–20 builds are carried over, with a new seed. Saves are read carefully: anything broken is ignored, and a newer version is read as far as this one understands. A 💾 button (top right) shows a backup code (`ND1-…` with a checksum, so typos and cut-off codes are refused) to copy, and a box to paste one back. If the device can't save (for example a locked-down preview window), the panel says so. Fast mode and the gallery never save.
+- **Why:** phase 21 ("closing and reopening keeps everything"), and so a dragon can survive a preview window that can't store anything, or move to a new device.
+- **Affects:** every later phase that adds something to remember (names, eggs, the den, coins, several dragons) adds a version and a migration.
+
 ## 2026-11-07: Eating and playing are a little messy
 
 - **Decision:** each snack takes 4 off Hygiene, each ball boop 1.5, and chasing the ribbon 0.6 a second. A full care session still ends happy (bath before the ball game).
