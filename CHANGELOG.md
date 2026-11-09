@@ -2,6 +2,7 @@
 
 Newest first. One line per finished phase.
 
+- **Phase 27 — Gate: a day in the life (b4b2874, 2026-11-09):** a robot plays a whole session and checks saving (21/21). Stage D done.
 - **Phase 26 — Noodle Catch (234a0cb, 2026-11-09):** a 45-second dumpling-catching mini-game with golden dumplings, best score and up to 25 coins a round. Jacob scored 81.
 - **Phase 25 — Shop (0468760, 2026-11-09):** treats, 13 decorations bought one at a time into drawer storage, and five forever-balls (1,000–1,500); balance later.
 - **Phase 24 — Noodle coins (dd4dca0, 2026-11-07):** coins for care and play with a daily hello and a gentle daily cap; a counter with flying coins.
