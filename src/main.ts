@@ -16,15 +16,7 @@ import { Bath } from "./ui/bath";
 import { feedEffect } from "./care/food";
 import { earn, emptyWallet, type CoinReason, type Wallet } from "./care/coins";
 import { CoinCounter } from "./ui/coinCounter";
-import {
-  buy,
-  CATALOG,
-  DECOR_PRICE,
-  emptyStash,
-  store as moveStorage,
-  useTreat,
-  type Stash,
-} from "./care/shop";
+import { buy, CATALOG, emptyStash, store as moveStorage, useTreat, type Stash } from "./care/shop";
 import { drawShopButton, onShopButton, openShop } from "./ui/shopPanel";
 import { ownedBalls } from "./ui/balls";
 import { TREAT_IDS } from "./care/food";
@@ -68,7 +60,6 @@ async function main(): Promise<void> {
   const coinCounter = new CoinCounter();
   /** Treats in the pantry and decorations in storage (saved with the dragon). */
   let stash: Stash = loaded.save?.stash ?? emptyStash();
-  decorator.prices = DECOR_PRICE;
   /**
    * Test modes, switched by tapping the build tag in the bottom-right corner (links with #fast
    * or #gallery also work in a normal browser, but Claude's app viewer can drop the #):
@@ -248,16 +239,7 @@ async function main(): Promise<void> {
         stash = moveStorage(stash, kind, change);
         decorator.storage = stash.storage;
       };
-      decorator.onBuy = (kind) => {
-        const item = CATALOG.find((i) => i.type === "decor" && i.kind === kind)!;
-        const r = buy(item, wallet, stash);
-        if (!r.ok) return false;
-        wallet = r.wallet;
-        stash = r.stash;
-        decorator.storage = stash.storage;
-        persist();
-        return true;
-      };
+
       if (
         pressAt &&
         !blocked &&

@@ -11,7 +11,6 @@ import {
   type DecorKind,
 } from "../den/decor";
 import { decorSize, drawDecorAt } from "../den/decorArt";
-import { drawCoin } from "./coinCounter";
 import type { PointerState } from "../engine/input";
 import type { Point } from "../noodle/spine";
 
@@ -36,20 +35,12 @@ const TAP = 10;
  */
 export class Decorator {
   active = false;
-  /** Every decoration is in the drawer, which is also its storage. */
+  /** All decorations, in drawer order; only the ones in storage are shown. */
   kinds: DecorKind[] = [...DECOR_KINDS];
-  /** How many of each are in storage (bought but not placed). */
+  /** How many of each are in storage (bought in the shop but not placed). */
   storage: Partial<Record<DecorKind, number>> = {};
-  prices: Partial<Record<DecorKind, number>> = {};
-  /** Buys one decoration into storage; returns false if there aren't enough coins. */
-  onBuy: (kind: DecorKind) => boolean = () => false;
   /** One decoration left storage (placed in the den), or came back (put away). */
   onStore: (kind: DecorKind, change: 1 | -1) => void = () => {};
-  /** A locked decoration tapped once: tap again within a few seconds to buy it. */
-  private pending: { kind: DecorKind; until: number } | null = null;
-  /** Little effects on drawer slots: a shake for "not enough coins", a sparkle for a purchase. */
-  private shake: { kind: DecorKind; t: number } | null = null;
-  private bought: { kind: DecorKind; t: number } | null = null;
   private drag: {
     index: number | null;
     kind: DecorKind;
@@ -60,17 +51,18 @@ export class Decorator {
   private time = 0;
 
   /**
-   * The drawer's slots, centred along the top of the screen so the whole floor stays free to
-   * decorate. It wraps into rows on narrow screens.
+   * The drawer's slots: only decorations you have in storage. Centred along the top of the
+   * screen so the whole floor stays free to decorate; wraps into rows on narrow screens.
    */
   slots(w: number, h: number): { kind: DecorKind; x: number; y: number; r: number }[] {
-    const r = Math.max(22, Math.min(30, Math.min(w, h) * 0.04));
+    const r = this.slotR(w, h);
     const gap = r * 0.5;
-    const n = this.kinds.length;
+    const shown = this.kinds.filter((k) => (this.storage[k] ?? 0) > 0);
+    const n = shown.length;
     const cols = Math.min(n, Math.max(3, Math.floor((w - 60 + gap) / (2 * r + gap))));
     // Below the need orbs and the mode tag, so nothing is covered.
-    const top = (w < 760 ? 132 : 112) + r * 1.4;
-    return this.kinds.map((kind, i) => {
+    const top = this.slotTop(w, h);
+    return shown.map((kind, i) => {
       const row = Math.floor(i / cols);
       const inRow = Math.min(cols, n - row * cols);
       const rowWidth = inRow * 2 * r + (inRow - 1) * gap;
@@ -83,10 +75,25 @@ export class Decorator {
     });
   }
 
-  /** The drawer's outline (around all its slots). */
+  private slotR(w: number, h: number): number {
+    return Math.max(22, Math.min(30, Math.min(w, h) * 0.04));
+  }
+
+  /** Below the need orbs and the mode tag, so nothing is covered. */
+  private slotTop(w: number, h: number): number {
+    return (w < 760 ? 132 : 112) + this.slotR(w, h) * 1.4;
+  }
+
+  /** The drawer's outline (around all its slots; a small empty tray when storage is empty). */
   private box(w: number, h: number): { left: number; right: number; top: number; bottom: number } {
     const s = this.slots(w, h);
-    const pad = s[0].r * 1.4;
+    const r = this.slotR(w, h);
+    const pad = r * 1.4;
+    if (s.length === 0) {
+      const top = this.slotTop(w, h);
+      const half = Math.min(215, w / 2 - 12);
+      return { left: w / 2 - half, right: w / 2 + half, top: top - pad, bottom: top + pad };
+    }
     return {
       left: Math.min(...s.map((q) => q.x)) - pad,
       right: Math.max(...s.map((q) => q.x)) + pad,
@@ -129,19 +136,6 @@ export class Decorator {
       const slot = this.slots(w, h).find(
         (s) => Math.hypot(pressAt.x - s.x, pressAt.y - s.y) <= s.r * 1.15,
       );
-      // The price tag sits under each slot: tapping it (or a decoration you have none of) buys
-      // one more. First tap asks "Buy?", a second tap buys.
-      const onTag = slot && pressAt.y > slot.y + slot.r * 0.45;
-      if (slot && (onTag || (this.storage[slot.kind] ?? 0) <= 0)) {
-        if (this.pending?.kind === slot.kind && this.time < this.pending.until) {
-          this.pending = null;
-          if (this.onBuy(slot.kind)) this.bought = { kind: slot.kind, t: this.time };
-          else this.shake = { kind: slot.kind, t: this.time };
-        } else {
-          this.pending = { kind: slot.kind, until: this.time + 3 };
-        }
-        return items;
-      }
       if (slot && items.length < MAX_DECOR) {
         this.drag = {
           index: null,
@@ -214,16 +208,14 @@ export class Decorator {
     for (const s of slots) {
       const have = this.storage[s.kind] ?? 0;
       const owned = have > 0;
-      const shaking = this.shake?.kind === s.kind && this.time - this.shake.t < 0.5;
-      const dx = shaking ? Math.sin((this.time - this.shake!.t) * 50) * 5 : 0;
-      ctx.globalAlpha = !owned ? 0.4 : full ? 0.35 : 1;
+      ctx.globalAlpha = full ? 0.35 : 1;
       // Wide things (rug, fairy lights) are shrunk to fit their slot.
       const size = (s.r * 0.6) / Math.max(1, WIDTH[s.kind] * 0.75);
       drawDecorAt(
         ctx,
         s.kind,
         0,
-        s.x + dx,
+        s.x,
         s.y + (ON_FLOOR[s.kind] ? -size * 0.1 : size * 0.15),
         size,
         dark,
@@ -242,56 +234,17 @@ export class Decorator {
         ctx.textBaseline = "middle";
         ctx.fillText(String(have), s.x + s.r * 0.7, s.y - s.r * 0.64);
       }
-      {
-        // Price tag: a coin and the price, under the decoration (tap it to buy one more).
-        const price = String(this.prices[s.kind] ?? "?");
-        ctx.font = "700 12px system-ui, sans-serif";
-        const tw = ctx.measureText(price).width + 22;
-        const ty = s.y + s.r * 0.72;
-        ctx.fillStyle = "rgba(20,14,60,0.9)";
-        ctx.beginPath();
-        ctx.roundRect(s.x - tw / 2 + dx, ty - 9, tw, 18, 9);
-        ctx.fill();
-        drawCoin(ctx, s.x - tw / 2 + 10 + dx, ty, 6);
-        ctx.fillStyle = "#ffe08a";
-        ctx.textAlign = "left";
-        ctx.textBaseline = "middle";
-        ctx.fillText(price, s.x - tw / 2 + 18 + dx, ty + 1);
-      }
-      if (this.pending?.kind === s.kind && this.time < this.pending.until) {
-        // Asking "Buy?": a pulsing gold ring and a label.
-        ctx.strokeStyle = `rgba(255,210,122,${(0.6 + 0.4 * Math.sin(this.time * 8)).toFixed(3)})`;
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, s.r * 1.05, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.font = "700 13px system-ui, sans-serif";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillStyle = "#ffd27a";
-        ctx.beginPath();
-        ctx.roundRect(s.x - 22, s.y - s.r * 1.35 - 10, 44, 20, 10);
-        ctx.fill();
-        ctx.fillStyle = "#1a1040";
-        ctx.fillText("Buy?", s.x, s.y - s.r * 1.35);
-      }
-      if (this.bought?.kind === s.kind && this.time - this.bought.t < 0.8) {
-        // Just bought one: a burst of sparkles.
-        const t = (this.time - this.bought.t) / 0.8;
-        ctx.fillStyle = `rgba(255,240,170,${(1 - t).toFixed(3)})`;
-        for (let k = 0; k < 8; k++) {
-          const a = (k / 8) * Math.PI * 2;
-          ctx.beginPath();
-          ctx.arc(
-            s.x + Math.cos(a) * s.r * (0.6 + t),
-            s.y + Math.sin(a) * s.r * (0.6 + t),
-            3,
-            0,
-            Math.PI * 2,
-          );
-          ctx.fill();
-        }
-      }
+    }
+    if (slots.length === 0) {
+      ctx.fillStyle = "#e6dcff";
+      ctx.font = "600 15px system-ui, sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(
+        "Storage is empty — buy decorations in the 🛍️ shop",
+        w / 2,
+        (box.top + box.bottom) / 2,
+      );
     }
     if (overBin) {
       // A little "put away" arrow over the drawer.

@@ -65,34 +65,31 @@ describe("decorating", () => {
   });
 });
 
-describe("buying from the drawer", () => {
-  it("asks first, then buys on a second tap", () => {
+describe("the drawer as storage", () => {
+  it("only shows decorations you have, with nothing to buy there", () => {
     const d = new Decorator();
     d.active = true;
-    const bought: string[] = [];
-    d.onBuy = (k) => {
-      bought.push(k);
-      return true;
-    };
-    const lamp = d.slots(W, H).find((s) => s.kind === "planet")!;
-    gesture(d, [], lamp, []);
-    expect(bought).toEqual([]); // just asked "Buy?"
-    gesture(d, [], lamp, []);
-    expect(bought).toEqual(["planet"]);
+    expect(d.slots(W, H)).toEqual([]);
+    d.storage = { lantern: 2, rug: 1 };
+    expect(d.slots(W, H).map((s) => s.kind)).toEqual(["lantern", "rug"]);
   });
 
-  it("buys another one by tapping the price tag, even when you already have some", () => {
-    const d = decorating();
-    const bought: string[] = [];
-    d.onBuy = (k) => {
-      bought.push(k);
-      return true;
-    };
-    const rug = d.slots(W, H).find((s) => s.kind === "rug")!;
-    const tag = { x: rug.x, y: rug.y + rug.r * 0.72 };
-    gesture(d, [], tag, []);
-    gesture(d, [], tag, []);
-    expect(bought).toEqual(["rug"]);
+  it("lets you put a decoration away even when storage is empty", () => {
+    const d = new Decorator();
+    d.active = true;
+    const moves: string[] = [];
+    d.onStore = (k, c) => void moves.push(`${k}${c > 0 ? "+" : "-"}`);
+    const items = gesture(
+      d,
+      [{ kind: "plant", x: 0.5, y: 0.85, color: 0 }],
+      { x: 640, y: 0.85 * 800 },
+      [
+        { x: 640, y: 400 },
+        { x: 640, y: 160 },
+      ],
+    );
+    expect(items).toHaveLength(0);
+    expect(moves).toEqual(["plant+"]);
   });
 
   it("takes a placed decoration out of storage, and puts it back when put away", () => {
@@ -106,18 +103,12 @@ describe("buying from the drawer", () => {
     expect(items).toHaveLength(0);
     expect(moves).toEqual(["jar-", "jar+"]);
   });
-
-  it("won't place a decoration you have none of", () => {
-    const d = new Decorator();
-    d.active = true;
-    const lantern = d.slots(W, H).find((s) => s.kind === "lantern")!;
-    expect(gesture(d, [], lantern, [{ x: 640, y: 300 }])).toHaveLength(0);
-  });
 });
 
 describe("the decoration drawer", () => {
   it("fits on screen, in one row on a tablet and wrapped into rows on a phone", () => {
     const d = new Decorator();
+    d.storage = Object.fromEntries(d.kinds.map((k) => [k, 1])); // one of everything
     for (const [w, h] of [
       [1280, 800],
       [800, 1280],
