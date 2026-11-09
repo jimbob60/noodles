@@ -2,6 +2,12 @@
 
 Newest first. Each entry says what we decided, why, and what it affects.
 
+## 2026-11-09: Corner buttons fit short screens; scales on the head
+
+- **Decision:** the four small top-right buttons (backup, decorate, shop, game) now share one layout (`cornerButton` in `src/ui/layout.ts`). On roomy screens nothing changes (18 px bubbles, 46 px apart). On short screens, like a phone on its side or inside the Claude app, the stack squeezes and the bubbles shrink so the last one stays clear of the sponge and moon buttons. The tray buttons share `trayRadius`. The head now has the same faint fish scales as the body over its crown and neck, stopping before the muzzle so the face stays clean.
+- **Why:** Jacob saw the buttons overlap in landscape on his phone, and the smooth head didn't match the scaly body.
+- **Affects:** phase 44 (menus) and phase 47 (accessibility) can build on the shared layout.
+
 ## 2026-11-09: Side profile — one eye, all feet under the belly
 
 - **Decision:** at Jacob's request the dragon is now seen in true side profile. The head shows one big eye (the far eye is gone). All four legs hang from the belly, the side facing down the screen: each pair is a near leg a little forward and a far leg a little back, drawn a shade darker behind it. When the body turns over, the feet slide smoothly under the body to the new belly side instead of jumping.

@@ -1,3 +1,5 @@
+import type { Point } from "../noodle/spine";
+import { cornerButton } from "../ui/layout";
 import { drawFood } from "../ui/foodArt";
 import { COUNTDOWN, ROUND_TIME, type NoodleCatch } from "./noodleCatch";
 
@@ -126,13 +128,12 @@ export function drawCatchHud(
 }
 
 /** The game button: under the shop button, a little dumpling with a sparkle. */
-export function gameButton(width: number): { x: number; y: number; r: number } {
-  const r = 18;
-  return { x: width - 14 - r, y: 44 + 3 * (2 * r + 10) + r, r };
+export function gameButton(width: number, height: number): Point & { r: number } {
+  return cornerButton(3, width, height);
 }
 
-export function drawGameButton(ctx: CanvasRenderingContext2D, width: number): void {
-  const b = gameButton(width);
+export function drawGameButton(ctx: CanvasRenderingContext2D, width: number, height: number): void {
+  const b = gameButton(width, height);
   ctx.fillStyle = "rgba(20,14,60,0.85)";
   ctx.strokeStyle = "rgba(255,138,216,0.7)";
   ctx.lineWidth = 2;

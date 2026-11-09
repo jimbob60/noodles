@@ -12,6 +12,8 @@ export interface HeadColors {
   eye: string;
   iris: string;
   cheek: string;
+  /** Faint fish-scale lines, the same as on the body. */
+  scale: string;
   mane: string;
   maneLight: string;
 }
@@ -28,6 +30,7 @@ export function headColors(look: DragonLook): HeadColors {
     // Jewel eyes: a deep version of the accent color.
     iris: hsl({ h: look.accent.h, s: 80, l: 42 }),
     cheek: hsl(look.accent, 0.6),
+    scale: hsl(rimOf(look.body), 0.32),
     mane: hsl(look.accent),
     maneLight: hsl(shade(look.accent, 10, 8)),
   };
@@ -136,6 +139,23 @@ export function drawHead(
   ctx.fill();
   ctx.save();
   ctx.clip();
+  // Fish scales over the crown and the back of the head, matching the body's: rows of little
+  // arcs, rounded edge toward the neck. They stop before the muzzle so the face stays clean.
+  ctx.strokeStyle = c.scale;
+  ctx.lineWidth = Math.max(1, r * 0.045);
+  const sz = r * 0.2;
+  for (let row = 0; row < 7; row++) {
+    const y = -r * 0.95 + row * sz * 1.25;
+    const shift = row % 2 === 0 ? 0 : sz;
+    for (let x = -r * 1.1 + shift; x < r * 0.5; x += sz * 2) {
+      // Fewer, smaller scales toward the face.
+      const near = Math.max(0, Math.min(1, (x + r * 0.2) / (r * 0.7)));
+      if (near > 0.85) continue;
+      ctx.beginPath();
+      ctx.arc(x, y, sz * (1 - near * 0.4), Math.PI * 0.5 + 0.35, Math.PI * 1.5 - 0.35);
+      ctx.stroke();
+    }
+  }
   // Pale chin and lower jaw.
   ctx.beginPath();
   ctx.ellipse(r * 0.7, r * 0.62, r * 0.85, r * 0.32, -0.12, 0, Math.PI * 2);

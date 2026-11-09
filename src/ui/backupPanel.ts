@@ -1,19 +1,23 @@
+import { cornerButton } from "./layout";
 import type { Point } from "../noodle/spine";
 
 /** The backup button: a small bubble in the top-right corner, under the mode tag. */
-export function backupButton(width: number): Point & { r: number } {
-  const r = 18;
-  return { x: width - 14 - r, y: 44 + r, r };
+export function backupButton(width: number, height: number): Point & { r: number } {
+  return cornerButton(0, width, height);
 }
 
-export function onBackupButton(p: Point, width: number): boolean {
-  const b = backupButton(width);
+export function onBackupButton(p: Point, width: number, height: number): boolean {
+  const b = backupButton(width, height);
   return Math.hypot(p.x - b.x, p.y - b.y) <= b.r * 1.3;
 }
 
 /** A little save disk icon in a bubble. */
-export function drawBackupButton(ctx: CanvasRenderingContext2D, width: number): void {
-  const b = backupButton(width);
+export function drawBackupButton(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+): void {
+  const b = backupButton(width, height);
   ctx.save();
   ctx.fillStyle = "rgba(20,14,60,0.85)";
   ctx.strokeStyle = "rgba(122,243,255,0.6)";

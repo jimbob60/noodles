@@ -1,3 +1,4 @@
+import { trayRadius } from "./layout";
 import type { Needs } from "../care/needs";
 import type { PointerState } from "../engine/input";
 import type { Point } from "../noodle/spine";
@@ -38,7 +39,7 @@ export interface BathResult {
 
 /** The sponge button, beside the bedtime button above the toys. */
 export function spongeButton(width: number, height: number): Point & { r: number } {
-  const r = Math.max(24, Math.min(34, Math.min(width, height) * 0.042));
+  const r = trayRadius(width, height);
   const gap = r * 0.55;
   return { x: width - 14 - r - (2 * r + gap), y: height - 14 - r - (2 * r + gap), r };
 }

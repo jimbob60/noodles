@@ -1,3 +1,4 @@
+import { trayRadius } from "./layout";
 import { FOOD_IDS, TREAT_IDS, wantsFood, type FoodId } from "../care/food";
 import type { Needs } from "../care/needs";
 import type { PointerState } from "../engine/input";
@@ -62,7 +63,7 @@ export class Feeding {
    * bottom, and any treats in the pantry in a row just above them.
    */
   slots(): { food: FoodId; x: number; y: number; r: number }[] {
-    const r = Math.max(24, Math.min(34, Math.min(this.width, this.height) * 0.042));
+    const r = trayRadius(this.width, this.height);
     const gap = r * 0.55;
     const row = (foods: FoodId[], y: number) =>
       foods.map((food, i) => ({ food, x: 14 + r + i * (2 * r + gap), y, r }));

@@ -1,3 +1,4 @@
+import { cornerButton } from "./layout";
 import { CATALOG, inStorage, type ShopItem, type Stash } from "../care/shop";
 import type { Wallet } from "../care/coins";
 import { drawDecorAt } from "../den/decorArt";
@@ -7,19 +8,18 @@ import { drawFood } from "./foodArt";
 import { drawBallKind } from "./balls";
 
 /** The shop button: under the decorate button in the top-right corner. */
-export function shopButton(width: number): Point & { r: number } {
-  const r = 18;
-  return { x: width - 14 - r, y: 44 + 2 * (2 * r + 10) + r, r };
+export function shopButton(width: number, height: number): Point & { r: number } {
+  return cornerButton(2, width, height);
 }
 
-export function onShopButton(p: Point, width: number): boolean {
-  const b = shopButton(width);
+export function onShopButton(p: Point, width: number, height: number): boolean {
+  const b = shopButton(width, height);
   return Math.hypot(p.x - b.x, p.y - b.y) <= b.r * 1.3;
 }
 
 /** A little shopping bag with a coin. */
-export function drawShopButton(ctx: CanvasRenderingContext2D, width: number): void {
-  const b = shopButton(width);
+export function drawShopButton(ctx: CanvasRenderingContext2D, width: number, height: number): void {
+  const b = shopButton(width, height);
   ctx.fillStyle = "rgba(20,14,60,0.85)";
   ctx.strokeStyle = "rgba(255,210,122,0.7)";
   ctx.lineWidth = 2;

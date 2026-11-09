@@ -220,12 +220,22 @@ async function main(): Promise<void> {
       }
       if (!input.down) swallowing = false;
       // The backup button (top right, under the mode tag).
-      if (pressAt && !swallowing && mode === "play" && onBackupButton(pressAt, screen.width)) {
+      if (
+        pressAt &&
+        !swallowing &&
+        mode === "play" &&
+        onBackupButton(pressAt, screen.width, screen.height)
+      ) {
         swallowing = true;
         showBackup();
       }
       // The decorate button (top right, under the backup button): decorating mode on or off.
-      if (pressAt && !swallowing && mode === "play" && onDecorateButton(pressAt, screen.width)) {
+      if (
+        pressAt &&
+        !swallowing &&
+        mode === "play" &&
+        onDecorateButton(pressAt, screen.width, screen.height)
+      ) {
         swallowing = true;
         decorator.active = !decorator.active;
         if (decorator.active) {
@@ -248,7 +258,12 @@ async function main(): Promise<void> {
       // Decorating blocks everything else, for this frame only (so the decorator keeps the finger).
       let blocked = swallowing || decorating;
       // The shop button: spend noodle coins.
-      if (pressAt && !swallowing && mode === "play" && onShopButton(pressAt, screen.width)) {
+      if (
+        pressAt &&
+        !swallowing &&
+        mode === "play" &&
+        onShopButton(pressAt, screen.width, screen.height)
+      ) {
         swallowing = true;
         openShop(wallet, stash, (item) => {
           const r = buy(item, wallet, stash);
@@ -261,7 +276,7 @@ async function main(): Promise<void> {
       }
       // Noodle Catch: the 🎮 button starts a round; while it's on, everything else steps aside
       // and the finger steers the dragon.
-      const gb = gameButton(screen.width);
+      const gb = gameButton(screen.width, screen.height);
       if (catchGame) {
         blocked = true;
         if (catchGame.phase === "done" && pressAt && catchDoneFor > 0.6) {
@@ -544,10 +559,17 @@ async function main(): Promise<void> {
             drawBedButton(ctx, screen.width, screen.height, needs.inBed === true, modeSeconds);
           }
           if (mode === "play") {
-            drawBackupButton(ctx, screen.width);
-            drawDecorateButton(ctx, screen.width, decorator.active, dark, modeSeconds);
-            if (!decorator.active) drawShopButton(ctx, screen.width);
-            if (!decorator.active && !catchGame) drawGameButton(ctx, screen.width);
+            drawBackupButton(ctx, screen.width, screen.height);
+            drawDecorateButton(
+              ctx,
+              screen.width,
+              screen.height,
+              decorator.active,
+              dark,
+              modeSeconds,
+            );
+            if (!decorator.active) drawShopButton(ctx, screen.width, screen.height);
+            if (!decorator.active && !catchGame) drawGameButton(ctx, screen.width, screen.height);
           }
           if (catchGame) {
             drawCatchHud(

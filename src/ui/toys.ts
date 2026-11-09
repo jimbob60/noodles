@@ -1,3 +1,4 @@
+import { trayRadius } from "./layout";
 import type { Needs } from "../care/needs";
 import type { PointerState } from "../engine/input";
 import { Spine, type Point } from "../noodle/spine";
@@ -93,7 +94,7 @@ export class Toys {
   private height = 0;
 
   slots(): { toy: ToyId; x: number; y: number; r: number }[] {
-    const r = Math.max(24, Math.min(34, Math.min(this.width, this.height) * 0.042));
+    const r = trayRadius(this.width, this.height);
     const gap = r * 0.55;
     // Right to left: ball in the corner, ribbon next to it.
     return TOY_IDS.map((toy, i) => ({

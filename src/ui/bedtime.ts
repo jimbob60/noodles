@@ -1,8 +1,9 @@
+import { trayRadius } from "./layout";
 import type { Point } from "../noodle/spine";
 
 /** The bedtime button sits just above the ball in the bottom-right corner. */
 export function bedButton(width: number, height: number): Point & { r: number } {
-  const r = Math.max(24, Math.min(34, Math.min(width, height) * 0.042));
+  const r = trayRadius(width, height);
   return { x: width - 14 - r, y: height - 14 - r - (2 * r + r * 0.55), r };
 }
 

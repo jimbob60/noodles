@@ -1,3 +1,4 @@
+import { cornerButton } from "./layout";
 import {
   addDecor,
   DECOR_KINDS,
@@ -15,13 +16,12 @@ import type { PointerState } from "../engine/input";
 import type { Point } from "../noodle/spine";
 
 /** The decorate button: under the backup button in the top-right corner. */
-export function decorateButton(width: number): Point & { r: number } {
-  const r = 18;
-  return { x: width - 14 - r, y: 44 + 2 * r + 10 + r, r };
+export function decorateButton(width: number, height: number): Point & { r: number } {
+  return cornerButton(1, width, height);
 }
 
-export function onDecorateButton(p: Point, width: number): boolean {
-  const b = decorateButton(width);
+export function onDecorateButton(p: Point, width: number, height: number): boolean {
+  const b = decorateButton(width, height);
   return Math.hypot(p.x - b.x, p.y - b.y) <= b.r * 1.3;
 }
 
@@ -291,11 +291,12 @@ export class Decorator {
 export function drawDecorateButton(
   ctx: CanvasRenderingContext2D,
   width: number,
+  height: number,
   active: boolean,
   dark: number,
   time: number,
 ): void {
-  const b = decorateButton(width);
+  const b = decorateButton(width, height);
   ctx.fillStyle = active ? "rgba(157,255,200,0.3)" : "rgba(20,14,60,0.85)";
   ctx.strokeStyle = active ? "#9dffc8" : "rgba(157,255,200,0.6)";
   ctx.lineWidth = 2;
