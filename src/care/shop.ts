@@ -1,6 +1,7 @@
 import { DECOR_KINDS, type DecorKind } from "../den/decor";
 import { spend, type Wallet } from "./coins";
 import { TREAT_IDS, type FoodId } from "./food";
+import { BALL_KINDS, BALLS, type BallKind } from "../ui/balls";
 
 /**
  * Things bought in the shop: treats in the pantry, and decorations in storage. Each decoration
@@ -10,13 +11,16 @@ export interface Stash {
   pantry: Partial<Record<FoodId, number>>;
   /** Decorations bought but not placed in the den, by kind. */
   storage: Partial<Record<DecorKind, number>>;
+  /** Toys are bought once and kept for good: the balls bought so far. */
+  balls: BallKind[];
 }
 
-export const emptyStash = (): Stash => ({ pantry: {}, storage: {} });
+export const emptyStash = (): Stash => ({ pantry: {}, storage: {}, balls: [] });
 
 export type ShopItem =
   | { id: string; type: "treat"; food: FoodId; pack: number; cost: number; name: string }
-  | { id: string; type: "decor"; kind: DecorKind; cost: number; name: string };
+  | { id: string; type: "decor"; kind: DecorKind; cost: number; name: string }
+  | { id: string; type: "ball"; ball: BallKind; cost: number; name: string };
 
 /** What each decoration costs (Jacob asked for every decoration to be bought). */
 export const DECOR_PRICE: Record<DecorKind, number> = {
@@ -55,6 +59,13 @@ export const DECOR_NAME: Record<DecorKind, string> = {
 export const CATALOG: ShopItem[] = [
   { id: "berries", type: "treat", food: "berries", pack: 3, cost: 6, name: "Berry bowls" },
   { id: "mooncake", type: "treat", food: "mooncake", pack: 3, cost: 15, name: "Moon cakes" },
+  ...BALL_KINDS.filter((b) => BALLS[b].cost > 0).map((ball) => ({
+    id: ball,
+    type: "ball" as const,
+    ball,
+    cost: BALLS[ball].cost,
+    name: BALLS[ball].name,
+  })),
   ...[...DECOR_KINDS]
     .sort((a, b) => DECOR_PRICE[a] - DECOR_PRICE[b])
     .map((kind) => ({
@@ -84,9 +95,10 @@ export function store(stash: Stash, kind: DecorKind, change: 1 | -1): Stash {
 }
 
 export type BuyResult =
-  { ok: true; wallet: Wallet; stash: Stash } | { ok: false; why: "coins" | "full" };
+  { ok: true; wallet: Wallet; stash: Stash } | { ok: false; why: "coins" | "full" | "owned" };
 
 export function buy(item: ShopItem, wallet: Wallet, stash: Stash): BuyResult {
+  if (item.type === "ball" && stash.balls.includes(item.ball)) return { ok: false, why: "owned" };
   if (item.type === "decor" && inStorage(stash, item.kind) >= STORAGE_MAX) {
     return { ok: false, why: "full" };
   }
@@ -95,6 +107,8 @@ export function buy(item: ShopItem, wallet: Wallet, stash: Stash): BuyResult {
   }
   const paid = spend(wallet, item.cost);
   if (!paid) return { ok: false, why: "coins" };
+  if (item.type === "ball")
+    return { ok: true, wallet: paid, stash: { ...stash, balls: [...stash.balls, item.ball] } };
   if (item.type === "decor") {
     return {
       ok: true,
@@ -124,6 +138,7 @@ export function parseStash(raw: unknown, placed: DecorKind[] = []): Stash {
     pantry?: Record<string, unknown>;
     storage?: Record<string, unknown>;
     unlocked?: unknown;
+    balls?: unknown;
   };
   const count = (v: unknown, max: number) =>
     typeof v === "number" && Number.isInteger(v) && v > 0 ? Math.min(v, max) : 0;
@@ -142,5 +157,8 @@ export function parseStash(raw: unknown, placed: DecorKind[] = []): Stash {
       if (r.unlocked.includes(k) && !placed.includes(k) && !storage[k]) storage[k] = 1;
     }
   }
-  return { pantry, storage };
+  const balls = Array.isArray(r.balls)
+    ? BALL_KINDS.filter((b) => BALLS[b].cost > 0 && (r.balls as unknown[]).includes(b))
+    : [];
+  return { pantry, storage, balls };
 }

@@ -40,6 +40,13 @@ describe("the shop", () => {
     expect(w.coins).toBe(200 - 2 * item("lantern").cost);
   });
 
+  it("sells balls once, to keep for good", () => {
+    const r = buy(item("jelly"), rich(), emptyStash());
+    expect(r.ok && r.stash.balls).toEqual(["jelly"]);
+    if (!r.ok) return;
+    expect(buy(item("jelly"), r.wallet, r.stash)).toEqual({ ok: false, why: "owned" });
+  });
+
   it("sells every decoration, each with a price", () => {
     const decor = CATALOG.filter((i) => i.type === "decor");
     expect(decor).toHaveLength(13);
@@ -63,13 +70,13 @@ describe("the shop", () => {
   });
 
   it("is saved, survives backup codes, and ignores junk", () => {
-    const stash = { pantry: { berries: 4 }, storage: { planet: 2 } };
+    const stash = { pantry: { berries: 4 }, storage: { planet: 2 }, balls: ["jelly" as const] };
     const save = makeSave(3, freshNeeds(0), 0, [], rich(), stash);
     expect(parseSave(JSON.parse(JSON.stringify(save)), 0)?.stash).toEqual(stash);
     expect(decodeBackup(encodeBackup(save), 0)?.stash).toEqual(stash);
     expect(
       parseStash({ pantry: { berries: -2, cake: 5 }, storage: { rug: 99, robot: 3 } }),
-    ).toEqual({ pantry: {}, storage: { rug: 9 } });
+    ).toEqual({ pantry: {}, storage: { rug: 9 }, balls: [] });
   });
 
   it("turns decorations 'unlocked' by the earlier shop into one each in storage, unless placed", () => {
@@ -78,6 +85,7 @@ describe("the shop", () => {
     ).toEqual({
       pantry: {},
       storage: { bonsai: 1 },
+      balls: [],
     });
   });
 });

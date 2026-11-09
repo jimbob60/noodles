@@ -13,7 +13,11 @@ const W = 1280;
 const H = 800;
 const lively = { fullness: 70, happiness: 50, energy: 80, cleanliness: 70 };
 const sleepy = { ...lively, energy: PLAY_ENERGY - 5 };
-const up = { x: 0, y: 0, down: false };
+const up = Object.assign((x = 0, y = 0) => ({ x, y, down: false }), {
+  x: 0,
+  y: 0,
+  down: false as const,
+});
 
 function fakeDragon(mouth = { x: -999, y: -999 }) {
   const log: string[] = [];
@@ -153,5 +157,43 @@ describe("ribbon", () => {
     expect(r.busy).toBe(true); // the release frame still belongs to the toy
     expect(toys.held).toBeNull();
     expect(toys.update(1 / 60, up, null, d, lively, W, H).busy).toBe(false);
+  });
+});
+
+describe("different balls", () => {
+  it("switch with a tap on the ball bubble, among the balls you own", async () => {
+    const toys = new Toys();
+    toys.owned = ["beach", "star", "jelly"];
+    const d = fakeDragon();
+    toys.update(1 / 60, up, null, d, lively, W, H);
+    const slot = toys.slots().find((s) => s.toy === "ball")!;
+    for (const want of ["star", "jelly", "beach"]) {
+      toys.update(1 / 60, { x: slot.x, y: slot.y, down: true }, slot, d, lively, W, H);
+      toys.update(1 / 60, up(slot.x, slot.y), null, d, lively, W, H);
+      expect(toys.ballKind).toBe(want);
+      expect(toys.ball).toBeNull(); // a tap doesn't throw
+    }
+  });
+
+  it("each play differently: the bubble ball falls far slower than the yarn ball", () => {
+    const drop = (kind: "bubble" | "yarn") => {
+      const toys = new Toys();
+      toys.owned = ["beach", kind];
+      toys.ballKind = kind;
+      const d = fakeDragon();
+      // Hold it still for a moment so it is dropped, not thrown.
+      grab(
+        toys,
+        "ball",
+        Array.from({ length: 40 }, () => ({ x: 640, y: 200 })),
+        d,
+        { ...lively, energy: 10 },
+      );
+      toys.update(1 / 60, up, null, d, { ...lively, energy: 10 }, W, H);
+      for (let i = 0; i < 30; i++)
+        toys.update(1 / 60, up, null, d, { ...lively, energy: 10 }, W, H);
+      return toys.ball!.y;
+    };
+    expect(drop("yarn")).toBeGreaterThan(drop("bubble") + 50);
   });
 });

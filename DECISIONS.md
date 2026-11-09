@@ -26,6 +26,12 @@ Newest first. Each entry says what we decided, why, and what it affects.
 - **Why:** Jacob's ask, and it gives the bath sponge a reason to come out regularly.
 - **Affects:** phase 42 (balance).
 
+## 2026-11-09: Toys in the shop — five new balls that each play differently
+
+- **Decision:** the shop gets a ⚽ Toys section: yarn ball (20; heavy, rolls, barely bounces, trails yarn), star ball (25; floaty, sparkle trail), bubble ball (30; very light and slow), jelly ball (35; super bouncy, squishes on landing) and rainbow ball (50; shifting colors, extra Love per boop). Each has its own gravity, bounce, air drag, floor grip and Love bonus. Toys are bought once and kept (unlike decorations, which are placed). The beach ball stays free. Tap the ball bubble to cycle through owned balls (dots show how many); drag to throw. Save version 6 adds the owned balls.
+- **Why:** Jacob asked for more games like the ball, with different balls.
+- **Affects:** phase 26 (the mini-game could reuse balls), phase 42 (balance).
+
 ## 2026-11-09: Decorations are bought one at a time and kept in storage
 
 - **Decision:** at Jacob's request, buying a decoration gets you one item, not an unlock: two lanterns means buying two. Prices: lantern 10, cushion 12, jar 15, plant 15, rug 18, stool 20, tea set 25, fairy lights 25, beanbag 30, moon mobile 30, crystal lamp 35, bonsai 40, planet lamp 50. The decorate drawer is the storage: each slot shows a green count of how many are stored and always a coin price tag. Placing one takes it out of storage; dragging it back onto the drawer returns it, so nothing paid for is lost. Tapping the price tag (or a decoration you have none of) asks "Buy?", and a second tap within 3 s buys one (or it shakes if short of coins). Recoloring is free. Storage holds up to 9 of each. Save version 5 adds `storage`; decorations "unlocked" by the version 4 shop become one each in storage unless already placed, and placed decorations stay placed. The shop panel shows how many are in storage.

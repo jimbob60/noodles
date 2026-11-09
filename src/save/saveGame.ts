@@ -4,7 +4,7 @@ import { emptyWallet, parseWallet, type Wallet } from "../care/coins";
 import { emptyStash, parseStash, type Stash } from "../care/shop";
 
 /** The save format version. Bump it (and add a migration below) whenever the format changes. */
-export const SAVE_VERSION = 5;
+export const SAVE_VERSION = 6;
 
 /**
  * Everything that makes your dragon yours.
@@ -13,9 +13,10 @@ export const SAVE_VERSION = 5;
  * - Version 3 (phase 24): plus the noodle coin wallet.
  * - Version 4 (phase 25): plus the shop stash (treats and unlocked decorations).
  * - Version 5 (phase 25): decorations are bought one at a time and kept in storage.
+ * - Version 6 (phase 25): plus the balls bought in the shop.
  */
-export interface SaveV5 {
-  version: 5;
+export interface SaveV6 {
+  version: 6;
   /** When this was saved (milliseconds since 1970). */
   savedAt: number;
   /** The seed its look comes from (and its favorite food and tickle spots). */
@@ -25,11 +26,11 @@ export interface SaveV5 {
   wallet: Wallet;
   stash: Stash;
 }
-export type Save = SaveV5;
+export type Save = SaveV6;
 
 export function newSave(seed: number, now: number): Save {
   return {
-    version: 5,
+    version: 6,
     savedAt: now,
     seed,
     needs: freshNeeds(now),
@@ -47,7 +48,7 @@ export function makeSave(
   wallet: Wallet = emptyWallet(),
   stash: Stash = emptyStash(),
 ): Save {
-  return { version: 5, savedAt: now, seed, needs, decor, wallet, stash };
+  return { version: 6, savedAt: now, seed, needs, decor, wallet, stash };
 }
 
 const validSeed = (v: unknown): v is number =>
@@ -83,7 +84,7 @@ export function parseSave(raw: unknown, now: number): Save | null {
         )
       : emptyStash();
   return {
-    version: 5,
+    version: 6,
     savedAt,
     seed: r.seed,
     needs: parseNeeds(r.needs, now),

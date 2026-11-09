@@ -4,6 +4,7 @@ import { drawDecorAt } from "../den/decorArt";
 import type { Point } from "../noodle/spine";
 import { drawCoin } from "./coinCounter";
 import { drawFood } from "./foodArt";
+import { drawBallKind } from "./balls";
 
 /** The shop button: under the decorate button in the top-right corner. */
 export function shopButton(width: number): Point & { r: number } {
@@ -52,6 +53,7 @@ function picture(item: ShopItem): HTMLCanvasElement {
   const ctx = c.getContext("2d")!;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   if (item.type === "treat") drawFood(ctx, item.food, 42, 38, 22);
+  else if (item.type === "ball") drawBallKind(ctx, item.ball, 42, 38, 18, 0.4, 1);
   else drawDecorAt(ctx, item.kind, 0, 42, 40, 20, 0.8, 1);
   return c;
 }
@@ -138,7 +140,7 @@ export function openShop(
       if (item.type !== section) {
         section = item.type;
         const h = document.createElement("div");
-        h.textContent = item.type === "treat" ? "🍓 Treats" : "🏮 Decorations";
+        h.textContent = { treat: "🍓 Treats", ball: "⚽ Toys", decor: "🏮 Decorations" }[item.type];
         css(h, {
           gridColumn: "1 / -1",
           font: "600 16px system-ui, sans-serif",
@@ -163,9 +165,11 @@ export function openShop(
       css(name, { fontWeight: "600", textAlign: "center" });
       const note = document.createElement("div");
       css(note, { fontSize: "13px", color: "#c9bdf0", minHeight: "16px" });
-      const owned = false;
+      const owned = item.type === "ball" && stash.balls.includes(item.ball);
       if (item.type === "treat")
         note.textContent = `×${item.pack} · you have ${stash.pantry[item.food] ?? 0}`;
+      else if (item.type === "ball")
+        note.textContent = owned ? "Tap the ball bubble to switch" : "Toy · yours to keep";
       else note.textContent = `In storage: ${inStorage(stash, item.kind)}`;
       const btn = document.createElement("button");
       const afford = wallet.coins >= item.cost;

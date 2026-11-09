@@ -26,6 +26,7 @@ import {
   type Stash,
 } from "./care/shop";
 import { drawShopButton, onShopButton, openShop } from "./ui/shopPanel";
+import { ownedBalls } from "./ui/balls";
 import { TREAT_IDS } from "./care/food";
 import { Petting } from "./care/petting";
 import { moodFrom } from "./care/mood";
@@ -238,6 +239,8 @@ async function main(): Promise<void> {
           return { wallet, stash };
         });
       }
+      // The toy tray knows which balls are owned.
+      toys.owned = ownedBalls(stash.balls);
       // The tray shows the pantry's treats, and the drawer only what's owned.
       feeding.pantry = stash.pantry;
       decorator.storage = stash.storage;

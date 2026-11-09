@@ -1,6 +1,7 @@
 import type { Needs } from "../care/needs";
 import type { PointerState } from "../engine/input";
 import { Spine, type Point } from "../noodle/spine";
+import { BALLS, drawBallKind, nextBall, type BallKind } from "./balls";
 
 export type ToyId = "ribbon" | "ball";
 export const TOY_IDS: ToyId[] = ["ribbon", "ball"];
@@ -22,8 +23,6 @@ export const BORED_AFTER = 6;
 /** Seconds the ball takes to drift home. */
 export const HOME_TIME = 2.2;
 
-const GRAVITY = 420;
-const BOUNCE = 0.72;
 const MAX_THROW = 1100;
 const BOOP_SPEED = 520;
 const LIFT = 34;
@@ -44,6 +43,11 @@ export interface Playful {
 }
 
 export interface Ball {
+  kind: BallKind;
+  /** Where it has recently been (yarn strand, star sparkles). */
+  trail: Point[];
+  /** 0–1: how squished it is after a bounce (the jelly ball shows it). */
+  squash: number;
   x: number;
   y: number;
   vx: number;
@@ -76,6 +80,11 @@ export class Toys {
   /** The ribbon's streamer while the wand is held. */
   streamer: Spine | null = null;
   private throwV: Point = { x: 0, y: 0 };
+  /** Which ball is out to play, and which balls are owned (set by the game). */
+  ballKind: BallKind = "beach";
+  owned: BallKind[] = ["beach"];
+  /** Where a ball grab from the tray started: letting go nearby is a tap, which switches ball. */
+  private grabbedFromTray: Point | null = null;
   private lastHeld: Point | null = null;
   private boopCooldown = 0;
   private refusedAt = -Infinity;
@@ -133,6 +142,7 @@ export class Toys {
         Math.hypot(pressAt.x - this.ball.x, pressAt.y - this.ball.y) < this.ballR * 2.2;
       if (onBall || (slot?.toy === "ball" && !this.ball)) {
         this.held = { toy: "ball", x: input.x, y: input.y - LIFT };
+        this.grabbedFromTray = onBall ? null : { ...pressAt };
         this.ball = null;
       } else if (slot?.toy === "ribbon") {
         this.held = { toy: "ribbon", x: input.x, y: input.y - LIFT };
@@ -148,7 +158,14 @@ export class Toys {
     if (this.held) {
       result.busy = true;
       if (!input.down) {
-        if (this.held.toy === "ball") this.throwBall();
+        const tapped =
+          this.held.toy === "ball" &&
+          this.grabbedFromTray &&
+          Math.hypot(input.x - this.grabbedFromTray.x, input.y - this.grabbedFromTray.y) < 14;
+        // A quick tap on the ball bubble switches to the next ball; a drag throws it.
+        if (tapped) this.ballKind = nextBall(this.ballKind, this.owned);
+        else if (this.held.toy === "ball") this.throwBall();
+        this.grabbedFromTray = null;
         this.held = null;
         this.streamer = null;
       } else {
@@ -201,6 +218,9 @@ export class Toys {
     const speed = Math.hypot(v.x, v.y);
     const k = speed > MAX_THROW ? MAX_THROW / speed : 1;
     this.ball = {
+      kind: this.ballKind,
+      trail: [],
+      squash: 0,
       x: this.held!.x,
       y: this.held!.y,
       vx: v.x * k,
@@ -224,10 +244,12 @@ export class Toys {
       return;
     }
 
-    // Bouncy physics, staying on screen.
+    // Bouncy physics, staying on screen. Each kind of ball has its own feel.
+    const st = BALLS[b.kind];
+    const BOUNCE = st.bounce;
     const r = this.ballR;
-    b.vy += GRAVITY * dt;
-    const drag = Math.exp(-0.6 * dt);
+    b.vy += st.gravity * dt;
+    const drag = Math.exp(-st.airDrag * dt);
     b.vx *= drag;
     b.vy *= drag;
     b.x += b.vx * dt;
@@ -237,10 +259,14 @@ export class Toys {
     if (b.x > this.width - r) [b.x, b.vx] = [this.width - r, -Math.abs(b.vx) * BOUNCE];
     if (b.y < r) [b.y, b.vy] = [r, Math.abs(b.vy) * BOUNCE];
     if (b.y > this.height - r) {
+      if (b.vy > 120) b.squash = Math.min(1, b.vy / 700);
       b.y = this.height - r;
       b.vy = -Math.abs(b.vy) * BOUNCE;
-      b.vx *= 0.9; // a little rolling friction on the floor
+      b.vx *= st.floorGrip; // a little rolling friction on the floor
     }
+    b.squash = Math.max(0, b.squash - dt * 3);
+    b.trail.push({ x: b.x, y: b.y });
+    if (b.trail.length > 14) b.trail.shift();
 
     b.idle += dt;
     if (keen && b.boops < BOOPS_PER_GAME) {
@@ -256,7 +282,7 @@ export class Toys {
         b.boops++;
         b.idle = 0;
         this.boopCooldown = 0.4;
-        result.love += BOOP_LOVE;
+        result.love += BOOP_LOVE + st.loveBonus;
         result.energy -= BOOP_ENERGY;
         result.grime -= BOOP_GRIME;
         result.booped = true;
@@ -296,54 +322,35 @@ export class Toys {
       ctx.stroke();
       const bob = Math.sin(this.time * 2 + s.x * 0.05) * s.r * 0.05;
       if (s.toy === "ball" && !this.ball && this.held?.toy !== "ball") {
-        drawBall(ctx, s.x, s.y + bob, s.r * 0.55, this.time * 0.5);
+        drawBallKind(ctx, this.ballKind, s.x, s.y + bob, s.r * 0.55, this.time * 0.5, this.time);
+        if (this.owned.length > 1) {
+          // Little dots show there are more balls to switch to (tap to switch).
+          this.owned.forEach((k, i) => {
+            ctx.fillStyle = k === this.ballKind ? "#ffffff" : "rgba(255,255,255,0.35)";
+            ctx.beginPath();
+            ctx.arc(
+              s.x + (i - (this.owned.length - 1) / 2) * 7,
+              s.y + s.r * 0.78,
+              2.4,
+              0,
+              Math.PI * 2,
+            );
+            ctx.fill();
+          });
+        }
       }
       if (s.toy === "ribbon" && this.held?.toy !== "ribbon") drawWand(ctx, s.x, s.y + bob, s.r);
     }
-    if (this.ball) drawBall(ctx, this.ball.x, this.ball.y, this.ballR, this.ball.spin);
-    if (this.held?.toy === "ball") drawBall(ctx, this.held.x, this.held.y, this.ballR * 1.1, 0);
+    const b = this.ball;
+    if (b) drawBallKind(ctx, b.kind, b.x, b.y, this.ballR, b.spin, this.time, b.trail, b.squash);
+    if (this.held?.toy === "ball") {
+      drawBallKind(ctx, this.ballKind, this.held.x, this.held.y, this.ballR * 1.1, 0, this.time);
+    }
     if (this.held?.toy === "ribbon" && this.streamer) {
       drawStreamer(ctx, this.streamer, slots[0].r, this.time);
       drawWand(ctx, this.held.x, this.held.y + slots[0].r * 0.5, slots[0].r);
     }
   }
-}
-
-/** A glowing beach-ball: pink, white and cyan wedges that spin as it rolls. */
-function drawBall(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  r: number,
-  spin: number,
-): void {
-  ctx.save();
-  ctx.translate(x, y);
-  ctx.fillStyle = "rgba(255,138,216,0.18)";
-  ctx.beginPath();
-  ctx.arc(0, 0, r * 1.6, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.rotate(spin);
-  const colors = ["#ff8ad8", "#ffffff", "#7af3ff", "#ffffff", "#ffd27a", "#ffffff"];
-  colors.forEach((c, i) => {
-    ctx.fillStyle = c;
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.arc(0, 0, r, (i * Math.PI) / 3, ((i + 1) * Math.PI) / 3);
-    ctx.closePath();
-    ctx.fill();
-  });
-  ctx.rotate(-spin);
-  ctx.strokeStyle = "#d9549f";
-  ctx.lineWidth = Math.max(1.5, r * 0.1);
-  ctx.beginPath();
-  ctx.arc(0, 0, r, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.fillStyle = "rgba(255,255,255,0.7)";
-  ctx.beginPath();
-  ctx.arc(-r * 0.35, -r * 0.4, r * 0.22, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.restore();
 }
 
 /** The ribbon wand: a short stick with a gold star on top. */
