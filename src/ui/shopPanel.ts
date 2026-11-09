@@ -1,4 +1,4 @@
-import { CATALOG, ownedDecor, type ShopItem, type Stash } from "../care/shop";
+import { CATALOG, inStorage, type ShopItem, type Stash } from "../care/shop";
 import type { Wallet } from "../care/coins";
 import { drawDecorAt } from "../den/decorArt";
 import type { Point } from "../noodle/spine";
@@ -163,10 +163,10 @@ export function openShop(
       css(name, { fontWeight: "600", textAlign: "center" });
       const note = document.createElement("div");
       css(note, { fontSize: "13px", color: "#c9bdf0", minHeight: "16px" });
-      const owned = item.type === "decor" && ownedDecor(stash).includes(item.kind);
+      const owned = false;
       if (item.type === "treat")
         note.textContent = `×${item.pack} · you have ${stash.pantry[item.food] ?? 0}`;
-      else note.textContent = owned ? "In your drawer" : "Decoration";
+      else note.textContent = `In storage: ${inStorage(stash, item.kind)}`;
       const btn = document.createElement("button");
       const afford = wallet.coins >= item.cost;
       btn.textContent = owned ? "✓ Owned" : `🪙 ${item.cost}`;

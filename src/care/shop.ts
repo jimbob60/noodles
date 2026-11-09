@@ -2,13 +2,17 @@ import { DECOR_KINDS, type DecorKind } from "../den/decor";
 import { spend, type Wallet } from "./coins";
 import { TREAT_IDS, type FoodId } from "./food";
 
-/** Things bought in the shop: treats in the pantry, and decorations unlocked for good. */
+/**
+ * Things bought in the shop: treats in the pantry, and decorations in storage. Each decoration
+ * is bought one at a time; placing one takes it out of storage, putting it away puts it back.
+ */
 export interface Stash {
   pantry: Partial<Record<FoodId, number>>;
-  unlocked: DecorKind[];
+  /** Decorations bought but not placed in the den, by kind. */
+  storage: Partial<Record<DecorKind, number>>;
 }
 
-export const emptyStash = (): Stash => ({ pantry: {}, unlocked: [] });
+export const emptyStash = (): Stash => ({ pantry: {}, storage: {} });
 
 export type ShopItem =
   | { id: string; type: "treat"; food: FoodId; pack: number; cost: number; name: string }
@@ -65,23 +69,27 @@ export const CATALOG: ShopItem[] = [
 /** How many treats the pantry can hold of each kind. */
 export const PANTRY_MAX = 30;
 
-/** The decorations that have been bought. */
-export function ownedDecor(stash: Stash): DecorKind[] {
-  return DECOR_KINDS.filter((k) => stash.unlocked.includes(k));
+/** How many of one decoration storage can hold. */
+export const STORAGE_MAX = 9;
+
+/** How many of a decoration are in storage. */
+export function inStorage(stash: Stash, kind: DecorKind): number {
+  return stash.storage[kind] ?? 0;
 }
 
-/** Decorations already placed in the den stay yours: unlock them for free (an upgrade step). */
-export function keepPlaced(stash: Stash, placed: DecorKind[]): Stash {
-  const unlocked = DECOR_KINDS.filter((k) => stash.unlocked.includes(k) || placed.includes(k));
-  return { ...stash, unlocked };
+/** Moves one decoration out of storage (placing it) or back in (putting it away). */
+export function store(stash: Stash, kind: DecorKind, change: 1 | -1): Stash {
+  const n = Math.max(0, inStorage(stash, kind) + change);
+  return { ...stash, storage: { ...stash.storage, [kind]: n } };
 }
 
 export type BuyResult =
-  { ok: true; wallet: Wallet; stash: Stash } | { ok: false; why: "coins" | "owned" | "full" };
+  { ok: true; wallet: Wallet; stash: Stash } | { ok: false; why: "coins" | "full" };
 
 export function buy(item: ShopItem, wallet: Wallet, stash: Stash): BuyResult {
-  if (item.type === "decor" && ownedDecor(stash).includes(item.kind))
-    return { ok: false, why: "owned" };
+  if (item.type === "decor" && inStorage(stash, item.kind) >= STORAGE_MAX) {
+    return { ok: false, why: "full" };
+  }
   if (item.type === "treat" && (stash.pantry[item.food] ?? 0) + item.pack > PANTRY_MAX) {
     return { ok: false, why: "full" };
   }
@@ -91,7 +99,7 @@ export function buy(item: ShopItem, wallet: Wallet, stash: Stash): BuyResult {
     return {
       ok: true,
       wallet: paid,
-      stash: { ...stash, unlocked: [...stash.unlocked, item.kind] },
+      stash: store(stash, item.kind, 1),
     };
   }
   const pantry = { ...stash.pantry, [item.food]: (stash.pantry[item.food] ?? 0) + item.pack };
@@ -105,17 +113,34 @@ export function useTreat(stash: Stash, food: FoodId): Stash {
   return { ...stash, pantry: { ...stash.pantry, [food]: n - 1 } };
 }
 
-/** Reads a saved stash, keeping only sensible entries. */
-export function parseStash(raw: unknown): Stash {
+/**
+ * Reads a saved stash, keeping only sensible entries. Saves from the short-lived "unlock" shop
+ * (an `unlocked` list) turn each unlocked decoration that isn't already placed into one in
+ * storage, so nothing bought is lost.
+ */
+export function parseStash(raw: unknown, placed: DecorKind[] = []): Stash {
   if (!raw || typeof raw !== "object") return emptyStash();
-  const r = raw as { pantry?: Record<string, unknown>; unlocked?: unknown };
+  const r = raw as {
+    pantry?: Record<string, unknown>;
+    storage?: Record<string, unknown>;
+    unlocked?: unknown;
+  };
+  const count = (v: unknown, max: number) =>
+    typeof v === "number" && Number.isInteger(v) && v > 0 ? Math.min(v, max) : 0;
   const pantry: Stash["pantry"] = {};
   for (const id of TREAT_IDS) {
-    const v = r.pantry?.[id];
-    if (typeof v === "number" && Number.isInteger(v) && v > 0) pantry[id] = Math.min(v, PANTRY_MAX);
+    const n = count(r.pantry?.[id], PANTRY_MAX);
+    if (n) pantry[id] = n;
   }
-  const unlocked = Array.isArray(r.unlocked)
-    ? DECOR_KINDS.filter((k) => (r.unlocked as unknown[]).includes(k))
-    : [];
-  return { pantry, unlocked };
+  const storage: Stash["storage"] = {};
+  for (const k of DECOR_KINDS) {
+    const n = count(r.storage?.[k], STORAGE_MAX);
+    if (n) storage[k] = n;
+  }
+  if (Array.isArray(r.unlocked)) {
+    for (const k of DECOR_KINDS) {
+      if (r.unlocked.includes(k) && !placed.includes(k) && !storage[k]) storage[k] = 1;
+    }
+  }
+  return { pantry, storage };
 }

@@ -4,7 +4,7 @@ import { emptyWallet, parseWallet, type Wallet } from "../care/coins";
 import { emptyStash, parseStash, type Stash } from "../care/shop";
 
 /** The save format version. Bump it (and add a migration below) whenever the format changes. */
-export const SAVE_VERSION = 4;
+export const SAVE_VERSION = 5;
 
 /**
  * Everything that makes your dragon yours.
@@ -12,9 +12,10 @@ export const SAVE_VERSION = 4;
  * - Version 2 (phase 23): plus the den's decorations.
  * - Version 3 (phase 24): plus the noodle coin wallet.
  * - Version 4 (phase 25): plus the shop stash (treats and unlocked decorations).
+ * - Version 5 (phase 25): decorations are bought one at a time and kept in storage.
  */
-export interface SaveV4 {
-  version: 4;
+export interface SaveV5 {
+  version: 5;
   /** When this was saved (milliseconds since 1970). */
   savedAt: number;
   /** The seed its look comes from (and its favorite food and tickle spots). */
@@ -24,11 +25,11 @@ export interface SaveV4 {
   wallet: Wallet;
   stash: Stash;
 }
-export type Save = SaveV4;
+export type Save = SaveV5;
 
 export function newSave(seed: number, now: number): Save {
   return {
-    version: 4,
+    version: 5,
     savedAt: now,
     seed,
     needs: freshNeeds(now),
@@ -46,7 +47,7 @@ export function makeSave(
   wallet: Wallet = emptyWallet(),
   stash: Stash = emptyStash(),
 ): Save {
-  return { version: 4, savedAt: now, seed, needs, decor, wallet, stash };
+  return { version: 5, savedAt: now, seed, needs, decor, wallet, stash };
 }
 
 const validSeed = (v: unknown): v is number =>
@@ -74,9 +75,15 @@ export function parseSave(raw: unknown, now: number): Save | null {
   // Versions 1–2 had no coins: they upgrade with an empty wallet.
   const wallet = r.version >= 3 ? parseWallet(r.wallet) : emptyWallet();
   // Versions 1–3 had no shop: they upgrade with an empty stash.
-  const stash = r.version >= 4 ? parseStash(r.stash) : emptyStash();
+  const stash =
+    r.version >= 4
+      ? parseStash(
+          r.stash,
+          decor.map((d) => d.kind),
+        )
+      : emptyStash();
   return {
-    version: 4,
+    version: 5,
     savedAt,
     seed: r.seed,
     needs: parseNeeds(r.needs, now),

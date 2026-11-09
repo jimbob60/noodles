@@ -6,8 +6,7 @@ import {
   buy,
   CATALOG,
   emptyStash,
-  keepPlaced,
-  ownedDecor,
+  inStorage,
   PANTRY_MAX,
   parseStash,
   useTreat,
@@ -27,23 +26,24 @@ describe("the shop", () => {
     expect(useTreat(r.stash, "berries").pantry.berries).toBe(2);
   });
 
-  it("unlocks a decoration once, adding it to the drawer", () => {
-    const r = buy(item("bonsai"), rich(), emptyStash());
-    expect(r.ok && ownedDecor(r.stash)).toContain("bonsai");
-    if (!r.ok) return;
-    expect(buy(item("bonsai"), r.wallet, r.stash)).toEqual({ ok: false, why: "owned" });
+  it("sells decorations one at a time, into storage", () => {
+    let st = emptyStash();
+    let w = rich();
+    for (let i = 0; i < 2; i++) {
+      const r = buy(item("lantern"), w, st);
+      expect(r.ok).toBe(true);
+      if (!r.ok) return;
+      w = r.wallet;
+      st = r.stash;
+    }
+    expect(inStorage(st, "lantern")).toBe(2);
+    expect(w.coins).toBe(200 - 2 * item("lantern").cost);
   });
 
   it("sells every decoration, each with a price", () => {
-    expect(ownedDecor(emptyStash())).toEqual([]);
     const decor = CATALOG.filter((i) => i.type === "decor");
     expect(decor).toHaveLength(13);
     for (const d of decor) expect(d.cost).toBeGreaterThan(0);
-  });
-
-  it("lets decorations already placed in the den stay yours", () => {
-    const kept = keepPlaced(emptyStash(), ["lantern", "rug", "lantern"]);
-    expect(ownedDecor(kept)).toEqual(["lantern", "rug"]);
   });
 
   it("won't sell what you can't afford, or overfill the pantry", () => {
@@ -63,18 +63,21 @@ describe("the shop", () => {
   });
 
   it("is saved, survives backup codes, and ignores junk", () => {
-    const stash = { pantry: { berries: 4 }, unlocked: ["planet" as const] };
+    const stash = { pantry: { berries: 4 }, storage: { planet: 2 } };
     const save = makeSave(3, freshNeeds(0), 0, [], rich(), stash);
     expect(parseSave(JSON.parse(JSON.stringify(save)), 0)?.stash).toEqual(stash);
     expect(decodeBackup(encodeBackup(save), 0)?.stash).toEqual(stash);
     expect(
-      parseStash({
-        pantry: { berries: -2, cake: 5 },
-        unlocked: ["lantern", "spaceship", "bonsai"],
-      }),
+      parseStash({ pantry: { berries: -2, cake: 5 }, storage: { rug: 99, robot: 3 } }),
+    ).toEqual({ pantry: {}, storage: { rug: 9 } });
+  });
+
+  it("turns decorations 'unlocked' by the earlier shop into one each in storage, unless placed", () => {
+    expect(
+      parseStash({ pantry: {}, unlocked: ["lantern", "bonsai", "spaceship"] }, ["lantern"]),
     ).toEqual({
       pantry: {},
-      unlocked: ["lantern", "bonsai"],
+      storage: { bonsai: 1 },
     });
   });
 });

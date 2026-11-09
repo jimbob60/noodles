@@ -22,7 +22,7 @@ function gesture(
 function decorating() {
   const d = new Decorator();
   d.active = true;
-  d.owned = [...d.kinds];
+  d.storage = Object.fromEntries(d.kinds.map((k) => [k, 5]));
   return d;
 }
 
@@ -81,7 +81,33 @@ describe("buying from the drawer", () => {
     expect(bought).toEqual(["planet"]);
   });
 
-  it("won't place a decoration you don't own", () => {
+  it("buys another one by tapping the price tag, even when you already have some", () => {
+    const d = decorating();
+    const bought: string[] = [];
+    d.onBuy = (k) => {
+      bought.push(k);
+      return true;
+    };
+    const rug = d.slots(W, H).find((s) => s.kind === "rug")!;
+    const tag = { x: rug.x, y: rug.y + rug.r * 0.72 };
+    gesture(d, [], tag, []);
+    gesture(d, [], tag, []);
+    expect(bought).toEqual(["rug"]);
+  });
+
+  it("takes a placed decoration out of storage, and puts it back when put away", () => {
+    const d = decorating();
+    const moves: string[] = [];
+    d.onStore = (k, c) => void moves.push(`${k}${c > 0 ? "+" : "-"}`);
+    const jar = d.slots(W, H).find((s) => s.kind === "jar")!;
+    let items = gesture(d, [], jar, [{ x: 640, y: 400 }]);
+    expect(moves).toEqual(["jar-"]);
+    items = gesture(d, items, { x: 640, y: 400 }, [{ x: 640, y: 300 }, jar]);
+    expect(items).toHaveLength(0);
+    expect(moves).toEqual(["jar-", "jar+"]);
+  });
+
+  it("won't place a decoration you have none of", () => {
     const d = new Decorator();
     d.active = true;
     const lantern = d.slots(W, H).find((s) => s.kind === "lantern")!;

@@ -26,11 +26,11 @@ Newest first. Each entry says what we decided, why, and what it affects.
 - **Why:** Jacob's ask, and it gives the bath sponge a reason to come out regularly.
 - **Affects:** phase 42 (balance).
 
-## 2026-11-09: Every decoration is bought, right from the drawer too
+## 2026-11-09: Decorations are bought one at a time and kept in storage
 
-- **Decision:** at Jacob's request every decoration now has a price (lantern 10, cushion 12, jar 15, plant 15, rug 18, stool 20, tea set 25, fairy lights 25, beanbag 30, moon mobile 30, crystal lamp 35, bonsai 40, planet lamp 50). The decorate drawer shows all 13: owned ones bright, the rest dimmed with a coin price tag. Tapping a locked one asks "Buy?", and a second tap within 3 s buys it (or it shakes if short of coins). The shop panel lists them too, under Treats and Decorations. Decorations already placed in a den are unlocked for free, so nothing disappears. Everyday food and toys stay free.
-- **Why:** Jacob asked for the decoration drawer to be a shop too, with prices for all of it.
-- **Affects:** phase 42 (balance: a new player earns about 50 coins a day, so the first few decorations come quickly).
+- **Decision:** at Jacob's request, buying a decoration gets you one item, not an unlock: two lanterns means buying two. Prices: lantern 10, cushion 12, jar 15, plant 15, rug 18, stool 20, tea set 25, fairy lights 25, beanbag 30, moon mobile 30, crystal lamp 35, bonsai 40, planet lamp 50. The decorate drawer is the storage: each slot shows a green count of how many are stored and always a coin price tag. Placing one takes it out of storage; dragging it back onto the drawer returns it, so nothing paid for is lost. Tapping the price tag (or a decoration you have none of) asks "Buy?", and a second tap within 3 s buys one (or it shakes if short of coins). Recoloring is free. Storage holds up to 9 of each. Save version 5 adds `storage`; decorations "unlocked" by the version 4 shop become one each in storage unless already placed, and placed decorations stay placed. The shop panel shows how many are in storage.
+- **Why:** Jacob wants each decoration bought, like a real shop.
+- **Affects:** phase 42 (balance: a new player earns about 50 coins a day).
 
 ## 2026-11-09: The shop — treats and new decorations; everyday things stay free
 

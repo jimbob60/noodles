@@ -36,12 +36,15 @@ const TAP = 10;
  */
 export class Decorator {
   active = false;
-  /** Every decoration is in the drawer; ones not owned yet show their price and can be bought. */
+  /** Every decoration is in the drawer, which is also its storage. */
   kinds: DecorKind[] = [...DECOR_KINDS];
-  owned: DecorKind[] = [];
+  /** How many of each are in storage (bought but not placed). */
+  storage: Partial<Record<DecorKind, number>> = {};
   prices: Partial<Record<DecorKind, number>> = {};
-  /** Buys a decoration; returns false if there aren't enough coins. */
+  /** Buys one decoration into storage; returns false if there aren't enough coins. */
   onBuy: (kind: DecorKind) => boolean = () => false;
+  /** One decoration left storage (placed in the den), or came back (put away). */
+  onStore: (kind: DecorKind, change: 1 | -1) => void = () => {};
   /** A locked decoration tapped once: tap again within a few seconds to buy it. */
   private pending: { kind: DecorKind; until: number } | null = null;
   /** Little effects on drawer slots: a shake for "not enough coins", a sparkle for a purchase. */
@@ -126,8 +129,10 @@ export class Decorator {
       const slot = this.slots(w, h).find(
         (s) => Math.hypot(pressAt.x - s.x, pressAt.y - s.y) <= s.r * 1.15,
       );
-      if (slot && !this.owned.includes(slot.kind)) {
-        // A locked decoration: first tap asks "Buy?", a second tap buys it.
+      // The price tag sits under each slot: tapping it (or a decoration you have none of) buys
+      // one more. First tap asks "Buy?", a second tap buys.
+      const onTag = slot && pressAt.y > slot.y + slot.r * 0.45;
+      if (slot && (onTag || (this.storage[slot.kind] ?? 0) <= 0)) {
         if (this.pending?.kind === slot.kind && this.time < this.pending.until) {
           this.pending = null;
           if (this.onBuy(slot.kind)) this.bought = { kind: slot.kind, t: this.time };
@@ -170,10 +175,16 @@ export class Decorator {
     this.drag = null;
     if (d.index === null) {
       if (!d.moved || this.overDrawer(d.at, w, h)) return items; // a tap on the drawer, or dropped back
-      return addDecor(items, d.kind, d.at.x / w, d.at.y / h);
+      const placed = addDecor(items, d.kind, d.at.x / w, d.at.y / h);
+      if (placed.length > items.length) this.onStore(d.kind, -1);
+      return placed;
     }
     if (!d.moved) return recolorDecor(items, d.index);
-    if (this.overDrawer(d.at, w, h)) return removeDecor(items, d.index);
+    if (this.overDrawer(d.at, w, h)) {
+      // Put away: back into storage, ready to place again.
+      this.onStore(d.kind, 1);
+      return removeDecor(items, d.index);
+    }
     return items;
   }
 
@@ -201,7 +212,8 @@ export class Decorator {
     ctx.stroke();
     const full = items.length >= MAX_DECOR;
     for (const s of slots) {
-      const owned = this.owned.includes(s.kind);
+      const have = this.storage[s.kind] ?? 0;
+      const owned = have > 0;
       const shaking = this.shake?.kind === s.kind && this.time - this.shake.t < 0.5;
       const dx = shaking ? Math.sin((this.time - this.shake!.t) * 50) * 5 : 0;
       ctx.globalAlpha = !owned ? 0.4 : full ? 0.35 : 1;
@@ -218,8 +230,20 @@ export class Decorator {
         this.time,
       );
       ctx.globalAlpha = 1;
-      if (!owned) {
-        // Price tag: a coin and the price, under the decoration.
+      if (owned) {
+        // How many are in storage, in a little badge.
+        ctx.fillStyle = "#9dffc8";
+        ctx.beginPath();
+        ctx.arc(s.x + s.r * 0.7, s.y - s.r * 0.65, 9, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#1a1040";
+        ctx.font = "700 12px system-ui, sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(String(have), s.x + s.r * 0.7, s.y - s.r * 0.64);
+      }
+      {
+        // Price tag: a coin and the price, under the decoration (tap it to buy one more).
         const price = String(this.prices[s.kind] ?? "?");
         ctx.font = "700 12px system-ui, sans-serif";
         const tw = ctx.measureText(price).width + 22;
@@ -252,7 +276,7 @@ export class Decorator {
         ctx.fillText("Buy?", s.x, s.y - s.r * 1.35);
       }
       if (this.bought?.kind === s.kind && this.time - this.bought.t < 0.8) {
-        // Just bought: a burst of sparkles.
+        // Just bought one: a burst of sparkles.
         const t = (this.time - this.bought.t) / 0.8;
         ctx.fillStyle = `rgba(255,240,170,${(1 - t).toFixed(3)})`;
         for (let k = 0; k < 8; k++) {

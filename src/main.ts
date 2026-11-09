@@ -21,8 +21,7 @@ import {
   CATALOG,
   DECOR_PRICE,
   emptyStash,
-  keepPlaced,
-  ownedDecor,
+  store as moveStorage,
   useTreat,
   type Stash,
 } from "./care/shop";
@@ -66,12 +65,8 @@ async function main(): Promise<void> {
   /** Noodle coins (saved with the dragon). */
   let wallet: Wallet = loaded.save?.wallet ?? emptyWallet();
   const coinCounter = new CoinCounter();
-  /** Treats and decorations bought in the shop (saved with the dragon). */
-  // Decorations already placed in the den stay yours, even from before they had prices.
-  let stash: Stash = keepPlaced(
-    loaded.save?.stash ?? emptyStash(),
-    decor.map((d) => d.kind),
-  );
+  /** Treats in the pantry and decorations in storage (saved with the dragon). */
+  let stash: Stash = loaded.save?.stash ?? emptyStash();
   decorator.prices = DECOR_PRICE;
   /**
    * Test modes, switched by tapping the build tag in the bottom-right corner (links with #fast
@@ -162,10 +157,7 @@ async function main(): Promise<void> {
     needs = fromSave(save);
     decor = save.decor;
     wallet = save.wallet;
-    stash = keepPlaced(
-      save.stash,
-      save.decor.map((d) => d.kind),
-    );
+    stash = save.stash;
     if (needs.inBed) setBedtime(true);
     document.body.dataset.favorite = dragon.favorite;
     document.body.dataset.seed = String(seed);
@@ -248,13 +240,18 @@ async function main(): Promise<void> {
       }
       // The tray shows the pantry's treats, and the drawer only what's owned.
       feeding.pantry = stash.pantry;
-      decorator.owned = ownedDecor(stash);
+      decorator.storage = stash.storage;
+      decorator.onStore = (kind, change) => {
+        stash = moveStorage(stash, kind, change);
+        decorator.storage = stash.storage;
+      };
       decorator.onBuy = (kind) => {
         const item = CATALOG.find((i) => i.type === "decor" && i.kind === kind)!;
         const r = buy(item, wallet, stash);
         if (!r.ok) return false;
         wallet = r.wallet;
         stash = r.stash;
+        decorator.storage = stash.storage;
         persist();
         return true;
       };
