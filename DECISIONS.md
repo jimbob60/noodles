@@ -26,6 +26,12 @@ Newest first. Each entry says what we decided, why, and what it affects.
 - **Why:** Jacob's ask, and it gives the bath sponge a reason to come out regularly.
 - **Affects:** phase 42 (balance).
 
+## 2026-11-09: Noodle Catch — a 45-second dumpling-catching mini-game
+
+- **Decision:** a 🎮 button (top right, under the shop) starts a round: a 3-2-1 countdown, then 45 s of dumplings falling from the sky; the finger steers the dragon and its mouth catches them. Dumplings are 1 point; golden ones (1 in 8, a little faster) are 3. They fall faster and more often as the round goes on. Nothing bad ever falls, and a miss just bounces off the floor. Each catch is a little Food. At the end: score, best score (saved; save version 7), and coins = half the score, at most 25 a round (the daily soft cap still applies), plus +6 Love and −8 Energy. Below 25 Energy it's too sleepy to play. Food, toys and other buttons are put away during a round.
+- **Why:** phase 26 ("a round is fun and lasts about a minute"); it also gives a faster way to earn coins toward the big shop goals.
+- **Affects:** phase 42 (balance), phase 43 (sounds).
+
 ## 2026-11-09: Toys in the shop — five new balls that each play differently
 
 - **Decision:** the shop gets a ⚽ Toys section: yarn ball (1,000; heavy, rolls, barely bounces, trails yarn), star ball (1,100; floaty, sparkle trail), bubble ball (1,250; very light and slow), jelly ball (1,350; super bouncy, squishes on landing) and rainbow ball (1,500; shifting colors, extra Love per boop). Because toys are kept forever, Jacob set them as big goals (1,000–1,500, all different); at about 50 coins a day they take weeks, which is where gems come in later. Each has its own gravity, bounce, air drag, floor grip and Love bonus. Toys are bought once and kept (unlike decorations, which are placed). The beach ball stays free. Tap the ball bubble to cycle through owned balls (dots show how many); drag to throw. Save version 6 adds the owned balls.

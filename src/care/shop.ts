@@ -2,6 +2,7 @@ import { DECOR_KINDS, type DecorKind } from "../den/decor";
 import { spend, type Wallet } from "./coins";
 import { TREAT_IDS, type FoodId } from "./food";
 import { BALL_KINDS, BALLS, type BallKind } from "../ui/balls";
+import { parseBest } from "../game/noodleCatch";
 
 /**
  * Things bought in the shop: treats in the pantry, and decorations in storage. Each decoration
@@ -13,9 +14,11 @@ export interface Stash {
   storage: Partial<Record<DecorKind, number>>;
   /** Toys are bought once and kept for good: the balls bought so far. */
   balls: BallKind[];
+  /** Best Noodle Catch score. */
+  bestCatch: number;
 }
 
-export const emptyStash = (): Stash => ({ pantry: {}, storage: {}, balls: [] });
+export const emptyStash = (): Stash => ({ pantry: {}, storage: {}, balls: [], bestCatch: 0 });
 
 export type ShopItem =
   | { id: string; type: "treat"; food: FoodId; pack: number; cost: number; name: string }
@@ -139,6 +142,7 @@ export function parseStash(raw: unknown, placed: DecorKind[] = []): Stash {
     storage?: Record<string, unknown>;
     unlocked?: unknown;
     balls?: unknown;
+    bestCatch?: unknown;
   };
   const count = (v: unknown, max: number) =>
     typeof v === "number" && Number.isInteger(v) && v > 0 ? Math.min(v, max) : 0;
@@ -160,5 +164,5 @@ export function parseStash(raw: unknown, placed: DecorKind[] = []): Stash {
   const balls = Array.isArray(r.balls)
     ? BALL_KINDS.filter((b) => BALLS[b].cost > 0 && (r.balls as unknown[]).includes(b))
     : [];
-  return { pantry, storage, balls };
+  return { pantry, storage, balls, bestCatch: parseBest(r.bestCatch) };
 }

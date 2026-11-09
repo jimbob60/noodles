@@ -73,13 +73,18 @@ describe("the shop", () => {
   });
 
   it("is saved, survives backup codes, and ignores junk", () => {
-    const stash = { pantry: { berries: 4 }, storage: { planet: 2 }, balls: ["jelly" as const] };
+    const stash = {
+      pantry: { berries: 4 },
+      storage: { planet: 2 },
+      balls: ["jelly" as const],
+      bestCatch: 12,
+    };
     const save = makeSave(3, freshNeeds(0), 0, [], rich(), stash);
     expect(parseSave(JSON.parse(JSON.stringify(save)), 0)?.stash).toEqual(stash);
     expect(decodeBackup(encodeBackup(save), 0)?.stash).toEqual(stash);
     expect(
       parseStash({ pantry: { berries: -2, cake: 5 }, storage: { rug: 99, robot: 3 } }),
-    ).toEqual({ pantry: {}, storage: { rug: 9 }, balls: [] });
+    ).toEqual({ pantry: {}, storage: { rug: 9 }, balls: [], bestCatch: 0 });
   });
 
   it("turns decorations 'unlocked' by the earlier shop into one each in storage, unless placed", () => {
@@ -89,6 +94,7 @@ describe("the shop", () => {
       pantry: {},
       storage: { bonsai: 1 },
       balls: [],
+      bestCatch: 0,
     });
   });
 });

@@ -1,6 +1,6 @@
 /** Noodle coins: earned only by caring and playing. No real money anywhere (phase 24). */
 export type CoinReason =
-  "snack" | "favorite" | "petting" | "boop" | "ribbon" | "bath" | "rested" | "hello";
+  "snack" | "favorite" | "petting" | "boop" | "ribbon" | "bath" | "rested" | "hello" | "catch";
 
 /** Coins for each kind of care. */
 export const REWARD: Record<CoinReason, number> = {
@@ -12,6 +12,8 @@ export const REWARD: Record<CoinReason, number> = {
   bath: 4,
   rested: 5,
   hello: 10,
+  /** Noodle Catch pays by score (see `amount`). */
+  catch: 0,
 };
 
 /** After this many coins in a day, everyday care pays half (rounded up), so there's no grinding. */
@@ -40,11 +42,12 @@ export function earn(
   w: Wallet,
   reason: CoinReason,
   now: number,
+  amount?: number,
 ): { wallet: Wallet; earned: number } {
   const day = dayOf(now);
   const today = w.day === day ? w.today : 0;
   if (reason === "hello" && w.helloDay === day) return { wallet: w, earned: 0 };
-  let earned = REWARD[reason];
+  let earned = amount ?? REWARD[reason];
   if (reason !== "hello" && today >= DAILY_SOFT_CAP) earned = Math.ceil(earned / 2);
   return {
     wallet: {

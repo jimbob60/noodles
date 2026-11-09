@@ -19,6 +19,15 @@ import { CoinCounter } from "./ui/coinCounter";
 import { buy, CATALOG, emptyStash, store as moveStorage, useTreat, type Stash } from "./care/shop";
 import { drawShopButton, onShopButton, openShop } from "./ui/shopPanel";
 import { ownedBalls } from "./ui/balls";
+import {
+  coinsFor,
+  FOOD_PER_CATCH,
+  NoodleCatch,
+  ROUND_ENERGY,
+  ROUND_LOVE,
+} from "./game/noodleCatch";
+import { drawCatchHud, drawFallers, drawGameButton, gameButton } from "./game/drawCatch";
+import { wantsToPlay } from "./ui/toys";
 import { TREAT_IDS } from "./care/food";
 import { Petting } from "./care/petting";
 import { moodFrom } from "./care/mood";
@@ -132,9 +141,9 @@ async function main(): Promise<void> {
   if (needs.inBed) setBedtime(true);
 
   /** Coins for care: only in the real game (not fast mode), popping out at `from`. */
-  function pay(reason: CoinReason, from: { x: number; y: number }): void {
+  function pay(reason: CoinReason, from: { x: number; y: number }, amount?: number): void {
     if (mode !== "play") return;
-    const r = earn(wallet, reason, Date.now());
+    const r = earn(wallet, reason, Date.now(), amount);
     wallet = r.wallet;
     if (r.earned > 0) coinCounter.earned(r.earned, from);
   }
@@ -175,6 +184,11 @@ async function main(): Promise<void> {
   const onTag = (x: number, y: number) => x > screen.width - TAG_W && y < TAG_H;
   let seenPresses = 0;
   let ribbonTime = 0;
+  /** A round of Noodle Catch, while one is on; and its coins once it's over. */
+  let catchGame: NoodleCatch | null = null;
+  let catchCoins = 0;
+  let catchDoneFor = 0;
+  let bestBefore = 0;
   let swallowing = false;
   const noFinger = { x: 0, y: 0, down: false };
 
@@ -229,6 +243,34 @@ async function main(): Promise<void> {
           persist();
           return { wallet, stash };
         });
+      }
+      // Noodle Catch: the 🎮 button starts a round; while it's on, everything else steps aside
+      // and the finger steers the dragon.
+      const gb = gameButton(screen.width);
+      if (catchGame) {
+        blocked = true;
+        if (catchGame.phase === "done" && pressAt && catchDoneFor > 0.6) {
+          catchGame = null;
+          swallowing = true;
+          persist();
+        }
+      } else if (
+        pressAt &&
+        !blocked &&
+        mode === "play" &&
+        !needs.inBed &&
+        Math.hypot(pressAt.x - gb.x, pressAt.y - gb.y) <= gb.r * 1.3
+      ) {
+        swallowing = true;
+        blocked = true;
+        if (!wantsToPlay(needs.values)) {
+          dragon.refuse(); // too sleepy for games
+        } else {
+          feeding.sendHome();
+          toys.sendHome();
+          catchGame = new NoodleCatch(screen.width, screen.height);
+          catchDoneFor = 0;
+        }
       }
       // The toy tray knows which balls are owned.
       toys.owned = ownedBalls(stash.balls);
@@ -338,7 +380,13 @@ async function main(): Promise<void> {
       // For automated checks: is it being petted, and how deep is the purr.
       const petState = pet.active ? petting.purr.toFixed(1) : "no";
       if (document.body.dataset.pet !== petState) document.body.dataset.pet = petState;
-      const finger = !free || pet.active || inBed ? noFinger : input;
+      const finger = catchGame
+        ? swallowing
+          ? noFinger
+          : input
+        : !free || pet.active || inBed
+          ? noFinger
+          : input;
       // For automated checks: how many foods are floating about right now.
       if (document.body.dataset.coins !== String(wallet.coins))
         document.body.dataset.coins = String(wallet.coins);
@@ -352,6 +400,28 @@ async function main(): Promise<void> {
       const wasExcited = dragon.exciteLeft > 0;
       dragon.update(dt, finger, world());
       if (!wasExcited && dragon.exciteLeft > 0) pay("petting", dragon.spine.head);
+      if (catchGame) {
+        const wasDone = catchGame.phase === "done";
+        for (const kind of catchGame.update(dt, dragon.mouth, dragon.headRadius)) {
+          dragon.eat("dumpling");
+          needs = change(needs, { fullness: FOOD_PER_CATCH * (kind === "golden" ? 2 : 1) });
+        }
+        // For automated checks: the lowest dumpling still falling.
+        const next = catchGame.fallers.filter((f) => f.landed === 0).sort((a, b) => b.y - a.y)[0];
+        document.body.dataset.target = next ? `${Math.round(next.x)},${Math.round(next.y)}` : "";
+        if (catchGame.phase === "done") {
+          catchDoneFor += dt;
+          if (!wasDone) {
+            // Round over: coins by score, a bit of Love, a bit tired, and maybe a new best.
+            catchCoins = coinsFor(catchGame.score);
+            pay("catch", { x: screen.width / 2, y: screen.height / 2 }, catchCoins);
+            needs = change(needs, { happiness: ROUND_LOVE, energy: ROUND_ENERGY });
+            bestBefore = stash.bestCatch;
+            stash = { ...stash, bestCatch: Math.max(stash.bestCatch, catchGame.score) };
+            document.body.dataset.catchScore = String(catchGame.score);
+          }
+        }
+      }
       coinCounter.update(dt, wallet.coins);
       modeSeconds += dt;
       needs = advance(needs, needsNow(), dragon.asleep);
@@ -402,9 +472,12 @@ async function main(): Promise<void> {
         drawNight(ctx, screen.width, screen.height, night, bedAt);
         drawBed(ctx, bedAt, dragon.halfWidth * 4.2, night);
         dragon.draw(ctx);
+        if (catchGame) drawFallers(ctx, catchGame, dragon.halfWidth * 1.1);
         needsBar.draw(ctx, screen.width, screen.height);
         if (mode === "play") coinCounter.draw(ctx);
-        if (decorator.active) {
+        if (catchGame) {
+          // The trays and buttons are put away during a round.
+        } else if (decorator.active) {
           decorator.draw(ctx, decor, screen.width, screen.height, dark);
         } else {
           if (!needs.inBed) {
@@ -418,6 +491,17 @@ async function main(): Promise<void> {
           drawBackupButton(ctx, screen.width);
           drawDecorateButton(ctx, screen.width, decorator.active, dark, modeSeconds);
           if (!decorator.active) drawShopButton(ctx, screen.width);
+          if (!decorator.active && !catchGame) drawGameButton(ctx, screen.width);
+        }
+        if (catchGame) {
+          drawCatchHud(
+            ctx,
+            catchGame,
+            screen.width,
+            screen.height,
+            catchGame.phase === "done" ? bestBefore : stash.bestCatch,
+            catchCoins,
+          );
         }
       }
 
