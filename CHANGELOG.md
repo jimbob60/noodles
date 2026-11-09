@@ -2,6 +2,7 @@
 
 Newest first. One line per finished phase.
 
+- **Phase 24 — Noodle coins (dd4dca0, 2026-11-07):** coins for care and play with a daily hello and a gentle daily cap; a counter with flying coins.
 - **Phase 23 — Decorations (2991dda, 2026-11-07):** a decorating mode with 10 detailed decorations to place, move, recolor and put away; saved with the dragon.
 - **Phase 22 — The den (0fe085a, 2026-11-07):** a glowing cave with an arched window, crystals, mushrooms, vines and fireflies; day and night follow the real clock.
 - **Phase 21 — Saving (e9166c4, 2026-11-07):** the whole dragon saves on the device (versioned, with a spare); its look now stays; a 💾 backup code to copy and restore.
