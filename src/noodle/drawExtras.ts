@@ -5,7 +5,10 @@ import { hsl, shade, type DragonLook } from "./look";
 import type { Point } from "./spine";
 import type { Whiskers } from "./whiskers";
 
-/** Stubby legs with round paws and pink toe beans. Drawn before the body so hips tuck under. */
+/**
+ * Stubby legs with round paws and little claws, all hanging from the belly as seen side-on: the
+ * far legs first and a shade darker, then the near ones. Drawn before the body so hips tuck under.
+ */
 export function drawLegs(
   ctx: CanvasRenderingContext2D,
   legs: Leg[],
@@ -14,10 +17,11 @@ export function drawLegs(
   look: DragonLook,
 ): void {
   const hw = s.bodyHalf;
-  const body = hsl(look.body);
-  const rim = hsl(rimOf(look.body));
   ctx.lineCap = "round";
-  for (const leg of legs) {
+  const ordered = [...legs.filter((l) => l.far), ...legs.filter((l) => !l.far)];
+  for (const leg of ordered) {
+    const body = hsl(leg.far ? shade(look.body, -12) : look.body);
+    const rim = hsl(rimOf(look.body));
     const hipPt = spine[leg.hip];
     const f = forwardAt(spine, leg.hip);
     const tuck = hw * bodyProfile(leg.hip / (spine.length - 1)) * 0.3;

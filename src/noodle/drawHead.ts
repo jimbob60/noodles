@@ -231,25 +231,21 @@ export function drawHead(
   ctx.ellipse(r * 0.22, r * 0.4, r * 0.2 * puff, r * 0.11 * puff, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Eyes: the near one big, the far one peeking over the bridge of the nose (three-quarter view).
-  // Looking is in screen space, so undo the mirroring for the x offset.
-  const lookX = face.look.x * face.facing;
-  const eye = (x: number, y: number, size: number) =>
-    drawEye(
-      ctx,
-      x,
-      y,
-      size,
-      lookX,
-      face.look.y,
-      face.blink,
-      c,
-      face.asleep,
-      face.droop,
-      face.pleading,
-    );
-  eye(-r * 0.3, -r * 0.3, r * 0.22);
-  eye(r * 0.14, -r * 0.14, r * 0.34);
+  // One big eye: the head is seen in side profile. Looking is in screen space, so undo the
+  // mirroring for the x offset.
+  drawEye(
+    ctx,
+    r * 0.08,
+    -r * 0.18,
+    r * 0.36,
+    face.look.x * face.facing,
+    face.look.y,
+    face.blink,
+    c,
+    face.asleep,
+    face.droop,
+    face.pleading,
+  );
 
   ctx.restore();
 }

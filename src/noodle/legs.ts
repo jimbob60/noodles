@@ -15,8 +15,13 @@ export function forwardAt(p: Point[], i: number): Point {
 export interface Leg {
   /** Which spine point the hip is on. */
   hip: number;
-  /** +1 or -1: which side of the body. */
-  side: 1 | -1;
+  /**
+   * Which side of the body the leg hangs from, -1 to +1. Seen side-on, every leg hangs from the
+   * belly (the lower side on screen), so this slides across when the body turns over.
+   */
+  side: number;
+  /** The far leg of the pair: just behind its partner, and drawn darker, as seen side-on. */
+  far: boolean;
   foot: Point;
   /** Set while the foot is in the air. */
   step: { from: Point; to: Point; t: number } | null;
@@ -35,25 +40,38 @@ export function legSizes(bodyHalf: number): LegSizes {
   return { bodyHalf, reach: bodyHalf * 0.42, stride: bodyHalf * 0.95 };
 }
 
-/** Where the foot would rest right now: out to the side of the hip, a little forward. */
+/** Where the foot would rest right now: below the belly, the near one a little forward. */
 export function restSpot(spine: Point[], leg: Leg, s: LegSizes): Point {
   const hip = spine[leg.hip];
   const f = forwardAt(spine, leg.hip);
   const out = s.bodyHalf * bodyProfile(leg.hip / (spine.length - 1)) + s.reach;
+  const ahead = s.reach * (leg.far ? -0.7 : 0.7);
   return {
-    x: hip.x - f.y * out * leg.side + f.x * s.reach * 0.35,
-    y: hip.y + f.x * out * leg.side + f.y * s.reach * 0.35,
+    x: hip.x - f.y * out * leg.side + f.x * ahead,
+    y: hip.y + f.x * out * leg.side + f.y * ahead,
   };
 }
 
-/** Two pairs of legs: front pair just behind the head, back pair partway down the body. */
+/**
+ * Which side is the belly at a hip: the side facing down the screen, from -1 to +1. It slides
+ * smoothly through 0 (feet tucked right under) as the body turns upright, so feet never jump.
+ */
+export function bellySide(spine: Point[], hip: number): number {
+  return Math.max(-1, Math.min(1, forwardAt(spine, hip).x * 2.5));
+}
+
+/**
+ * Two pairs of legs: front pair just behind the head, back pair partway down the body. Seen
+ * side-on, both legs of a pair hang from the belly, one near and one far.
+ */
 export function makeLegs(spine: Point[], s: LegSizes): Leg[] {
   const front = Math.round(spine.length * 0.17);
   const back = Math.round(spine.length * 0.42);
   const legs: Leg[] = [];
   for (const hip of [front, back]) {
-    for (const side of [1, -1] as const) {
-      const leg: Leg = { hip, side, foot: { x: 0, y: 0 }, step: null };
+    const side = bellySide(spine, hip);
+    for (const far of [false, true]) {
+      const leg: Leg = { hip, side, far, foot: { x: 0, y: 0 }, step: null };
       leg.foot = restSpot(spine, leg, s);
       legs.push(leg);
     }
@@ -63,9 +81,10 @@ export function makeLegs(spine: Point[], s: LegSizes): Leg[] {
 
 /**
  * Plants and lifts the feet. A foot steps when the body has moved too far from it, but only
- * while its partner on the other side is on the ground, so the legs take turns.
+ * while its partner is on the ground, so the legs take turns.
  */
 export function updateLegs(legs: Leg[], spine: Point[], s: LegSizes, dt: number): void {
+  for (const leg of legs) leg.side = bellySide(spine, leg.hip);
   for (const leg of legs) {
     if (leg.step) {
       leg.step.t += dt / STEP_TIME;

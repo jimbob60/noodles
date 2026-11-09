@@ -2,6 +2,12 @@
 
 Newest first. Each entry says what we decided, why, and what it affects.
 
+## 2026-11-09: Side profile — one eye, all feet under the belly
+
+- **Decision:** at Jacob's request the dragon is now seen in true side profile. The head shows one big eye (the far eye is gone). All four legs hang from the belly, the side facing down the screen: each pair is a near leg a little forward and a far leg a little back, drawn a shade darker behind it. When the body turns over, the feet slide smoothly under the body to the new belly side instead of jumping.
+- **Why:** a mixed view (side-on head, legs on both sides as if seen from above) looked confused next to the new Eastern look.
+- **Affects:** phase 29 (growing up), any future poses.
+
 ## 2026-11-09: Redesign — cute Eastern dragons
 
 - **Decision:** from Jacob's picture of a red-and-gold Eastern dragon ("cute Eastern, but the snout and eyes have to change, the snout looks like a pig's"). The round pale snout with two nostril dots is gone: the head is now one shape, a round crown sloping into a tapered muzzle with a slightly upturned nose, a nostril curl on top, a pale chin, and a mouth line along the muzzle (chomp drops the jaw, smile is a wide grin, pout turns down). Eyes are big almond jewel eyes slanting back, with a brow ridge, a colored iris (a deep shade of the accent color) and a soft slit pupil, still sparkly; blink, droop, pleading and sleep all kept. Swept-back antler horns with a branch, a flame-like mane and a chin tuft in the accent color. Body: faint fish scales, a spiny ridge of fins along the upper edge (they shrink away where the body runs straight up or down, so they never flip sides), clawed feet instead of toe beans, and a flickering flame tail fin instead of the fluffy tuft. Whiskers now grow from the tip of the nose. The mouth point used by feeding and Noodle Catch moved with the new mouth (`MOUTH` in drawHead.ts). Body size and length are unchanged, so nothing in play changed.
