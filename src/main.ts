@@ -18,6 +18,8 @@ import { earn, emptyWallet, type CoinReason, type Wallet } from "./care/coins";
 import { CoinCounter } from "./ui/coinCounter";
 import { buy, CATALOG, emptyStash, store as moveStorage, useTreat, type Stash } from "./care/shop";
 import { drawShopButton, onShopButton, openShop } from "./ui/shopPanel";
+import { Egg } from "./egg/egg";
+import { drawEgg, drawEggHint } from "./egg/drawEgg";
 import { ownedBalls } from "./ui/balls";
 import {
   coinsFor,
@@ -76,8 +78,8 @@ async function main(): Promise<void> {
    * - fast: needs time runs 600× faster (an hour every 6 s) from full; never saves.
    * - gallery: twenty random dragons.
    */
-  type Mode = "play" | "fast" | "gallery";
-  const MODES: Mode[] = ["play", "fast", "gallery"];
+  type Mode = "play" | "fast" | "gallery" | "hatch";
+  const MODES: Mode[] = ["play", "fast", "gallery", "hatch"];
   const fromHash = location.hash.slice(1);
   let mode: Mode = MODES.includes(fromHash as Mode) ? (fromHash as Mode) : "play";
   const showNumbers = () => mode === "fast" || location.hash === "#debug";
@@ -97,8 +99,19 @@ async function main(): Promise<void> {
   const toys = new Toys();
   const bath = new Bath();
   /** Saves on this device (only the real game: fast mode and the gallery never save). */
+  /**
+   * An egg waiting to hatch: a brand-new player starts with one (nothing is saved until it
+   * hatches), and the "hatch" test mode replays your own dragon's hatching.
+   */
+  let newPlayerEgg = !loaded.save;
+  let egg: Egg | null = null;
+  const eggAt = () => ({ x: screen.width / 2, y: screen.height * 0.62 });
+  const eggSize = () => Math.max(46, Math.min(80, Math.min(screen.width, screen.height) * 0.09));
+  let eggLast: { x: number; y: number } | null = null;
   const persist = () => {
-    if (mode === "play") storeGame(store, makeSave(seed, needs, Date.now(), decor, wallet, stash));
+    // Nothing is saved until a new player's egg has hatched.
+    if (mode === "play" && !egg && !newPlayerEgg)
+      storeGame(store, makeSave(seed, needs, Date.now(), decor, wallet, stash));
   };
   window.addEventListener("pagehide", persist);
   document.addEventListener("visibilitychange", () => {
@@ -114,11 +127,13 @@ async function main(): Promise<void> {
       const full = { fullness: 100, happiness: 100, energy: 100, cleanliness: 100 };
       needs = change(freshNeeds(modeStartedAt), full);
       dragon.wakeUp(world());
-    } else if (mode === "play") {
+    }
+    egg = mode === "hatch" || (mode === "play" && newPlayerEgg) ? new Egg() : null;
+    if (mode === "play") {
       // Back from a test mode: pick up the real dragon's needs again.
       const again = loadGame(store, Date.now(), randomSeed).save;
       if (again && again.seed === seed) needs = fromSave(again);
-    } else if (!gallery) {
+    } else if (mode === "gallery" && !gallery) {
       gallery = new Gallery(screen);
     }
   }
@@ -300,6 +315,38 @@ async function main(): Promise<void> {
         gallery.update(dt, blocked ? noFinger : input);
         return;
       }
+      if (egg) {
+        // Hatching time: rub the egg to warm it, then tap to crack it. Nothing else to do yet.
+        const at = eggAt();
+        const sz = eggSize();
+        const onEgg = (q: { x: number; y: number }) =>
+          Math.abs(q.x - at.x) < sz * 1.1 && Math.abs(q.y - at.y) < sz * 1.3;
+        let rubbed = 0;
+        if (input.down && !swallowing && onEgg(input)) {
+          if (eggLast) rubbed = Math.hypot(input.x - eggLast.x, input.y - eggLast.y);
+          eggLast = { x: input.x, y: input.y };
+        } else {
+          eggLast = null;
+        }
+        const tapped = !!pressAt && !swallowing && onEgg(pressAt);
+        const r = egg.update(dt, rubbed, tapped);
+        if (r.hatched) {
+          // Out pops the dragon, right where the egg was, thrilled to meet you.
+          dragon = new Dragon(at.x, at.y, segmentFor(screen), world(), makeLook(seed));
+          dragon.getExcited();
+          egg = null;
+          if (mode === "play") {
+            newPlayerEgg = false;
+            persist();
+          }
+        }
+        document.body.dataset.egg = egg
+          ? `${egg.phase}:${egg.warmth.toFixed(2)}:${egg.cracks}`
+          : "hatched";
+        modeSeconds += dt;
+        coinCounter.update(dt, wallet.coins);
+        return;
+      }
       // The food tray gets first say over a press; while it holds food, the finger is busy.
       const tray =
         blocked || inBed
@@ -474,39 +521,44 @@ async function main(): Promise<void> {
         const dark = skyAt(hour).dark;
         for (const i of drawOrder(decor))
           drawDecor(ctx, decor[i], screen.width, screen.height, dark, modeSeconds);
-        drawNight(ctx, screen.width, screen.height, night, bedAt);
-        drawBed(ctx, bedAt, dragon.halfWidth * 4.2, night);
-        dragon.draw(ctx);
-        if (catchGame) drawFallers(ctx, catchGame, dragon.halfWidth * 1.1);
-        needsBar.draw(ctx, screen.width, screen.height);
-        if (mode === "play") coinCounter.draw(ctx);
-        if (catchGame) {
-          // The trays and buttons are put away during a round.
-        } else if (decorator.active) {
-          decorator.draw(ctx, decor, screen.width, screen.height, dark);
+        if (egg) {
+          drawEgg(ctx, egg, eggAt(), eggSize(), dragon.look);
+          drawEggHint(ctx, egg, eggAt(), eggSize());
         } else {
-          if (!needs.inBed) {
-            feeding.draw(ctx);
-            toys.draw(ctx);
-            bath.draw(ctx, screen.width, screen.height);
+          drawNight(ctx, screen.width, screen.height, night, bedAt);
+          drawBed(ctx, bedAt, dragon.halfWidth * 4.2, night);
+          dragon.draw(ctx);
+          if (catchGame) drawFallers(ctx, catchGame, dragon.halfWidth * 1.1);
+          needsBar.draw(ctx, screen.width, screen.height);
+          if (mode === "play") coinCounter.draw(ctx);
+          if (catchGame) {
+            // The trays and buttons are put away during a round.
+          } else if (decorator.active) {
+            decorator.draw(ctx, decor, screen.width, screen.height, dark);
+          } else {
+            if (!needs.inBed) {
+              feeding.draw(ctx);
+              toys.draw(ctx);
+              bath.draw(ctx, screen.width, screen.height);
+            }
+            drawBedButton(ctx, screen.width, screen.height, needs.inBed === true, modeSeconds);
           }
-          drawBedButton(ctx, screen.width, screen.height, needs.inBed === true, modeSeconds);
-        }
-        if (mode === "play") {
-          drawBackupButton(ctx, screen.width);
-          drawDecorateButton(ctx, screen.width, decorator.active, dark, modeSeconds);
-          if (!decorator.active) drawShopButton(ctx, screen.width);
-          if (!decorator.active && !catchGame) drawGameButton(ctx, screen.width);
-        }
-        if (catchGame) {
-          drawCatchHud(
-            ctx,
-            catchGame,
-            screen.width,
-            screen.height,
-            catchGame.phase === "done" ? bestBefore : stash.bestCatch,
-            catchCoins,
-          );
+          if (mode === "play") {
+            drawBackupButton(ctx, screen.width);
+            drawDecorateButton(ctx, screen.width, decorator.active, dark, modeSeconds);
+            if (!decorator.active) drawShopButton(ctx, screen.width);
+            if (!decorator.active && !catchGame) drawGameButton(ctx, screen.width);
+          }
+          if (catchGame) {
+            drawCatchHud(
+              ctx,
+              catchGame,
+              screen.width,
+              screen.height,
+              catchGame.phase === "done" ? bestBefore : stash.bestCatch,
+              catchCoins,
+            );
+          }
         }
       }
 
@@ -522,7 +574,9 @@ async function main(): Promise<void> {
       }
 
       // Build tag, frame rate and test mode in the corner. Tap it to switch mode.
-      const modeName = mode === "play" ? "play" : mode === "fast" ? "⏩ fast" : "🖼 gallery";
+      const modeName = { play: "play", fast: "⏩ fast", gallery: "🖼 gallery", hatch: "🥚 hatch" }[
+        mode
+      ];
       const fps = `${Math.round(loop.fps())} fps`;
       // Narrow phones get a short tag (just the commit), so it doesn't run into the need orbs.
       const label =

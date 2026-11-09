@@ -26,6 +26,12 @@ Newest first. Each entry says what we decided, why, and what it affects.
 - **Why:** Jacob's ask, and it gives the bath sponge a reason to come out regularly.
 - **Affects:** phase 42 (balance).
 
+## 2026-11-09: Eggs — every new dragon hatches
+
+- **Decision:** a brand-new player starts with an egg in a nest in the den. Rub it to warm it (about 600 px of rubbing; it cools gently if left, never below cold), then tap it three times to crack it (cracks spread and light shines through), and it bursts open: the top of the shell tumbles away with crumbs, sparkles and a flash, and the dragon pops out with the excited loop-de-loop and hearts. The egg is tinted with the dragon's own colors and speckled with its pattern color, so it hints at who is inside. A wordless finger hint shows rubbing, then tapping. Nothing is saved until it hatches. Existing dragons stay hatched; the mode button's 🥚 hatch test mode replays your own dragon's hatching without saving anything.
+- **Why:** phase 28 ("hatching feels special").
+- **Affects:** phase 38 (breeding lays eggs), phase 45 (the tutorial's talking egg).
+
 ## 2026-11-09: A "day in the life" robot as the Stage D gate
 
 - **Decision:** `npm run day` (scripts/day-in-the-life.mjs) plays a whole session on a tablet-sized screen in headless Chromium: a new dragon and the daily hello, a snack and a polite "no thanks" when full, petting, a ball game, a bath, buying and placing a lantern, a Noodle Catch round played by a bot, and a full bedtime to waking. Then it closes and reopens (same dragon, den, coins and best score) and comes back 36 hours later (every need above the cozy floor). Any page error fails it. It joins the checks to run before each phase is published.

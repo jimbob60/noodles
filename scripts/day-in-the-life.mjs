@@ -71,6 +71,25 @@ const sponge = { x: W - 14 - R - (2 * R + GAP), y: H - 14 - R - (2 * R + GAP) };
 const moon = { x: W - 14 - R, y: H - 14 - R - (2 * R + GAP) };
 
 await open();
+// A brand-new player starts with an egg: warm it by rubbing, then tap three times to hatch it.
+check((await data("egg")).startsWith("warming"), "a new player starts with an egg");
+check(
+  (await p.evaluate(() => localStorage.getItem("noodle-dragons.save"))) === null,
+  "nothing is saved before it hatches",
+);
+const eggAt = { x: W / 2, y: H * 0.62 };
+await drag(
+  eggAt,
+  Array.from({ length: 90 }, (_, i) => ({ x: eggAt.x + Math.sin(i / 3) * 40, y: eggAt.y })),
+);
+console.log(`  (egg after rubbing: ${await data("egg")})`);
+for (let c = 0; c < 3; c++) {
+  await tap(eggAt.x, eggAt.y - 10);
+  console.log(`  (egg after tap ${c + 1}: ${await data("egg")})`);
+  await step(400);
+}
+await step(4000);
+check((await data("egg")) === "hatched", "the egg hatches into the dragon");
 const fresh = await save();
 check(fresh.version >= 7, `a new dragon starts and saves (save version ${fresh.version})`);
 check((await num("coins")) === 10, "the daily hello gives 10 coins");
