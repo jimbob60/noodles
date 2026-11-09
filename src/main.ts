@@ -457,6 +457,11 @@ async function main(): Promise<void> {
       if (document.body.dataset.feeling !== dragon.mood)
         document.body.dataset.feeling = dragon.mood;
       if (document.body.dataset.mood !== mood) document.body.dataset.mood = mood;
+      // For automated checks: where the dragon's head and body are.
+      const h = dragon.spine.head;
+      const c = dragon.centre;
+      document.body.dataset.head = `${Math.round(h.x)},${Math.round(h.y)}`;
+      document.body.dataset.body = `${Math.round(c.x)},${Math.round(c.y)}`;
     },
     render() {
       const ctx = screen.begin();

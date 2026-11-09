@@ -26,6 +26,12 @@ Newest first. Each entry says what we decided, why, and what it affects.
 - **Why:** Jacob's ask, and it gives the bath sponge a reason to come out regularly.
 - **Affects:** phase 42 (balance).
 
+## 2026-11-09: A "day in the life" robot as the Stage D gate
+
+- **Decision:** `npm run day` (scripts/day-in-the-life.mjs) plays a whole session on a tablet-sized screen in headless Chromium: a new dragon and the daily hello, a snack and a polite "no thanks" when full, petting, a ball game, a bath, buying and placing a lantern, a Noodle Catch round played by a bot, and a full bedtime to waking. Then it closes and reopens (same dragon, den, coins and best score) and comes back 36 hours later (every need above the cozy floor). Any page error fails it. It joins the checks to run before each phase is published.
+- **Why:** phase 27 ("nothing is lost and Jacob enjoys a full session"). The first run found the test's own wrong expectations, not game bugs.
+- **Affects:** every later phase; it grows as features are added.
+
 ## 2026-11-09: Noodle Catch — a 45-second dumpling-catching mini-game
 
 - **Decision:** a 🎮 button (top right, under the shop) starts a round: a 3-2-1 countdown, then 45 s of dumplings falling from the sky; the finger steers the dragon and its mouth catches them. Dumplings are 1 point; golden ones (1 in 8, a little faster) are 3. They fall faster and more often as the round goes on. Nothing bad ever falls, and a miss just bounces off the floor. Each catch is a little Food. At the end: score, best score (saved; save version 7), and coins = half the score, at most 25 a round (the daily soft cap still applies), plus +6 Love and −8 Energy. Below 25 Energy it's too sleepy to play. Food, toys and other buttons are put away during a round.

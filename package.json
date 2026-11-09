@@ -10,7 +10,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "screenshot": "node scripts/screenshot.mjs",
-    "check": "npm run format:check && npm run build && npm test && npm run screenshot"
+    "check": "npm run format:check && npm run build && npm test && npm run screenshot",
+    "day": "node scripts/day-in-the-life.mjs"
   },
   "repository": {
     "type": "git",
