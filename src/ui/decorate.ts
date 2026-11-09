@@ -1,6 +1,7 @@
 import {
   addDecor,
   DECOR_KINDS,
+  STARTER_DECOR,
   MAX_DECOR,
   moveDecor,
   recolorDecor,
@@ -35,6 +36,8 @@ const TAP = 10;
  */
 export class Decorator {
   active = false;
+  /** Which decorations are in the drawer (the starter set plus anything bought). */
+  kinds: DecorKind[] = [...STARTER_DECOR];
   private drag: {
     index: number | null;
     kind: DecorKind;
@@ -51,11 +54,11 @@ export class Decorator {
   slots(w: number, h: number): { kind: DecorKind; x: number; y: number; r: number }[] {
     const r = Math.max(22, Math.min(30, Math.min(w, h) * 0.04));
     const gap = r * 0.5;
-    const n = DECOR_KINDS.length;
+    const n = this.kinds.length;
     const cols = Math.min(n, Math.max(3, Math.floor((w - 60 + gap) / (2 * r + gap))));
     // Below the need orbs and the mode tag, so nothing is covered.
     const top = (w < 760 ? 132 : 112) + r * 1.4;
-    return DECOR_KINDS.map((kind, i) => {
+    return this.kinds.map((kind, i) => {
       const row = Math.floor(i / cols);
       const inRow = Math.min(cols, n - row * cols);
       const rowWidth = inRow * 2 * r + (inRow - 1) * gap;

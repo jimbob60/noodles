@@ -8,7 +8,10 @@ export type DecorKind =
   | "crystal"
   | "stool"
   | "mobile"
-  | "tea";
+  | "tea"
+  | "bonsai"
+  | "beanbag"
+  | "planet";
 export const DECOR_KINDS: DecorKind[] = [
   "lantern",
   "lights",
@@ -20,7 +23,12 @@ export const DECOR_KINDS: DecorKind[] = [
   "plant",
   "tea",
   "rug",
+  "bonsai",
+  "beanbag",
+  "planet",
 ];
+/** Free from the start; the others are bought in the shop. */
+export const STARTER_DECOR: DecorKind[] = DECOR_KINDS.slice(0, 10);
 
 /** How many decorations a den can hold, so it stays cozy rather than cluttered. */
 export const MAX_DECOR = 16;
@@ -47,6 +55,9 @@ export const ON_FLOOR: Record<DecorKind, boolean> = {
   stool: true,
   mobile: false,
   tea: true,
+  bonsai: true,
+  beanbag: true,
+  planet: false,
 };
 
 /** How wide each decoration is, in decoration sizes (for grabbing it). */
@@ -61,6 +72,9 @@ export const WIDTH: Record<DecorKind, number> = {
   stool: 1,
   mobile: 1.2,
   tea: 1.4,
+  bonsai: 1.3,
+  beanbag: 1.3,
+  planet: 1.3,
 };
 export const FLOOR_BAND: [number, number] = [0.8, 0.95];
 

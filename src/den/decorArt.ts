@@ -12,6 +12,9 @@ const HUES: Record<DecorKind, [number, number, number]> = {
   stool: [355, 270, 30],
   mobile: [45, 220, 300],
   tea: [330, 187, 45],
+  bonsai: [330, 0, 45],
+  beanbag: [45, 270, 187],
+  planet: [30, 187, 290],
 };
 
 /** Size of a decoration for the screen: about the size of the dragon's head. */
@@ -46,6 +49,9 @@ export function drawDecorAt(
     stool,
     mobile,
     tea,
+    bonsai,
+    beanbag,
+    planet,
   }[kind];
   draw(ctx, s, hue, dark, time);
   ctx.restore();
@@ -768,5 +774,163 @@ const tea: Painter = (ctx, s, hue, _dark, time) => {
     ctx.fill();
     ctx.fillStyle = c(hue, 60, 70);
     ctx.fillRect((cx - 0.17) * s, s * 0.26, s * 0.34, s * 0.04);
+  }
+};
+
+/** A little cherry blossom tree in a low dish, petals drifting down. */
+const bonsai: Painter = (ctx, s, hue, _dark, time) => {
+  shadow(ctx, s * 0.62, s * 0.9, s * 0.18);
+  // Trunk and branches.
+  ctx.strokeStyle = "#6b4630";
+  ctx.lineWidth = Math.max(2, s * 0.16);
+  ctx.beginPath();
+  ctx.moveTo(0, s * 0.35);
+  ctx.quadraticCurveTo(-s * 0.25, 0, 0, -s * 0.4);
+  ctx.moveTo(-s * 0.08, -s * 0.05);
+  ctx.quadraticCurveTo(s * 0.4, -s * 0.1, s * 0.6, -s * 0.4);
+  ctx.moveTo(-s * 0.1, -s * 0.2);
+  ctx.quadraticCurveTo(-s * 0.5, -s * 0.3, -s * 0.65, -s * 0.55);
+  ctx.stroke();
+  // Blossom clouds.
+  const petal = (l: number) => (hue === 0 ? `hsl(0 0% ${l}%)` : c(hue, 85, l));
+  for (const [x, y, r, l] of [
+    [-0.65, -0.65, 0.38, 82],
+    [0.6, -0.55, 0.4, 80],
+    [0, -0.75, 0.5, 86],
+    [-0.25, -0.45, 0.32, 76],
+    [0.3, -0.85, 0.32, 90],
+  ]) {
+    ctx.fillStyle = petal(l);
+    ctx.beginPath();
+    ctx.arc(x * s, y * s, r * s, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.fillStyle = petal(96);
+  for (let i = 0; i < 9; i++) {
+    const a = i * 2.4;
+    ctx.beginPath();
+    ctx.arc(Math.cos(a) * s * 0.55, -s * 0.65 + Math.sin(a) * s * 0.3, s * 0.05, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  // Falling petals.
+  for (let i = 0; i < 3; i++) {
+    const t = (time * 0.25 + i / 3) % 1;
+    ctx.globalAlpha = 1 - t;
+    ctx.fillStyle = petal(84);
+    ctx.beginPath();
+    ctx.ellipse(
+      (i - 1) * s * 0.5 + Math.sin(t * 6 + i) * s * 0.15,
+      -s * 0.3 + t * s * 0.8,
+      s * 0.06,
+      s * 0.035,
+      t * 5,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  // Low glazed dish.
+  ctx.fillStyle = "#3f6fa8";
+  ctx.beginPath();
+  ctx.moveTo(-s * 0.8, s * 0.3);
+  ctx.lineTo(s * 0.8, s * 0.3);
+  ctx.lineTo(s * 0.62, s * 0.62);
+  ctx.lineTo(-s * 0.62, s * 0.62);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = "#5b8fd0";
+  ctx.fillRect(-s * 0.85, s * 0.24, s * 1.7, s * 0.12);
+  ctx.fillStyle = "#5fbf6a";
+  ctx.beginPath();
+  ctx.ellipse(0, s * 0.26, s * 0.6, s * 0.06, 0, 0, Math.PI * 2);
+  ctx.fill();
+};
+
+/** A squishy star-shaped beanbag with stitched seams. */
+const beanbag: Painter = (ctx, s, hue) => {
+  shadow(ctx, s * 0.6, s * 1.2, s * 0.22);
+  ctx.save();
+  ctx.scale(1.25, 0.85);
+  const star = () => {
+    ctx.beginPath();
+    for (let i = 0; i < 10; i++) {
+      const a = -Math.PI / 2 + (i * Math.PI) / 5;
+      const r = i % 2 === 0 ? s * 0.95 : s * 0.55;
+      const x = Math.cos(a) * r;
+      const y = Math.sin(a) * r;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+  };
+  ctx.lineJoin = "round";
+  star();
+  const g = ctx.createRadialGradient(-s * 0.2, -s * 0.3, s * 0.1, 0, 0, s);
+  g.addColorStop(0, c(hue, 85, 78));
+  g.addColorStop(1, c(hue, 70, 55));
+  ctx.fillStyle = g;
+  ctx.fill();
+  ctx.lineWidth = s * 0.22;
+  ctx.strokeStyle = g;
+  ctx.stroke();
+  ctx.lineWidth = Math.max(1.2, s * 0.05);
+  ctx.strokeStyle = c(hue, 50, 42);
+  ctx.stroke();
+  ctx.setLineDash([s * 0.08, s * 0.07]);
+  ctx.strokeStyle = c(hue, 80, 90, 0.8);
+  ctx.save();
+  ctx.scale(0.7, 0.7);
+  star();
+  ctx.restore();
+  ctx.stroke();
+  ctx.setLineDash([]);
+  // A dent where a dragon would sit.
+  ctx.fillStyle = c(hue, 60, 50, 0.45);
+  ctx.beginPath();
+  ctx.ellipse(0, s * 0.05, s * 0.32, s * 0.2, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+};
+
+/** A floating planet lamp: a glowing ringed planet with two little moons. */
+const planet: Painter = (ctx, s, hue, dark, time) => {
+  glow(ctx, 0, 0, s * 2.3, hue, 0.15 + 0.35 * dark);
+  ctx.rotate(-0.35);
+  // Back half of the ring.
+  ctx.strokeStyle = c((hue + 40) % 360, 70, 75);
+  ctx.lineWidth = Math.max(2, s * 0.14);
+  ctx.beginPath();
+  ctx.ellipse(0, 0, s * 1.15, s * 0.32, 0, Math.PI, Math.PI * 2);
+  ctx.stroke();
+  const g = ctx.createRadialGradient(-s * 0.25, -s * 0.25, s * 0.05, 0, 0, s * 0.7);
+  g.addColorStop(0, c(hue, 90, 85));
+  g.addColorStop(1, c(hue, 70, 58));
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.arc(0, 0, s * 0.65, 0, Math.PI * 2);
+  ctx.fill();
+  // Stripes.
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(0, 0, s * 0.65, 0, Math.PI * 2);
+  ctx.clip();
+  ctx.fillStyle = c(hue, 70, 68, 0.7);
+  ctx.fillRect(-s, -s * 0.18, s * 2, s * 0.12);
+  ctx.fillRect(-s, s * 0.15, s * 2, s * 0.08);
+  ctx.restore();
+  // Front half of the ring.
+  ctx.strokeStyle = c((hue + 40) % 360, 75, 80);
+  ctx.beginPath();
+  ctx.ellipse(0, 0, s * 1.15, s * 0.32, 0, 0, Math.PI);
+  ctx.stroke();
+  ctx.rotate(0.35);
+  // Moons orbiting.
+  for (const k of [0, 1]) {
+    const a = time * (0.6 + k * 0.35) + k * 3;
+    ctx.fillStyle = k ? "#fff6c9" : "#d9ccff";
+    ctx.beginPath();
+    ctx.arc(Math.cos(a) * s * 1.35, Math.sin(a) * s * 0.55, s * (0.1 + k * 0.04), 0, Math.PI * 2);
+    ctx.fill();
   }
 };

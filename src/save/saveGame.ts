@@ -1,18 +1,20 @@
 import { freshNeeds, parseNeeds, type NeedsState } from "../care/needs";
 import { parseDecor, type DecorItem } from "../den/decor";
 import { emptyWallet, parseWallet, type Wallet } from "../care/coins";
+import { emptyStash, parseStash, type Stash } from "../care/shop";
 
 /** The save format version. Bump it (and add a migration below) whenever the format changes. */
-export const SAVE_VERSION = 3;
+export const SAVE_VERSION = 4;
 
 /**
  * Everything that makes your dragon yours.
  * - Version 1 (phase 21): seed and needs.
  * - Version 2 (phase 23): plus the den's decorations.
  * - Version 3 (phase 24): plus the noodle coin wallet.
+ * - Version 4 (phase 25): plus the shop stash (treats and unlocked decorations).
  */
-export interface SaveV3 {
-  version: 3;
+export interface SaveV4 {
+  version: 4;
   /** When this was saved (milliseconds since 1970). */
   savedAt: number;
   /** The seed its look comes from (and its favorite food and tickle spots). */
@@ -20,17 +22,19 @@ export interface SaveV3 {
   needs: NeedsState;
   decor: DecorItem[];
   wallet: Wallet;
+  stash: Stash;
 }
-export type Save = SaveV3;
+export type Save = SaveV4;
 
 export function newSave(seed: number, now: number): Save {
   return {
-    version: 3,
+    version: 4,
     savedAt: now,
     seed,
     needs: freshNeeds(now),
     decor: [],
     wallet: emptyWallet(),
+    stash: emptyStash(),
   };
 }
 
@@ -40,8 +44,9 @@ export function makeSave(
   now: number,
   decor: DecorItem[] = [],
   wallet: Wallet = emptyWallet(),
+  stash: Stash = emptyStash(),
 ): Save {
-  return { version: 3, savedAt: now, seed, needs, decor, wallet };
+  return { version: 4, savedAt: now, seed, needs, decor, wallet, stash };
 }
 
 const validSeed = (v: unknown): v is number =>
@@ -60,6 +65,7 @@ export function parseSave(raw: unknown, now: number): Save | null {
     savedAt?: unknown;
     decor?: unknown;
     wallet?: unknown;
+    stash?: unknown;
   };
   if (typeof r.version !== "number" || r.version < 1 || !validSeed(r.seed)) return null;
   const savedAt = typeof r.savedAt === "number" && r.savedAt <= now ? r.savedAt : now;
@@ -67,7 +73,17 @@ export function parseSave(raw: unknown, now: number): Save | null {
   const decor = r.version >= 2 ? parseDecor(r.decor) : [];
   // Versions 1–2 had no coins: they upgrade with an empty wallet.
   const wallet = r.version >= 3 ? parseWallet(r.wallet) : emptyWallet();
-  return { version: 3, savedAt, seed: r.seed, needs: parseNeeds(r.needs, now), decor, wallet };
+  // Versions 1–3 had no shop: they upgrade with an empty stash.
+  const stash = r.version >= 4 ? parseStash(r.stash) : emptyStash();
+  return {
+    version: 4,
+    savedAt,
+    seed: r.seed,
+    needs: parseNeeds(r.needs, now),
+    decor,
+    wallet,
+    stash,
+  };
 }
 
 // ---- Backup codes: a save as text that can be copied out and pasted back in. ----

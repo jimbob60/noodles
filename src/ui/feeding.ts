@@ -1,4 +1,4 @@
-import { FOOD_IDS, wantsFood, type FoodId } from "../care/food";
+import { FOOD_IDS, TREAT_IDS, wantsFood, type FoodId } from "../care/food";
 import type { Needs } from "../care/needs";
 import type { PointerState } from "../engine/input";
 import type { Point } from "../noodle/spine";
@@ -54,17 +54,32 @@ export class Feeding {
   private time = 0;
   private width = 0;
   private height = 0;
+  /** Treats from the shop, and how many of each are in the pantry. */
+  pantry: Partial<Record<FoodId, number>> = {};
 
-  /** Tray slot centers and radius for the current screen size. */
+  /**
+   * Tray slot centers and radius for the current screen size: the everyday foods along the
+   * bottom, and any treats in the pantry in a row just above them.
+   */
   slots(): { food: FoodId; x: number; y: number; r: number }[] {
     const r = Math.max(24, Math.min(34, Math.min(this.width, this.height) * 0.042));
     const gap = r * 0.55;
-    return FOOD_IDS.map((food, i) => ({
-      food,
-      x: 14 + r + i * (2 * r + gap),
-      y: this.height - 14 - r,
-      r,
-    }));
+    const row = (foods: FoodId[], y: number) =>
+      foods.map((food, i) => ({ food, x: 14 + r + i * (2 * r + gap), y, r }));
+    const treats = TREAT_IDS.filter((t) => (this.pantry[t] ?? 0) > 0);
+    return [
+      ...row(FOOD_IDS, this.height - 14 - r),
+      ...row(treats, this.height - 14 - r - (2 * r + gap)),
+    ];
+  }
+
+  /** Treats of a kind still in the pantry and not already out (held or floating). */
+  available(food: FoodId): number {
+    if (!TREAT_IDS.includes(food)) return Infinity;
+    const out =
+      (this.held?.food === food ? 1 : 0) +
+      this.floating.filter((f) => f.food === food && !f.home).length;
+    return (this.pantry[food] ?? 0) - out;
   }
 
   /** The tray slot under a point, if any. */
@@ -94,7 +109,7 @@ export class Feeding {
 
     if (pressed && !this.held) {
       const food = this.slotAt(pressed.x, pressed.y);
-      if (food) {
+      if (food && this.available(food) > 0) {
         this.held = { food, x: input.x, y: input.y - LIFT };
         this.lastHeld = null;
       }
@@ -202,7 +217,7 @@ export class Feeding {
       f.age += dt;
       if (f.home) {
         f.home.t = Math.min(1, f.home.t + dt / RETURN_TIME);
-        const slot = this.slots().find((s) => s.food === f.food)!;
+        const slot = this.slots().find((s) => s.food === f.food) ?? this.slots()[0];
         const e = f.home.t * f.home.t * (3 - 2 * f.home.t);
         f.x = f.home.from.x + (slot.x - f.home.from.x) * e;
         // A gentle arc on the way home, so it floats rather than slides.
@@ -243,10 +258,27 @@ export class Feeding {
       ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
-      // The food in its slot bobs gently, inviting a drag. It hides while being held.
-      if (this.held?.food !== s.food) {
+      // The food in its slot bobs gently, inviting a drag. It hides while being held (or, for a
+      // treat, when every one is already out).
+      const left = this.available(s.food);
+      if (this.held?.food !== s.food || left > 0) {
         const bob = Math.sin(this.time * 2 + s.x * 0.05) * s.r * 0.05;
+        ctx.globalAlpha = left > 0 ? 1 : 0.35;
         drawFood(ctx, s.food, s.x, s.y + bob, s.r * 0.6);
+        ctx.globalAlpha = 1;
+      }
+      if (TREAT_IDS.includes(s.food)) {
+        // How many are left, in a little badge.
+        const n = String(Math.max(0, left));
+        ctx.fillStyle = "#ff8ad8";
+        ctx.beginPath();
+        ctx.arc(s.x + s.r * 0.72, s.y - s.r * 0.72, s.r * 0.36, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#1a1040";
+        ctx.font = `700 ${Math.round(s.r * 0.42)}px system-ui, sans-serif`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(n, s.x + s.r * 0.72, s.y - s.r * 0.7);
       }
     }
     const r = slots[0].r;

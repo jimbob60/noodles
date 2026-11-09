@@ -8,7 +8,7 @@ describe("food", () => {
   });
 
   it("spreads favorites across all three foods", () => {
-    const counts = { noodles: 0, dumpling: 0, fish: 0 };
+    const counts: Record<string, number> = { noodles: 0, dumpling: 0, fish: 0 };
     for (let seed = 1; seed <= 3000; seed++) counts[favoriteFood(seed)]++;
     for (const id of FOOD_IDS) expect(counts[id]).toBeGreaterThan(800);
   });

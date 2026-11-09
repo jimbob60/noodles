@@ -5,6 +5,8 @@ export const FOOD_COLOR: Record<FoodId, string> = {
   noodles: "#ffd27a",
   dumpling: "#fff1d6",
   fish: "#ff9f6e",
+  berries: "#ff6b9a",
+  mooncake: "#e8b54a",
 };
 
 /** Draws a food centered at (x, y), about 2s wide. All code-drawn, no image files. */
@@ -21,7 +23,9 @@ export function drawFood(
   ctx.lineCap = "round";
   if (id === "noodles") drawNoodleBowl(ctx, s);
   else if (id === "dumpling") drawDumpling(ctx, s);
-  else drawFish(ctx, s);
+  else if (id === "fish") drawFish(ctx, s);
+  else if (id === "berries") drawBerries(ctx, s);
+  else drawMooncake(ctx, s);
   ctx.restore();
 }
 
@@ -153,5 +157,107 @@ function drawFish(ctx: CanvasRenderingContext2D, s: number): void {
   ctx.fillStyle = "#1a1040";
   ctx.beginPath();
   ctx.arc(s * 0.48, -s * 0.08, s * 0.07, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+/** A little bowl heaped with strawberries and blueberries. */
+function drawBerries(ctx: CanvasRenderingContext2D, s: number): void {
+  for (const [x, y, r] of [
+    [-0.35, -0.25, 0.3],
+    [0.3, -0.3, 0.28],
+    [0, -0.5, 0.3],
+  ]) {
+    ctx.fillStyle = "#ff4f7f";
+    ctx.beginPath();
+    ctx.moveTo(x * s, (y + r * 1.3) * s);
+    ctx.quadraticCurveTo((x - r * 1.2) * s, (y - r * 0.2) * s, x * s, (y - r * 0.6) * s);
+    ctx.quadraticCurveTo((x + r * 1.2) * s, (y - r * 0.2) * s, x * s, (y + r * 1.3) * s);
+    ctx.fill();
+    ctx.fillStyle = "#ffe08a";
+    for (const [dx, dy] of [
+      [-0.1, 0],
+      [0.1, 0.15],
+      [0, 0.35],
+    ]) {
+      ctx.beginPath();
+      ctx.arc((x + dx * r * 2) * s, (y + dy * r * 2) * s, s * 0.03, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.fillStyle = "#5fbf6a";
+    ctx.beginPath();
+    ctx.ellipse(x * s, (y - r * 0.6) * s, r * 0.5 * s, r * 0.18 * s, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.fillStyle = "#5b7bff";
+  for (const [x, y] of [
+    [-0.6, -0.05],
+    [0.62, -0.08],
+    [0.05, -0.1],
+  ]) {
+    ctx.beginPath();
+    ctx.arc(x * s, y * s, s * 0.14, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.fillStyle = "#b7a0ff";
+  ctx.beginPath();
+  ctx.moveTo(-s * 0.9, -s * 0.05);
+  ctx.lineTo(s * 0.9, -s * 0.05);
+  ctx.quadraticCurveTo(s * 0.85, s * 0.7, 0, s * 0.7);
+  ctx.quadraticCurveTo(-s * 0.85, s * 0.7, -s * 0.9, -s * 0.05);
+  ctx.fill();
+  ctx.fillStyle = "rgba(255,255,255,0.8)";
+  ctx.beginPath();
+  ctx.ellipse(-s * 0.35, s * 0.25, s * 0.15, s * 0.07, -0.3, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+/** A golden moon cake with a stamped flower and a little star. */
+function drawMooncake(ctx: CanvasRenderingContext2D, s: number): void {
+  ctx.fillStyle = "#b9822f";
+  ctx.beginPath();
+  ctx.ellipse(0, s * 0.18, s * 0.85, s * 0.5, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#e8b54a";
+  ctx.beginPath();
+  for (let i = 0; i < 16; i++) {
+    const a = (i / 16) * Math.PI * 2;
+    const r = i % 2 ? 0.78 : 0.86;
+    const x = Math.cos(a) * s * r;
+    const y = Math.sin(a) * s * r * 0.6 - s * 0.05;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "#b9822f";
+  ctx.lineWidth = Math.max(1, s * 0.06);
+  ctx.beginPath();
+  ctx.ellipse(0, -s * 0.05, s * 0.5, s * 0.3, 0, 0, Math.PI * 2);
+  ctx.stroke();
+  for (let p = 0; p < 4; p++) {
+    const a = (p * Math.PI) / 2 + Math.PI / 4;
+    ctx.beginPath();
+    ctx.ellipse(
+      Math.cos(a) * s * 0.2,
+      -s * 0.05 + Math.sin(a) * s * 0.12,
+      s * 0.12,
+      s * 0.06,
+      a,
+      0,
+      Math.PI * 2,
+    );
+    ctx.stroke();
+  }
+  ctx.fillStyle = "#fff6c9";
+  ctx.beginPath();
+  for (let i = 0; i < 10; i++) {
+    const a = -Math.PI / 2 + (i * Math.PI) / 5;
+    const r = i % 2 === 0 ? s * 0.12 : s * 0.05;
+    const x = Math.cos(a) * r;
+    const y = -s * 0.05 + Math.sin(a) * r;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
   ctx.fill();
 }

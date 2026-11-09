@@ -26,6 +26,12 @@ Newest first. Each entry says what we decided, why, and what it affects.
 - **Why:** Jacob's ask, and it gives the bath sponge a reason to come out regularly.
 - **Affects:** phase 42 (balance).
 
+## 2026-11-09: The shop — treats and new decorations; everyday things stay free
+
+- **Decision:** a 🛍️ button (top right, under the decorate button) opens the shop. It sells treats in packs of 3, which go in the pantry and show in a row above the food tray with a count: berry bowls (6 coins; Food +15 and extra Love) and moon cakes (15 coins; Food +30, more Love and a little Energy). It also unlocks three new decorations for good: a star beanbag (30), a blossom bonsai (40) and a planet lamp (50). The three everyday foods, the toys and the 10 starter decorations stay free forever, so care never depends on coins. The pantry holds up to 30 of each treat. Save version 4 adds the stash (pantry and unlocked decorations); older saves start empty.
+- **Why:** phase 25 ("buying works and prices feel fair"), keeping the no-stress vision.
+- **Affects:** phase 26 (the mini-game earns coins), phase 42 (balance), and later gems (phase 64).
+
 ## 2026-11-07: Noodle coins — earned only by caring and playing
 
 - **Decision:** coins for a snack (2), the favorite food (3), a good petting that ends in the excited loop (3), a ball boop (1), every 5 s of ribbon chasing (2), a squeaky-clean bath (4), waking up rested (5), and a daily hello on the first visit each day (10). After 150 in a day, everyday care pays half, so there's no grinding; it resets the next day. Coins pop out and fly to a counter under the need orbs. Fast mode never pays. Saved with the dragon (save version 3; older saves start at 0). No real money anywhere; spending comes with the shop (phase 25).

@@ -1,11 +1,25 @@
 import { seededRandom } from "../noodle/look";
 import type { Needs } from "./needs";
 
-export type FoodId = "noodles" | "dumpling" | "fish";
+export type FoodId = "noodles" | "dumpling" | "fish" | "berries" | "mooncake";
+/** The everyday foods: always free, always in the tray. */
 export const FOOD_IDS: FoodId[] = ["noodles", "dumpling", "fish"];
+/** Treats from the shop: kept in the pantry, one used up per bite. */
+export const TREAT_IDS: FoodId[] = ["berries", "mooncake"];
 
 /** How much each food fills the Food orb, and the little bit of Love any snack brings. */
-export const FOOD_FULLNESS: Record<FoodId, number> = { noodles: 30, dumpling: 20, fish: 25 };
+export const FOOD_FULLNESS: Record<FoodId, number> = {
+  noodles: 30,
+  dumpling: 20,
+  fish: 25,
+  berries: 15,
+  mooncake: 30,
+};
+/** Treats are extra special: more Love (and moon cakes a little Energy). */
+const TREAT_BONUS: Partial<Record<FoodId, { happiness: number; energy?: number }>> = {
+  berries: { happiness: 8 },
+  mooncake: { happiness: 15, energy: 10 },
+};
 export const SNACK_HAPPINESS = 4;
 /** Extra Love for a dragon's favorite food. */
 export const FAVORITE_HAPPINESS = 14;
@@ -27,9 +41,11 @@ export function wantsFood(needs: Needs): boolean {
 
 /** What eating a food changes. */
 export function feedEffect(food: FoodId, favorite: boolean): Partial<Needs> {
+  const bonus = TREAT_BONUS[food];
   return {
     fullness: FOOD_FULLNESS[food],
-    happiness: SNACK_HAPPINESS + (favorite ? FAVORITE_HAPPINESS : 0),
+    happiness: SNACK_HAPPINESS + (favorite ? FAVORITE_HAPPINESS : 0) + (bonus?.happiness ?? 0),
     cleanliness: -MESSY_EATING,
+    ...(bonus?.energy ? { energy: bonus.energy } : {}),
   };
 }

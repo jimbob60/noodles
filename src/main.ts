@@ -16,6 +16,9 @@ import { Bath } from "./ui/bath";
 import { feedEffect } from "./care/food";
 import { earn, emptyWallet, type CoinReason, type Wallet } from "./care/coins";
 import { CoinCounter } from "./ui/coinCounter";
+import { buy, emptyStash, ownedDecor, useTreat, type Stash } from "./care/shop";
+import { drawShopButton, onShopButton, openShop } from "./ui/shopPanel";
+import { TREAT_IDS } from "./care/food";
 import { Petting } from "./care/petting";
 import { moodFrom } from "./care/mood";
 import { bedRefill, rested, sleepy } from "./care/bedtime";
@@ -54,6 +57,8 @@ async function main(): Promise<void> {
   /** Noodle coins (saved with the dragon). */
   let wallet: Wallet = loaded.save?.wallet ?? emptyWallet();
   const coinCounter = new CoinCounter();
+  /** Treats and decorations bought in the shop (saved with the dragon). */
+  let stash: Stash = loaded.save?.stash ?? emptyStash();
   /**
    * Test modes, switched by tapping the build tag in the bottom-right corner (links with #fast
    * or #gallery also work in a normal browser, but Claude's app viewer can drop the #):
@@ -83,7 +88,7 @@ async function main(): Promise<void> {
   const bath = new Bath();
   /** Saves on this device (only the real game: fast mode and the gallery never save). */
   const persist = () => {
-    if (mode === "play") storeGame(store, makeSave(seed, needs, Date.now(), decor, wallet));
+    if (mode === "play") storeGame(store, makeSave(seed, needs, Date.now(), decor, wallet, stash));
   };
   window.addEventListener("pagehide", persist);
   document.addEventListener("visibilitychange", () => {
@@ -143,6 +148,7 @@ async function main(): Promise<void> {
     needs = fromSave(save);
     decor = save.decor;
     wallet = save.wallet;
+    stash = save.stash;
     if (needs.inBed) setBedtime(true);
     document.body.dataset.favorite = dragon.favorite;
     document.body.dataset.seed = String(seed);
@@ -152,7 +158,7 @@ async function main(): Promise<void> {
   const showBackup = () => {
     persist();
     openBackupPanel(
-      encodeBackup(makeSave(seed, needs, Date.now(), decor, wallet)),
+      encodeBackup(makeSave(seed, needs, Date.now(), decor, wallet, stash)),
       restore,
       store !== null,
     );
@@ -211,7 +217,21 @@ async function main(): Promise<void> {
       );
       // Decorating blocks everything else, for this frame only (so the decorator keeps the finger).
       let blocked = swallowing || decorating;
-      // The bedtime button: lights down, or good morning.
+      // The shop button: spend noodle coins.
+      if (pressAt && !swallowing && mode === "play" && onShopButton(pressAt, screen.width)) {
+        swallowing = true;
+        openShop(wallet, stash, (item) => {
+          const r = buy(item, wallet, stash);
+          if (!r.ok) return null;
+          wallet = r.wallet;
+          stash = r.stash;
+          persist();
+          return { wallet, stash };
+        });
+      }
+      // The tray shows the pantry's treats, and the drawer only what's owned.
+      feeding.pantry = stash.pantry;
+      decorator.kinds = ownedDecor(stash);
       if (
         pressAt &&
         !blocked &&
@@ -239,6 +259,7 @@ async function main(): Promise<void> {
         const favorite = tray.event.ate === dragon.favorite;
         needs = change(needs, feedEffect(tray.event.ate, favorite));
         pay(favorite ? "favorite" : "snack", dragon.mouth);
+        if (TREAT_IDS.includes(tray.event.ate)) stash = useTreat(stash, tray.event.ate);
         // For automated checks: how many snacks have been eaten this visit.
         document.body.dataset.fed = String(Number(document.body.dataset.fed ?? 0) + 1);
       }
@@ -388,6 +409,7 @@ async function main(): Promise<void> {
         if (mode === "play") {
           drawBackupButton(ctx, screen.width);
           drawDecorateButton(ctx, screen.width, decorator.active, dark, modeSeconds);
+          if (!decorator.active) drawShopButton(ctx, screen.width);
         }
       }
 
