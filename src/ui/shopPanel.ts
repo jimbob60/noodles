@@ -133,7 +133,20 @@ export function openShop(
   const render = () => {
     purse.textContent = `🪙 ${wallet.coins}`;
     grid.replaceChildren();
+    let section = "";
     for (const item of CATALOG) {
+      if (item.type !== section) {
+        section = item.type;
+        const h = document.createElement("div");
+        h.textContent = item.type === "treat" ? "🍓 Treats" : "🏮 Decorations";
+        css(h, {
+          gridColumn: "1 / -1",
+          font: "600 16px system-ui, sans-serif",
+          color: "#ffd27a",
+          marginTop: "4px",
+        });
+        grid.append(h);
+      }
       const tile = document.createElement("div");
       css(tile, {
         background: "rgba(255,255,255,0.06)",

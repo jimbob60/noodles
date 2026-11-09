@@ -27,8 +27,6 @@ export const DECOR_KINDS: DecorKind[] = [
   "beanbag",
   "planet",
 ];
-/** Free from the start; the others are bought in the shop. */
-export const STARTER_DECOR: DecorKind[] = DECOR_KINDS.slice(0, 10);
 
 /** How many decorations a den can hold, so it stays cozy rather than cluttered. */
 export const MAX_DECOR = 16;

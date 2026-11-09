@@ -22,6 +22,7 @@ function gesture(
 function decorating() {
   const d = new Decorator();
   d.active = true;
+  d.owned = [...d.kinds];
   return d;
 }
 
@@ -64,6 +65,30 @@ describe("decorating", () => {
   });
 });
 
+describe("buying from the drawer", () => {
+  it("asks first, then buys on a second tap", () => {
+    const d = new Decorator();
+    d.active = true;
+    const bought: string[] = [];
+    d.onBuy = (k) => {
+      bought.push(k);
+      return true;
+    };
+    const lamp = d.slots(W, H).find((s) => s.kind === "planet")!;
+    gesture(d, [], lamp, []);
+    expect(bought).toEqual([]); // just asked "Buy?"
+    gesture(d, [], lamp, []);
+    expect(bought).toEqual(["planet"]);
+  });
+
+  it("won't place a decoration you don't own", () => {
+    const d = new Decorator();
+    d.active = true;
+    const lantern = d.slots(W, H).find((s) => s.kind === "lantern")!;
+    expect(gesture(d, [], lantern, [{ x: 640, y: 300 }])).toHaveLength(0);
+  });
+});
+
 describe("the decoration drawer", () => {
   it("fits on screen, in one row on a tablet and wrapped into rows on a phone", () => {
     const d = new Decorator();
@@ -73,7 +98,7 @@ describe("the decoration drawer", () => {
       [400, 860],
     ]) {
       const slots = d.slots(w, h);
-      expect(slots).toHaveLength(10);
+      expect(slots).toHaveLength(13);
       for (const s of slots) {
         expect(s.x - s.r).toBeGreaterThanOrEqual(0);
         expect(s.x + s.r).toBeLessThanOrEqual(w);

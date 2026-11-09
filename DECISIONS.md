@@ -26,6 +26,12 @@ Newest first. Each entry says what we decided, why, and what it affects.
 - **Why:** Jacob's ask, and it gives the bath sponge a reason to come out regularly.
 - **Affects:** phase 42 (balance).
 
+## 2026-11-09: Every decoration is bought, right from the drawer too
+
+- **Decision:** at Jacob's request every decoration now has a price (lantern 10, cushion 12, jar 15, plant 15, rug 18, stool 20, tea set 25, fairy lights 25, beanbag 30, moon mobile 30, crystal lamp 35, bonsai 40, planet lamp 50). The decorate drawer shows all 13: owned ones bright, the rest dimmed with a coin price tag. Tapping a locked one asks "Buy?", and a second tap within 3 s buys it (or it shakes if short of coins). The shop panel lists them too, under Treats and Decorations. Decorations already placed in a den are unlocked for free, so nothing disappears. Everyday food and toys stay free.
+- **Why:** Jacob asked for the decoration drawer to be a shop too, with prices for all of it.
+- **Affects:** phase 42 (balance: a new player earns about 50 coins a day, so the first few decorations come quickly).
+
 ## 2026-11-09: The shop — treats and new decorations; everyday things stay free
 
 - **Decision:** a 🛍️ button (top right, under the decorate button) opens the shop. It sells treats in packs of 3, which go in the pantry and show in a row above the food tray with a count: berry bowls (6 coins; Food +15 and extra Love) and moon cakes (15 coins; Food +30, more Love and a little Energy). It also unlocks three new decorations for good: a star beanbag (30), a blossom bonsai (40) and a planet lamp (50). The three everyday foods, the toys and the 10 starter decorations stay free forever, so care never depends on coins. The pantry holds up to 30 of each treat. Save version 4 adds the stash (pantry and unlocked decorations); older saves start empty.

@@ -6,6 +6,7 @@ import {
   buy,
   CATALOG,
   emptyStash,
+  keepPlaced,
   ownedDecor,
   PANTRY_MAX,
   parseStash,
@@ -33,10 +34,16 @@ describe("the shop", () => {
     expect(buy(item("bonsai"), r.wallet, r.stash)).toEqual({ ok: false, why: "owned" });
   });
 
-  it("starts with the 10 starter decorations, not the shop ones", () => {
-    const owned = ownedDecor(emptyStash());
-    expect(owned).toHaveLength(10);
-    expect(owned).not.toContain("planet");
+  it("sells every decoration, each with a price", () => {
+    expect(ownedDecor(emptyStash())).toEqual([]);
+    const decor = CATALOG.filter((i) => i.type === "decor");
+    expect(decor).toHaveLength(13);
+    for (const d of decor) expect(d.cost).toBeGreaterThan(0);
+  });
+
+  it("lets decorations already placed in the den stay yours", () => {
+    const kept = keepPlaced(emptyStash(), ["lantern", "rug", "lantern"]);
+    expect(ownedDecor(kept)).toEqual(["lantern", "rug"]);
   });
 
   it("won't sell what you can't afford, or overfill the pantry", () => {
@@ -67,7 +74,7 @@ describe("the shop", () => {
       }),
     ).toEqual({
       pantry: {},
-      unlocked: ["bonsai"],
+      unlocked: ["lantern", "bonsai"],
     });
   });
 });

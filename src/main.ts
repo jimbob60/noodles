@@ -16,7 +16,16 @@ import { Bath } from "./ui/bath";
 import { feedEffect } from "./care/food";
 import { earn, emptyWallet, type CoinReason, type Wallet } from "./care/coins";
 import { CoinCounter } from "./ui/coinCounter";
-import { buy, emptyStash, ownedDecor, useTreat, type Stash } from "./care/shop";
+import {
+  buy,
+  CATALOG,
+  DECOR_PRICE,
+  emptyStash,
+  keepPlaced,
+  ownedDecor,
+  useTreat,
+  type Stash,
+} from "./care/shop";
 import { drawShopButton, onShopButton, openShop } from "./ui/shopPanel";
 import { TREAT_IDS } from "./care/food";
 import { Petting } from "./care/petting";
@@ -58,7 +67,12 @@ async function main(): Promise<void> {
   let wallet: Wallet = loaded.save?.wallet ?? emptyWallet();
   const coinCounter = new CoinCounter();
   /** Treats and decorations bought in the shop (saved with the dragon). */
-  let stash: Stash = loaded.save?.stash ?? emptyStash();
+  // Decorations already placed in the den stay yours, even from before they had prices.
+  let stash: Stash = keepPlaced(
+    loaded.save?.stash ?? emptyStash(),
+    decor.map((d) => d.kind),
+  );
+  decorator.prices = DECOR_PRICE;
   /**
    * Test modes, switched by tapping the build tag in the bottom-right corner (links with #fast
    * or #gallery also work in a normal browser, but Claude's app viewer can drop the #):
@@ -148,7 +162,10 @@ async function main(): Promise<void> {
     needs = fromSave(save);
     decor = save.decor;
     wallet = save.wallet;
-    stash = save.stash;
+    stash = keepPlaced(
+      save.stash,
+      save.decor.map((d) => d.kind),
+    );
     if (needs.inBed) setBedtime(true);
     document.body.dataset.favorite = dragon.favorite;
     document.body.dataset.seed = String(seed);
@@ -231,7 +248,16 @@ async function main(): Promise<void> {
       }
       // The tray shows the pantry's treats, and the drawer only what's owned.
       feeding.pantry = stash.pantry;
-      decorator.kinds = ownedDecor(stash);
+      decorator.owned = ownedDecor(stash);
+      decorator.onBuy = (kind) => {
+        const item = CATALOG.find((i) => i.type === "decor" && i.kind === kind)!;
+        const r = buy(item, wallet, stash);
+        if (!r.ok) return false;
+        wallet = r.wallet;
+        stash = r.stash;
+        persist();
+        return true;
+      };
       if (
         pressAt &&
         !blocked &&
