@@ -40,8 +40,11 @@ describe("the shop", () => {
     expect(w.coins).toBe(200 - 2 * item("lantern").cost);
   });
 
-  it("sells balls once, to keep for good", () => {
-    const r = buy(item("jelly"), rich(), emptyStash());
+  it("sells balls once, to keep for good, as a big goal (1,000–1,500 coins, all different)", () => {
+    const balls = CATALOG.filter((i) => i.type === "ball");
+    for (const b of balls) expect(b.cost >= 1000 && b.cost <= 1500).toBe(true);
+    expect(new Set(balls.map((b) => b.cost)).size).toBe(balls.length);
+    const r = buy(item("jelly"), { ...emptyWallet(), coins: 2000 }, emptyStash());
     expect(r.ok && r.stash.balls).toEqual(["jelly"]);
     if (!r.ok) return;
     expect(buy(item("jelly"), r.wallet, r.stash)).toEqual({ ok: false, why: "owned" });

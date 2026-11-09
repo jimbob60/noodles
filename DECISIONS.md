@@ -28,7 +28,7 @@ Newest first. Each entry says what we decided, why, and what it affects.
 
 ## 2026-11-09: Toys in the shop — five new balls that each play differently
 
-- **Decision:** the shop gets a ⚽ Toys section: yarn ball (20; heavy, rolls, barely bounces, trails yarn), star ball (25; floaty, sparkle trail), bubble ball (30; very light and slow), jelly ball (35; super bouncy, squishes on landing) and rainbow ball (50; shifting colors, extra Love per boop). Each has its own gravity, bounce, air drag, floor grip and Love bonus. Toys are bought once and kept (unlike decorations, which are placed). The beach ball stays free. Tap the ball bubble to cycle through owned balls (dots show how many); drag to throw. Save version 6 adds the owned balls.
+- **Decision:** the shop gets a ⚽ Toys section: yarn ball (1,000; heavy, rolls, barely bounces, trails yarn), star ball (1,100; floaty, sparkle trail), bubble ball (1,250; very light and slow), jelly ball (1,350; super bouncy, squishes on landing) and rainbow ball (1,500; shifting colors, extra Love per boop). Because toys are kept forever, Jacob set them as big goals (1,000–1,500, all different); at about 50 coins a day they take weeks, which is where gems come in later. Each has its own gravity, bounce, air drag, floor grip and Love bonus. Toys are bought once and kept (unlike decorations, which are placed). The beach ball stays free. Tap the ball bubble to cycle through owned balls (dots show how many); drag to throw. Save version 6 adds the owned balls.
 - **Why:** Jacob asked for more games like the ball, with different balls.
 - **Affects:** phase 26 (the mini-game could reuse balls), phase 42 (balance).
 
@@ -54,6 +54,7 @@ Newest first. Each entry says what we decided, why, and what it affects.
 
 - **Idea:** Jacob's: a premium currency (say, gems 💎) bought with real money, alongside the free noodle coins.
 - **How it could work:** Google Play Billing (Capacitor has plugins for it); gems buy cosmetic extras like special decorations, accessories or rare patterns. Real-money sales need the Play Console's payments profile and tax info, a store listing that says "In-app purchases", and careful rules if children play (Play's Families policies). To keep the cozy, no-stress vision: never pay-to-win, never pressure, everything that matters still reachable with coins.
+- **Swap for coins:** Jacob's plan is that gems can be swapped for noodle coins, so a player could reach a big goal like a 1,000+ coin ball sooner. (Earning coins by play must stay a fair, steady path.)
 - **When:** after launch (phase 64). Phase 24's coins stay earned-only, and nothing is built for gems yet, so no real money is anywhere in the game for now. This also answers part of the open question "free, or a small price?".
 
 ## 2026-11-07: Idea for later — the dragon as a live wallpaper

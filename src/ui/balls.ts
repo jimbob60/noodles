@@ -37,7 +37,7 @@ export const BALLS: Record<BallKind, BallStats> = {
     airDrag: 0.5,
     floorGrip: 0.985,
     loveBonus: 1,
-    cost: 20,
+    cost: 1000,
   },
   star: {
     name: "Star ball",
@@ -46,7 +46,7 @@ export const BALLS: Record<BallKind, BallStats> = {
     airDrag: 0.7,
     floorGrip: 0.9,
     loveBonus: 1,
-    cost: 25,
+    cost: 1100,
   },
   bubble: {
     name: "Bubble ball",
@@ -55,7 +55,7 @@ export const BALLS: Record<BallKind, BallStats> = {
     airDrag: 1.6,
     floorGrip: 0.8,
     loveBonus: 2,
-    cost: 30,
+    cost: 1250,
   },
   jelly: {
     name: "Jelly ball",
@@ -64,7 +64,7 @@ export const BALLS: Record<BallKind, BallStats> = {
     airDrag: 0.4,
     floorGrip: 0.95,
     loveBonus: 2,
-    cost: 35,
+    cost: 1350,
   },
   rainbow: {
     name: "Rainbow ball",
@@ -73,7 +73,7 @@ export const BALLS: Record<BallKind, BallStats> = {
     airDrag: 0.6,
     floorGrip: 0.9,
     loveBonus: 4,
-    cost: 50,
+    cost: 1500,
   },
 };
 
