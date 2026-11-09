@@ -42,6 +42,13 @@ export function drawBody(
     traceSmoothLoop(ctx, outline);
   }
 
+  // Fish scales: soft arcs in rows, clipped to the body.
+  ctx.save();
+  ctx.clip();
+  drawScales(ctx, spine.points, hw, look);
+  ctx.restore();
+  traceSmoothLoop(ctx, outline);
+
   ctx.strokeStyle = hsl(rimOf(look.body));
   ctx.lineWidth = Math.max(1.5, hw * 0.12);
   ctx.stroke();
@@ -58,6 +65,85 @@ export function drawBody(
   ctx.strokeStyle = "rgba(255,255,255,0.5)";
   ctx.lineWidth = hw * 0.28;
   ctx.stroke();
+}
+
+/**
+ * Fish scales: rows of little arcs that open toward the tail, like an Eastern dragon's. Faint, so
+ * the pattern still shows through. The caller has already clipped to the body outline.
+ */
+function drawScales(ctx: CanvasRenderingContext2D, p: Point[], hw: number, look: DragonLook): void {
+  const n = p.length;
+  ctx.strokeStyle = hsl(rimOf(look.body), 0.32);
+  ctx.lineCap = "round";
+  for (let i = 2; i < n - 2; i++) {
+    const f = forwardAt(p, i);
+    // forwardAt points toward the head; scales open toward the tail.
+    const back = Math.atan2(-f.y, -f.x);
+    const w = hw * bodyProfile(i / (n - 1));
+    const size = Math.max(2, w * 0.42);
+    ctx.lineWidth = Math.max(1, size * 0.18);
+    const across = i % 2 === 0 ? [-0.62, 0, 0.62] : [-0.31, 0.31];
+    for (const a of across) {
+      const x = p[i].x - f.y * w * a;
+      const y = p[i].y + f.x * w * a;
+      ctx.beginPath();
+      ctx.arc(x, y, size, back - Math.PI / 2 - 0.35, back + Math.PI / 2 + 0.35);
+      ctx.stroke();
+    }
+  }
+}
+
+/**
+ * The spiny ridge along the back: pointed fins poking out of the upper edge of the body, sweeping
+ * toward the tail and shrinking as it thins. Drawn before the body, so their roots tuck in. Where
+ * the body runs straight up or down there is no clear "top", so the fins shrink away there
+ * instead of flipping sides.
+ */
+export function drawRidge(
+  ctx: CanvasRenderingContext2D,
+  spine: Spine,
+  look: DragonLook = CLASSIC_LOOK,
+  puff = 1,
+): void {
+  const p = spine.points;
+  const n = p.length;
+  const hw = bodyHalfWidth(spine) * puff;
+  ctx.lineJoin = "round";
+  ctx.fillStyle = hsl(look.accent);
+  ctx.strokeStyle = hsl(shade(look.accent, -24, -8));
+  ctx.lineWidth = Math.max(1, hw * 0.08);
+  for (let i = 2; i < n - 2; i++) {
+    const f = forwardAt(p, i);
+    // The side normal that points up the screen.
+    let nx = -f.y;
+    let ny = f.x;
+    if (ny > 0) {
+      nx = -nx;
+      ny = -ny;
+    }
+    const up = Math.min(1, -ny * 1.6);
+    if (up < 0.15) continue;
+    const w = hw * bodyProfile(i / (n - 1));
+    const tall = w * 0.75 * up;
+    const half = w * 0.42;
+    const ex = p[i].x + nx * w * 0.8;
+    const ey = p[i].y + ny * w * 0.8;
+    // Leaning back toward the tail, like a fin in the wind.
+    const tx = ex + nx * tall - f.x * tall * 0.7;
+    const ty = ey + ny * tall - f.y * tall * 0.7;
+    ctx.beginPath();
+    ctx.moveTo(ex + f.x * half, ey + f.y * half);
+    ctx.quadraticCurveTo(ex + nx * tall * 0.7, ey + ny * tall * 0.7, tx, ty);
+    ctx.quadraticCurveTo(
+      ex - f.x * half * 0.6,
+      ey - f.y * half * 0.6,
+      ex - f.x * half,
+      ey - f.y * half,
+    );
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+  }
 }
 
 /** Paints the pattern; the caller has already clipped to the body outline. */

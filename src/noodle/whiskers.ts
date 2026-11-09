@@ -13,12 +13,13 @@ export function headToWorld(at: Point, face: Face, local: Point): Point {
 
 /** Where each whisker grows from, in head space (as a share of the head radius). */
 const ROOTS: Point[] = [
-  { x: 0.8, y: 0.35 },
-  { x: 0.6, y: 0.45 },
+  // From the sides of the nose, near the tip, like an Eastern dragon's long whiskers.
+  { x: 1.32, y: 0.08 },
+  { x: 1.18, y: 0.2 },
 ];
 
 /**
- * Two long whiskers, each a tiny chain that trails from under the snout. They drift down and a little
+ * Two long whiskers, each a tiny chain that trails from the tip of the snout. They drift down and a little
  * back on their own, so they hang and sway even while the head holds still.
  */
 export class Whiskers {

@@ -10,6 +10,7 @@ A cozy pet game about raising **super cute, glowing noodle dragons** in a nightt
 ## 1. Dragon feel: super cute
 
 - Round, chubby noodle bodies with big sparkly eyes. They should feel like baby animals.
+- **Cute Eastern dragons** (Jacob's redesign, 2026-11-09): long snaky bodies with fish scales, a spiny back ridge, swept-back antler horns, a flame-like mane, long whiskers from the nose, little clawed feet and a flame tail fin. A real tapered dragon muzzle (never a round pig snout) and big almond jewel eyes with brows.
 - Soft, bouncy movement. Even the adults stay cute and never turn fierce.
 - Expressions are big and easy to read: happy wiggles, sleepy droops, little pouts.
 

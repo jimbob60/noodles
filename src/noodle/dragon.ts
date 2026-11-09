@@ -7,9 +7,9 @@ import type { PointerState } from "../engine/input";
 import { FOOD_COLOR } from "../ui/foodArt";
 import { Follower } from "../follower";
 import { bodyOutline, bodyProfile, traceSmoothLoop } from "./body";
-import { bodyHalfWidth, drawBody } from "./drawBody";
+import { bodyHalfWidth, drawBody, drawRidge } from "./drawBody";
 import { drawLegs, drawTailTuft, drawWhiskers } from "./drawExtras";
-import { drawHead, headColors, type HeadColors } from "./drawHead";
+import { drawHead, headColors, MOUTH, type HeadColors } from "./drawHead";
 import { CHEW_TIME, Face, SHAKE_TIME, YAWN_TIME } from "./face";
 import { IdleBrain, type World } from "./idleBrain";
 import { legSizes, makeLegs, updateLegs, type Leg, type LegSizes } from "./legs";
@@ -139,7 +139,7 @@ export class Dragon {
   /** Where the mouth is right now (just under the snout). */
   get mouth(): Point {
     const r = this.headRadius;
-    return headToWorld(this.spine.head, this.face, { x: r * 0.72, y: r * 0.56 });
+    return headToWorld(this.spine.head, this.face, { x: r * MOUTH.x, y: r * MOUTH.y });
   }
 
   /** Munch! Chomps, crumbs, and hearts if it's the favorite. */
@@ -531,6 +531,7 @@ export class Dragon {
       }
     }
     drawLegs(ctx, this.legs, this.spine.points, this.sizes, this.look);
+    drawRidge(ctx, this.spine, this.look, puff);
     drawBody(ctx, this.spine, this.look, puff);
     if (this.grime > 0) this.drawGrime(ctx, hw);
     drawTailTuft(ctx, this.spine.points, hw, this.asleep ? this.time * 0.3 : this.time, this.look);
