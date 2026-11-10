@@ -51,6 +51,8 @@ export class Face {
   asleep = false;
   /** While being petted: happy closed "^ ^" eyes. */
   happy = false;
+  /** Shy blushing, 0–1: rosy cheeks. */
+  blush = 0;
   /** Seconds of chewing left (three big chomps). */
   chewLeft = 0;
   /** Seconds of "no thanks" head shake left. */

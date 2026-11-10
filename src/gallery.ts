@@ -1,3 +1,4 @@
+import { mainTrait, TRAIT_LABEL } from "./noodle/personality";
 import type { PointerState } from "./engine/input";
 import type { Screen } from "./engine/screen";
 import { Dragon } from "./noodle/dragon";
@@ -70,13 +71,14 @@ export class Gallery {
     ctx.fillStyle = sky;
     ctx.fillRect(0, 0, w, h);
     for (const c of this.cells) c.dragon.draw(ctx);
-    // Each dragon's seed, small, so favourites can be named and found again.
+    // Each dragon's seed and main personality, small, so favourites can be found again.
     ctx.font = "11px system-ui, sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "bottom";
     ctx.fillStyle = "rgba(255,255,255,0.4)";
     for (const c of this.cells) {
-      ctx.fillText(`#${c.dragon.look.seed}`, c.cx, c.cy + c.ch / 2 - 4);
+      const trait = TRAIT_LABEL[mainTrait(c.dragon.genes.personality)];
+      ctx.fillText(`#${c.dragon.look.seed} · ${trait}`, c.cx, c.cy + c.ch / 2 - 4);
     }
   }
 }

@@ -348,6 +348,14 @@ export function drawHead(
   ctx.beginPath();
   ctx.ellipse(r * 0.22, r * 0.4, r * 0.2 * puff, r * 0.11 * puff, 0, 0, Math.PI * 2);
   ctx.fill();
+  if (face.blush > 0.03) {
+    // Shy blushing: a bigger, rosier cheek.
+    const b = 1 + face.blush * 0.5;
+    ctx.fillStyle = `rgba(255,110,160,${(0.55 * face.blush).toFixed(3)})`;
+    ctx.beginPath();
+    ctx.ellipse(r * 0.22, r * 0.4, r * 0.22 * b, r * 0.13 * b, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
   if (c.look.freckles) {
     ctx.fillStyle = c.rim;
     for (const [fx, fy] of [

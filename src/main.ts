@@ -567,6 +567,8 @@ async function main(): Promise<void> {
       if (document.body.dataset.feeling !== dragon.mood)
         document.body.dataset.feeling = dragon.mood;
       if (document.body.dataset.mood !== mood) document.body.dataset.mood = mood;
+      const thinking = dragon.thinkingOf ?? "";
+      if (document.body.dataset.thinking !== thinking) document.body.dataset.thinking = thinking;
       // For automated checks: where the dragon's head and body are.
       const h = dragon.spine.head;
       const c = dragon.centre;

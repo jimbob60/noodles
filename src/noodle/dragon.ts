@@ -13,6 +13,7 @@ import { IdleBrain, type World } from "./idleBrain";
 import { legSizes, makeLegs, updateLegs, type Leg, type LegSizes } from "./legs";
 import { hsl, type DragonLook } from "./look";
 import { CLASSIC_GENES, type Genes } from "./genes";
+import { temperOf, type Temper } from "./personality";
 import { Spine, type Point } from "./spine";
 import { Swimmer } from "./swimmer";
 import { headToWorld, Whiskers } from "./whiskers";
@@ -54,6 +55,10 @@ export const EXCITE_TIME = 1.4;
 
 /** How quickly the head swims toward held-out food (slower than following a finger: it reaches). */
 const LURE_RATE = 4;
+/** Seconds a shy dragon trusts you after a lovely petting. */
+const TRUST_TIME = 120;
+/** Seconds a greedy dragon's begging bubble shows. */
+const BEG_TIME = 2.6;
 /** Top swimming speed toward food, in spine units per second, so you can watch it swim over. */
 export const LURE_TOP_SPEED = 16;
 
@@ -111,6 +116,20 @@ export class Dragon {
   private bits: Bit[] = [];
   /** How it looks (from its genes). */
   readonly look: DragonLook;
+  /** How it behaves (from its personality genes). */
+  readonly temper: Temper;
+  /** Personality beats: seconds since the last zoomies, yawn and begging. */
+  private zoomClock = 0;
+  private yawnClock = 0;
+  private begClock = 0;
+  /** Greedy: seconds left showing a food thought bubble while begging. */
+  private begLeft = 0;
+  /** Greedy: a happy wiggle once this snack is chewed. */
+  private wiggleAfterEat = 0;
+  /** Shy: seconds left of trusting you after a lovely petting (shyness mostly gone). */
+  private trustLeft = 0;
+  /** Shy: the finger is close and it's hiding its face. */
+  private shyHiding = false;
   /** How grown up, 0 (just hatched) to 1 (grown). Change it with setGrowth. */
   growth = 1;
   /** The spine spacing for a grown dragon on this screen. */
@@ -126,6 +145,7 @@ export class Dragon {
     random = Math.random,
   ) {
     this.look = genes;
+    this.temper = temperOf(genes.personality);
     this.headPalette = headColors(genes);
     this.favorite = genes.favorite;
     this.tickles = genes.tickles;
@@ -134,6 +154,7 @@ export class Dragon {
     this.head = new Follower(x, y);
     this.swimmer = new Swimmer(x, y, -Math.PI / 2);
     this.brain = new IdleBrain(random);
+    this.brain.temper = this.temper;
     this.brain.start("wander", this.swimmer, world);
     this.whiskers = new Whiskers(
       this.spine.head,
@@ -197,6 +218,7 @@ export class Dragon {
   /** Munch! Chomps, crumbs, and hearts if it's the favorite. */
   eat(food: FoodId): void {
     this.face.chewLeft = CHEW_TIME;
+    if (this.temper.snackWiggle) this.wiggleAfterEat = CHEW_TIME + 0.15;
     this.face.shakeLeft = 0;
     const m = this.mouth;
     const u = this.halfWidth;
@@ -323,7 +345,13 @@ export class Dragon {
     const m = this._mood;
     const f = this.face;
     // Faces follow the mood smoothly.
-    const droopTo = m === "tired" && !this.asleep ? 0.5 : 0;
+    // Tired eyes droop; a sleepy dragon's are always a little heavy.
+    const droopTo =
+      this.asleep || m === "happy" || this.exciteLeft > 0
+        ? 0
+        : m === "tired"
+          ? 0.5
+          : this.temper.droop;
     f.droop += (droopTo - f.droop) * (1 - Math.exp(-3 * dt));
     f.mouthShape =
       m === "happy" || this.exciteLeft > 0
@@ -332,7 +360,14 @@ export class Dragon {
           ? "pout"
           : "w";
     f.pleading = m === "lonely" && !this.asleep;
+    this.begLeft = Math.max(0, this.begLeft - dt);
+    this.trustLeft = Math.max(0, this.trustLeft - dt);
+    if (this.wiggleAfterEat > 0) {
+      this.wiggleAfterEat -= dt;
+      if (this.wiggleAfterEat <= 0 && !this.held && !this.asleep) this.zoomies();
+    }
     if (!this.free) return;
+    this.personalityBeats(dt, m);
 
     this.moodClock += dt;
     if (this.moodClock >= this.nextMoodBeat) {
@@ -362,7 +397,35 @@ export class Dragon {
 
   /** The need shown in its thought bubble right now, or null. */
   get thinkingOf(): string | null {
+    if (this.begLeft > 0) return "fullness";
     return this.thinkLeft > 0 ? needOf(this._mood) : null;
+  }
+
+  /** How shy it is right now (much less while it trusts you after a petting), 0–1. */
+  get shyness(): number {
+    return this.temper.shyness * (this.trustLeft > 0 ? 0.25 : 1);
+  }
+
+  /**
+   * Personality, now and then: a playful dragon does surprise zoomies, a sleepy one yawns,
+   * and a greedy one begs for a snack (a food thought bubble and a look at the food tray).
+   */
+  private personalityBeats(dt: number, m: Mood): void {
+    const t = this.temper;
+    this.zoomClock += dt;
+    this.yawnClock += dt;
+    this.begClock += dt;
+    if (this.zoomClock > t.zoomEvery && m !== "tired") {
+      this.zoomClock = 0;
+      this.zoomies();
+    } else if (this.yawnClock > t.yawnEvery) {
+      this.yawnClock = 0;
+      this.face.yawnLeft = YAWN_TIME;
+    } else if (this.begClock > t.begEvery && this.thinkLeft === 0) {
+      this.begClock = 0;
+      this.begLeft = BEG_TIME;
+      this.glanceLeft = 1.6;
+    }
   }
 
   /** Where the eyes look while showing a mood, or null for the usual. */
@@ -402,8 +465,13 @@ export class Dragon {
     this.brain.wake(this.swimmer, world);
   }
 
+  /** Playful zoomies (or a greedy happy wiggle): a quick loop-de-loop with sparkles. */
+  zoomies(): void {
+    this.getExcited(false);
+  }
+
   /** After a lovely petting: a burst of hearts and an excited loop-de-loop. */
-  getExcited(): void {
+  getExcited(hearts = true): void {
     this.exciteLeft = EXCITE_TIME;
     const R = this.halfWidth * 2.6;
     // The loop starts where the head is and goes up and over a circle just behind it.
@@ -413,7 +481,7 @@ export class Dragon {
     for (let i = 0; i < 9; i++) {
       const a = -Math.PI / 2 + (i - 4) * 0.3;
       this.bits.push({
-        kind: i % 3 === 1 ? "sparkle" : "heart",
+        kind: !hearts || i % 3 === 1 ? "sparkle" : "heart",
         x: h.x,
         y: h.y - this.headRadius,
         vx: Math.cos(a) * u * 5,
@@ -477,6 +545,8 @@ export class Dragon {
       // Petting over: carry on from here (a sleeping dragon just keeps sleeping).
       this.petAnchor = null;
       const loved = this.petPeak >= EXCITE_PURR;
+      // A shy dragon trusts you for a while after a lovely petting.
+      if (loved) this.trustLeft = TRUST_TIME;
       this.petPeak = 0;
       if (!this.brain.asleep && !this.brain.inBed) {
         const [h, n] = this.spine.points;
@@ -509,10 +579,11 @@ export class Dragon {
       const ty = this.lure.y - r * 0.56;
       const fromX = this.head.x;
       const fromY = this.head.y;
-      this.head.update(dt, tx, ty, LURE_RATE);
+      // Greedy dragons rush for food.
+      this.head.update(dt, tx, ty, LURE_RATE * this.temper.lureBoost);
       // Never faster than a quick swim, however far away the food is.
       const step = Math.hypot(this.head.x - fromX, this.head.y - fromY);
-      const max = LURE_TOP_SPEED * this.spine.segment * dt;
+      const max = LURE_TOP_SPEED * this.temper.lureBoost * this.spine.segment * dt;
       if (step > max) {
         this.head.x = fromX + ((this.head.x - fromX) * max) / step;
         this.head.y = fromY + ((this.head.y - fromY) * max) / step;
@@ -523,7 +594,17 @@ export class Dragon {
       this.wasLured = false;
       this.sinceTouch = 0;
       this.lastPress = { x: input.x, y: input.y };
-      this.head.update(dt, input.x, input.y);
+      // Shy: follows, but keeps a little distance from the finger.
+      const shy = this.shyness;
+      if (shy > 0) {
+        const dx = this.head.x - input.x;
+        const dy = this.head.y - input.y;
+        const d = Math.hypot(dx, dy) || 1;
+        const keep = shy * this.headRadius * 2.2;
+        this.head.update(dt, input.x + (dx / d) * keep, input.y + (dy / d) * keep);
+      } else {
+        this.head.update(dt, input.x, input.y);
+      }
     } else if (this.held) {
       this.sinceTouch += dt;
       // Settle where the finger last was (not wherever a hovering mouse goes). After food,
@@ -550,13 +631,24 @@ export class Dragon {
     this.spine.follow(this.head.x, this.head.y);
     const [head, neck] = this.spine.points;
     // Eyes follow the finger; otherwise they look where the dragon is heading.
-    const target = this.lure
-      ? this.lure
-      : this.free && this.moodLook()
-        ? this.moodLook()!
-        : input.down
-          ? { x: input.x, y: input.y }
-          : { x: head.x + (head.x - neck.x) * 6, y: head.y + (head.y - neck.y) * 6 };
+    // Shy: a finger close by makes it blush and look away.
+    const near =
+      input.down &&
+      !this.lure &&
+      !this.pet.active &&
+      Math.hypot(input.x - head.x, input.y - head.y) < this.headRadius * 6;
+    this.shyHiding = near && this.shyness > 0.15 && !this.asleep;
+    const blushTo = this.shyHiding ? this.shyness : this.pet.active ? this.shyness * 0.6 : 0;
+    this.face.blush += (blushTo - this.face.blush) * (1 - Math.exp(-4 * dt));
+    const target = this.shyHiding
+      ? { x: head.x + (head.x - input.x), y: head.y + (head.y - input.y) * 0.3 }
+      : this.lure
+        ? this.lure
+        : this.free && this.moodLook()
+          ? this.moodLook()!
+          : input.down
+            ? { x: input.x, y: input.y }
+            : { x: head.x + (head.x - neck.x) * 6, y: head.y + (head.y - neck.y) * 6 };
     this.face.asleep = this.asleep;
     this.face.happy =
       (this.pet.active && (this.pet.purr > 0.3 || this.pet.giggle > 0)) || this.exciteLeft > 0;
@@ -607,7 +699,7 @@ export class Dragon {
     if (purr > 0.25) this.drawPurr(ctx, purr);
     if (this.asleep) this.drawSnoreBubble(ctx);
     ctx.restore();
-    if (this.thinkLeft > 0) this.drawThought(ctx);
+    if (this.thinkLeft > 0 || this.begLeft > 0) this.drawThought(ctx);
     this.drawZees(ctx);
     this.drawBits(ctx);
   }
@@ -631,11 +723,15 @@ export class Dragon {
 
   /** A little thought bubble above the head with the icon of what it wants. */
   private drawThought(ctx: CanvasRenderingContext2D): void {
-    const need = needOf(this._mood);
+    // Begging (greedy) shows food; otherwise whatever its mood needs.
+    const begging = this.begLeft > 0;
+    const need = begging ? "fullness" : needOf(this._mood);
     if (!need) return;
     const r = this.headRadius;
     const h = this.spine.head;
-    const appear = Math.min(1, (2.4 - this.thinkLeft) * 4, this.thinkLeft * 4);
+    const left = begging ? this.begLeft : this.thinkLeft;
+    const total = begging ? BEG_TIME : 2.4;
+    const appear = Math.min(1, (total - left) * 4, left * 4);
     const bx = h.x + r * 1.1;
     const by = h.y - r * 2.4 + Math.sin(this.time * 2) * 3;
     ctx.save();
