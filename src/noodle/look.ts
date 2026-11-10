@@ -8,6 +8,22 @@ export interface Hsl {
 export type Pattern = "plain" | "stripes" | "spots" | "gradient" | "backstripe";
 export const PATTERNS: Pattern[] = ["plain", "stripes", "spots", "gradient", "backstripe"];
 
+/** The gene choices that are one of a few kinds. */
+export const HORN_STYLES = ["antler", "curl", "spike"] as const;
+export const RIDGE_STYLES = ["spikes", "scallops", "sail"] as const;
+export const TAIL_STYLES = ["flame", "fan", "pompom"] as const;
+export const MARKS = ["none", "gem", "star", "moon", "heart"] as const;
+export const WHISKER_COLORS = ["white", "gold", "accent"] as const;
+export const MANE_COLORS = ["accent", "pattern", "horn"] as const;
+export const MOUTH_STYLES = ["plain", "fangs", "toothy", "snaggle"] as const;
+export type HornStyle = (typeof HORN_STYLES)[number];
+export type RidgeStyle = (typeof RIDGE_STYLES)[number];
+export type TailStyle = (typeof TAIL_STYLES)[number];
+export type Mark = (typeof MARKS)[number];
+export type WhiskerColor = (typeof WHISKER_COLORS)[number];
+export type ManeColor = (typeof MANE_COLORS)[number];
+export type MouthStyle = (typeof MOUTH_STYLES)[number];
+
 /** Everything about how one dragon is colored. Made from a seed by `makeLook`. */
 export interface DragonLook {
   seed: number;
@@ -28,6 +44,43 @@ export interface DragonLook {
   whiskerLength: number;
   /** Grown-up size, about 0.9 (petite) to 1.1 (big and long). */
   size: number;
+
+  // ---- Phase 30, more genes ----
+  /** Eye (iris) hue, 0–360. */
+  eyeHue: number;
+  /** Eye size, about 0.85 to 1.2. */
+  eyeSize: number;
+  /** Snout length, about 0.85 (short and button-nosed) to 1.2 (long). */
+  snoutLength: number;
+  /** A little mark on the forehead. */
+  mark: Mark;
+  /** Freckles on the cheek. */
+  freckles: boolean;
+  /** Horn shape: branching antlers, curly ram horns or straight spikes. */
+  hornStyle: HornStyle;
+  /** Back ridge: pointed spikes, round scallops or a flowing sail fin. */
+  ridgeStyle: RidgeStyle;
+  /** Back ridge size, about 0.6 to 1.4. */
+  ridgeSize: number;
+  /** Tail tip: a flame, a fish-like fan or a fluffy pompom. */
+  tailStyle: TailStyle;
+  /** Tail tip size, about 0.75 to 1.3. */
+  tailSize: number;
+  /** How chubby the body is, about 0.85 to 1.15. */
+  chubby: number;
+  /** Leg length, about 0.8 (stubby) to 1.3. */
+  legLength: number;
+  /** How strongly it glows, about 0.5 to 1.6. */
+  glow: number;
+  /** How clearly the scales show, about 0.12 to 0.5. */
+  scaleStrength: number;
+  whiskerColor: WhiskerColor;
+  /** The mane's color: the accent, the pattern or the horn color. */
+  maneColor: ManeColor;
+  /** Little fins on the cheeks. */
+  frills: boolean;
+  /** Teeth: none showing, two little fangs, a grin full of sharp teeth, or one snaggle-tooth. */
+  mouthStyle: MouthStyle;
 }
 
 export const hsl = (c: Hsl, alpha = 1): string =>
@@ -110,6 +163,38 @@ export function makeLook(seed: number): DragonLook {
     maneLength: between(0.75, 1.3),
     whiskerLength: between(0.7, 1.4),
     size: between(0.9, 1.1),
+    ...moreGenes(seed, accent),
+  };
+}
+
+/**
+ * The phase 30 extra genes, from a third stream of their own, so adding them didn't change any
+ * gene a dragon already had.
+ */
+function moreGenes(seed: number, accent: Hsl) {
+  const m = seededRandom(seed ^ 0x2545_f491);
+  const between = (a: number, z: number) => a + m() * (z - a);
+  const one = <T>(list: readonly T[]) => list[Math.floor(m() * list.length)];
+  return {
+    // Eyes: half match the accent, half are a jewel color of their own.
+    eyeHue: m() < 0.5 ? accent.h : Math.floor(m() * 360),
+    eyeSize: between(0.85, 1.2),
+    snoutLength: between(0.85, 1.2),
+    mark: m() < 0.55 ? ("none" as Mark) : one(MARKS.slice(1)),
+    freckles: m() < 0.3,
+    hornStyle: one(HORN_STYLES),
+    ridgeStyle: one(RIDGE_STYLES),
+    ridgeSize: between(0.6, 1.4),
+    tailStyle: one(TAIL_STYLES),
+    tailSize: between(0.75, 1.3),
+    chubby: between(0.85, 1.15),
+    legLength: between(0.8, 1.3),
+    glow: between(0.5, 1.6),
+    scaleStrength: between(0.12, 0.5),
+    whiskerColor: one(WHISKER_COLORS),
+    maneColor: m() < 0.6 ? ("accent" as ManeColor) : one(MANE_COLORS),
+    frills: m() < 0.4,
+    mouthStyle: one(MOUTH_STYLES),
   };
 }
 
@@ -126,4 +211,22 @@ export const CLASSIC_LOOK: DragonLook = {
   maneLength: 1,
   whiskerLength: 1,
   size: 1,
+  eyeHue: 320,
+  eyeSize: 1,
+  snoutLength: 1,
+  mark: "none",
+  freckles: false,
+  hornStyle: "antler",
+  ridgeStyle: "spikes",
+  ridgeSize: 1,
+  tailStyle: "flame",
+  tailSize: 1,
+  chubby: 1,
+  legLength: 1,
+  glow: 1,
+  scaleStrength: 0.32,
+  whiskerColor: "white",
+  maneColor: "accent",
+  frills: false,
+  mouthStyle: "plain",
 };

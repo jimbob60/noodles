@@ -7,7 +7,7 @@ import { Follower } from "../follower";
 import { bodyOutline, bodyProfile, traceSmoothLoop } from "./body";
 import { bodyHalfWidth, drawBody, drawRidge } from "./drawBody";
 import { drawLegs, drawTailTuft, drawWhiskers } from "./drawExtras";
-import { drawHead, headColors, MOUTH, type HeadColors } from "./drawHead";
+import { drawHead, headColors, MOUTH, muzzleX, type HeadColors } from "./drawHead";
 import { CHEW_TIME, Face, SHAKE_TIME, YAWN_TIME } from "./face";
 import { IdleBrain, type World } from "./idleBrain";
 import { legSizes, makeLegs, updateLegs, type Leg, type LegSizes } from "./legs";
@@ -135,20 +135,26 @@ export class Dragon {
     this.swimmer = new Swimmer(x, y, -Math.PI / 2);
     this.brain = new IdleBrain(random);
     this.brain.start("wander", this.swimmer, world);
-    this.whiskers = new Whiskers(this.spine.head, segment * 0.95, genes.whiskerLength);
-    this.sizes = legSizes(this.halfWidth);
+    this.whiskers = new Whiskers(
+      this.spine.head,
+      segment * 0.95,
+      genes.whiskerLength,
+      genes.snoutLength,
+    );
+    this.sizes = legSizes(this.halfWidth, this.genes.legLength);
     this.legs = makeLegs(this.spine.points, this.sizes);
     // A grown dragon's length and build come from its size gene.
     this.setGrowth(this.growth);
   }
 
   get halfWidth(): number {
-    return bodyHalfWidth(this.spine);
+    return bodyHalfWidth(this.spine, this.genes.chubby);
   }
 
   /** Babies have big heads for their size; it evens out as they grow. */
   get headRadius(): number {
-    return this.halfWidth * 1.3 * (1 + 0.35 * (1 - this.growth));
+    // Chubbiness is the body only: the head keeps its size.
+    return bodyHalfWidth(this.spine) * 1.3 * (1 + 0.35 * (1 - this.growth));
   }
 
   /**
@@ -170,7 +176,7 @@ export class Dragon {
       p.push({ x: b.x + ((b.x - a.x) / d) * seg, y: b.y + ((b.y - a.y) / d) * seg });
     }
     this.spine.resize(this.segmentAt(g));
-    this.sizes = legSizes(this.halfWidth);
+    this.sizes = legSizes(this.halfWidth, this.genes.legLength);
     if (changed || !this.legs) this.legs = makeLegs(this.spine.points, this.sizes);
     this.whiskers?.resize(this.spine.segment * 0.95);
   }
@@ -182,7 +188,10 @@ export class Dragon {
   /** Where the mouth is right now (just under the snout). */
   get mouth(): Point {
     const r = this.headRadius;
-    return headToWorld(this.spine.head, this.face, { x: r * MOUTH.x, y: r * MOUTH.y });
+    return headToWorld(this.spine.head, this.face, {
+      x: r * muzzleX(MOUTH.x, this.genes.snoutLength),
+      y: r * MOUTH.y,
+    });
   }
 
   /** Munch! Chomps, crumbs, and hearts if it's the favorite. */
@@ -450,7 +459,7 @@ export class Dragon {
   resize(segment: number): void {
     this.baseSegment = segment;
     this.spine.resize(this.segmentAt(this.growth));
-    this.sizes = legSizes(this.halfWidth);
+    this.sizes = legSizes(this.halfWidth, this.genes.legLength);
     this.legs = makeLegs(this.spine.points, this.sizes);
     this.whiskers.resize(this.spine.segment * 0.95);
   }
@@ -586,7 +595,7 @@ export class Dragon {
     if (this.grime > 0) this.drawGrime(ctx, hw);
     drawTailTuft(ctx, this.spine.points, hw, this.asleep ? this.time * 0.3 : this.time, this.look);
     // Whiskers before the head, so they hang out from under the snout instead of over the eyes.
-    drawWhiskers(ctx, this.whiskers, hw);
+    drawWhiskers(ctx, this.whiskers, hw, this.look);
     drawHead(
       ctx,
       this.spine.head,

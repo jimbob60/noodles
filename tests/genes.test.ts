@@ -100,3 +100,55 @@ describe("genes", () => {
     expect(big.spine.points.length).toBeGreaterThan(small.spine.points.length);
   });
 });
+
+describe("lots more genes", () => {
+  const many = Array.from({ length: 300 }, (_, i) => genesFromSeed(i * 7 + 3));
+
+  it("every kind of horn, ridge, tail, mark, mouth, whisker and mane color turns up", () => {
+    const kinds = {
+      hornStyle: ["antler", "curl", "spike"],
+      ridgeStyle: ["spikes", "scallops", "sail"],
+      tailStyle: ["flame", "fan", "pompom"],
+      mark: ["none", "gem", "star", "moon", "heart"],
+      mouthStyle: ["plain", "fangs", "toothy", "snaggle"],
+      whiskerColor: ["white", "gold", "accent"],
+      maneColor: ["accent", "pattern", "horn"],
+    } as const;
+    for (const [key, all] of Object.entries(kinds))
+      expect(new Set(many.map((g) => g[key as keyof typeof kinds]))).toEqual(new Set(all));
+    expect(new Set(many.map((g) => g.freckles))).toEqual(new Set([true, false]));
+    expect(new Set(many.map((g) => g.frills))).toEqual(new Set([true, false]));
+  });
+
+  it("numbers spread across their ranges", () => {
+    for (const key of [
+      "eyeHue",
+      "eyeSize",
+      "snoutLength",
+      "ridgeSize",
+      "tailSize",
+      "chubby",
+      "legLength",
+      "glow",
+      "scaleStrength",
+    ] as const) {
+      const v = many.map((g) => g[key]);
+      expect(Math.max(...v) - Math.min(...v), key).toBeGreaterThan(0.2);
+    }
+  });
+
+  it("a save from before the extra genes gets the same extras from its seed every time", () => {
+    const g = genesFromSeed(2024);
+    const old = { ...g } as Record<string, unknown>;
+    for (const k of ["eyeHue", "mouthStyle", "tailStyle", "frills", "chubby"]) delete old[k];
+    expect(parseGenes(old)).toEqual(g);
+    expect(parseGenes({ ...g, tailStyle: "rocket" })?.tailStyle).toBe(g.tailStyle);
+  });
+
+  it("toothy, fanged and plain mouths draw differently", () => {
+    const base = genesFromSeed(31337);
+    const plain = drawn({ ...base, mouthStyle: "plain" });
+    expect(drawn({ ...base, mouthStyle: "toothy" })).not.toEqual(plain);
+    expect(drawn({ ...base, mouthStyle: "fangs" })).not.toEqual(plain);
+  });
+});

@@ -74,19 +74,22 @@ export function drawLegs(
   }
 }
 
-/** A flickering flame-shaped fin at the tail tip that fans out and sways. */
+/** The tail tip, from the genes: a flame, a fish-like fan or a fluffy pompom. */
 export function drawTailTuft(
   ctx: CanvasRenderingContext2D,
   spine: Point[],
-  hw: number,
+  hwBody: number,
   time: number,
   look: DragonLook,
 ): void {
+  const hw = hwBody * look.tailSize;
   const n = spine.length;
   const tip = spine[n - 1];
   const before = spine[n - 3];
   const back = Math.atan2(tip.y - before.y, tip.x - before.x);
   const sway = Math.sin(time * 3.1) * 0.22;
+  if (look.tailStyle === "fan") return drawFan(ctx, tip, back, sway, hw, look);
+  if (look.tailStyle === "pompom") return drawPompom(ctx, tip, back, sway, hw, look);
   const tongues = [
     { angle: -0.8, length: 1.0, phase: 0 },
     { angle: 0.8, length: 1.0, phase: 2.1 },
@@ -123,10 +126,105 @@ export function drawTailTuft(
   }
 }
 
-/** Long flowing whiskers: thick at the root, thin at the tip. */
-export function drawWhiskers(ctx: CanvasRenderingContext2D, whiskers: Whiskers, hw: number): void {
+/** A fish-like fan: rays spreading from the tip, joined by a scalloped fin. */
+function drawFan(
+  ctx: CanvasRenderingContext2D,
+  tip: Point,
+  back: number,
+  sway: number,
+  hw: number,
+  look: DragonLook,
+): void {
+  const rays = 7;
+  const spread = 1.05;
+  const len = hw * 1.5;
+  const ends: Point[] = [];
+  for (let k = 0; k < rays; k++) {
+    const t = k / (rays - 1) - 0.5;
+    const a = back + t * 2 * spread + sway * (1 + Math.abs(t));
+    const l = len * (1 - Math.abs(t) * 0.35);
+    ends.push({ x: tip.x + Math.cos(a) * l, y: tip.y + Math.sin(a) * l });
+  }
+  ctx.beginPath();
+  ctx.moveTo(tip.x, tip.y);
+  ctx.lineTo(ends[0].x, ends[0].y);
+  for (let k = 1; k < rays; k++) {
+    // Each edge between rays dips in a little, for a scalloped rim.
+    const a = ends[k - 1];
+    const b = ends[k];
+    const mx = (a.x + b.x) / 2 + (tip.x - (a.x + b.x) / 2) * 0.12;
+    const my = (a.y + b.y) / 2 + (tip.y - (a.y + b.y) / 2) * 0.12;
+    ctx.quadraticCurveTo(mx, my, b.x, b.y);
+  }
+  ctx.closePath();
+  ctx.fillStyle = hsl(look.accent, 0.85);
+  ctx.fill();
+  ctx.strokeStyle = hsl(shade(look.accent, -22, -10));
+  ctx.lineWidth = Math.max(1, hw * 0.07);
+  ctx.lineJoin = "round";
+  ctx.stroke();
+  ctx.strokeStyle = hsl(shade(look.accent, 12, 5));
   ctx.lineCap = "round";
-  ctx.strokeStyle = "rgba(240,255,255,0.92)";
+  for (const e of ends) {
+    ctx.beginPath();
+    ctx.moveTo(tip.x, tip.y);
+    ctx.lineTo(tip.x + (e.x - tip.x) * 0.85, tip.y + (e.y - tip.y) * 0.85);
+    ctx.stroke();
+  }
+}
+
+/** A fluffy pompom of soft round lobes that fans out and sways. */
+function drawPompom(
+  ctx: CanvasRenderingContext2D,
+  tip: Point,
+  back: number,
+  sway: number,
+  hw: number,
+  look: DragonLook,
+): void {
+  const lobes = [
+    { angle: -0.75, length: 0.75 },
+    { angle: 0.75, length: 0.75 },
+    { angle: -0.38, length: 1.0 },
+    { angle: 0.38, length: 1.0 },
+    { angle: 0, length: 1.2 },
+  ];
+  for (const pass of ["rim", "fill"] as const) {
+    for (const lobe of lobes) {
+      const a = back + lobe.angle + sway * (1 + Math.abs(lobe.angle));
+      const len = hw * lobe.length;
+      const grow = pass === "rim" ? hw * 0.07 : 0;
+      ctx.beginPath();
+      ctx.ellipse(
+        tip.x + Math.cos(a) * len * 0.5,
+        tip.y + Math.sin(a) * len * 0.5,
+        len * 0.55 + grow,
+        hw * 0.3 + grow,
+        a,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fillStyle = hsl(pass === "rim" ? shade(look.accent, -22, -10) : look.accent);
+      ctx.fill();
+    }
+  }
+}
+
+const WHISKER_INK: Record<DragonLook["whiskerColor"], (look: DragonLook) => string> = {
+  white: () => "rgba(240,255,255,0.92)",
+  gold: () => "rgba(255,226,140,0.95)",
+  accent: (look) => hsl(shade(look.accent, 8), 0.95),
+};
+
+/** Long flowing whiskers: thick at the root, thin at the tip. */
+export function drawWhiskers(
+  ctx: CanvasRenderingContext2D,
+  whiskers: Whiskers,
+  hw: number,
+  look?: DragonLook,
+): void {
+  ctx.lineCap = "round";
+  ctx.strokeStyle = look ? WHISKER_INK[look.whiskerColor](look) : "rgba(240,255,255,0.92)";
   for (const strand of whiskers.strands) {
     const p = strand.points;
     for (let i = 0; i < p.length - 1; i++) {

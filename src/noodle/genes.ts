@@ -1,6 +1,20 @@
 import { favoriteFood, FOOD_IDS, type FoodId } from "../care/food";
 import { tickleSpots } from "../care/petting";
-import { CLASSIC_LOOK, makeLook, PATTERNS, seededRandom, type DragonLook, type Hsl } from "./look";
+import {
+  CLASSIC_LOOK,
+  HORN_STYLES,
+  makeLook,
+  MANE_COLORS,
+  MARKS,
+  MOUTH_STYLES,
+  PATTERNS,
+  RIDGE_STYLES,
+  seededRandom,
+  TAIL_STYLES,
+  WHISKER_COLORS,
+  type DragonLook,
+  type Hsl,
+} from "./look";
 
 /** Personality traits, each 0 (not at all) to 1 (very). How they act on these comes later. */
 export interface Personality {
@@ -99,6 +113,13 @@ export function parseGenes(raw: unknown): Genes | null {
   )
     return null;
   const [playful, sleepy, greedy, shy] = traits as number[];
+  // Genes added later (the phase 30 extras) fill in from the seed when a save doesn't have them,
+  // the same way every time.
+  const wild = genesFromSeed(Math.round(seed));
+  const pick = <T>(list: readonly T[], v: unknown, fallback: T): T =>
+    list.find((x) => x === v) ?? fallback;
+  const or = (v: unknown, lo: number, hi: number, fallback: number) => num(v, lo, hi) ?? fallback;
+  const bool = (v: unknown, fallback: boolean) => (typeof v === "boolean" ? v : fallback);
   return {
     seed: Math.round(seed),
     body,
@@ -111,6 +132,24 @@ export function parseGenes(raw: unknown): Genes | null {
     maneLength,
     whiskerLength,
     size,
+    eyeHue: or(g.eyeHue, 0, 360, wild.eyeHue),
+    eyeSize: or(g.eyeSize, 0.85, 1.2, wild.eyeSize),
+    snoutLength: or(g.snoutLength, 0.85, 1.2, wild.snoutLength),
+    mark: pick(MARKS, g.mark, wild.mark),
+    freckles: bool(g.freckles, wild.freckles),
+    hornStyle: pick(HORN_STYLES, g.hornStyle, wild.hornStyle),
+    ridgeStyle: pick(RIDGE_STYLES, g.ridgeStyle, wild.ridgeStyle),
+    ridgeSize: or(g.ridgeSize, 0.6, 1.4, wild.ridgeSize),
+    tailStyle: pick(TAIL_STYLES, g.tailStyle, wild.tailStyle),
+    tailSize: or(g.tailSize, 0.75, 1.3, wild.tailSize),
+    chubby: or(g.chubby, 0.85, 1.15, wild.chubby),
+    legLength: or(g.legLength, 0.8, 1.3, wild.legLength),
+    glow: or(g.glow, 0.5, 1.6, wild.glow),
+    scaleStrength: or(g.scaleStrength, 0.12, 0.5, wild.scaleStrength),
+    whiskerColor: pick(WHISKER_COLORS, g.whiskerColor, wild.whiskerColor),
+    maneColor: pick(MANE_COLORS, g.maneColor, wild.maneColor),
+    frills: bool(g.frills, wild.frills),
+    mouthStyle: pick(MOUTH_STYLES, g.mouthStyle, wild.mouthStyle),
     personality: { playful, sleepy, greedy, shy },
     favorite,
     tickles,

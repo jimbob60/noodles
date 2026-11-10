@@ -2,6 +2,12 @@
 
 Newest first. Each entry says what we decided, why, and what it affects.
 
+## 2026-11-10: Lots more genes, including teeth
+
+- **Decision:** at Jacob's request ("make a ton more genes", "some with lots of sharp teeth"), 18 more genes: eye color and eye size; snout length (only the muzzle stretches, and the whiskers and feeding mouth move with it); a forehead mark (none, gem, star, moon or heart); freckles; cheek frills (webbed fins); horn shape (branching antlers, curly ram horns or straight spikes); back ridge style (spikes, round scallops or a see-through sail fin) and size; tail tip style (flame, fish-like fan or fluffy pompom) and size; chubbiness (the body only, not the head); leg length; glow strength; how clearly the scales show; whisker color (white, gold or the accent); mane color (accent, pattern or horn color); and **teeth** (none showing, two fangs, a grin full of sharp little teeth, or a snaggle-tooth). Teeth follow the mouth: along the lip when shut, top and bottom rows when chomping. The extras come from a third random stream, so no gene a dragon already had changed. Genes saved before these existed get the extras from their seed, the same way every time, so the save format stays version 9.
+- **Why:** more variety, so every dragon looks like itself; it also gives breeding (phase 38) and rarity (phase 39) a lot to work with.
+- **Affects:** phase 35 (the 50-dragon test will check these combinations), phase 38, phase 39, phase 40 (Dragondex).
+
 ## 2026-11-10: Genes — one record makes each dragon; saved as save version 9
 
 - **Decision:** every dragon carries **genes** (`src/noodle/genes.ts`): its colors and pattern (as before), horn length (0.75–1.3) and branches (0–2 tines each), mane length, whisker length, size (0.9–1.1: a big dragon is a few spine points longer and a little chunkier when grown), a personality (playful, sleepy, greedy and shy, each 0–1), its favorite food and its secret tickle spots. Drawing and behavior read only the genes, so the same genes always make the same dragon; a test draws two dragons from the same genes into a recording canvas and checks every drawing call matches. A wild dragon's genes come from its seed. The new body-shape genes come from a separate random stream, so every existing dragon kept its colors, favorite food and tickle spots. The save is now version 9 (adds `genes`); older saves get the genes their seed always made, and broken genes fall back to the seed the same way. Personality is only data for now: phase 31 makes dragons act on it.

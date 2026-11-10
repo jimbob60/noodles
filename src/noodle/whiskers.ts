@@ -1,4 +1,5 @@
 import type { Face } from "./face";
+import { muzzleX } from "./drawHead";
 import { Spine, type Point } from "./spine";
 
 /** Turns a point in the head's own drawing space (facing right, upright) into screen space. */
@@ -27,7 +28,13 @@ export class Whiskers {
   private time = 0;
 
   /** @param length whisker length from the genes (1 = seven links). */
-  constructor(at: Point, segment: number, length = 1) {
+  constructor(
+    at: Point,
+    segment: number,
+    length = 1,
+    /** The snout gene: the whiskers grow from the tip of the nose, wherever it is. */
+    private snout = 1,
+  ) {
     const links = Math.max(4, Math.round(7 * length));
     this.strands = ROOTS.map(() => new Spine(at.x, at.y, links, segment, Math.PI / 5));
   }
@@ -41,7 +48,7 @@ export class Whiskers {
     const drift = headRadius * 3 * dt;
     this.strands.forEach((strand, k) => {
       const root = headToWorld(at, face, {
-        x: ROOTS[k].x * headRadius,
+        x: muzzleX(ROOTS[k].x, this.snout) * headRadius,
         y: ROOTS[k].y * headRadius,
       });
       // Gentle drift mostly down and a little back, so they hang below the face, with a lazy sway.

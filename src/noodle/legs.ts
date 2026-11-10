@@ -36,8 +36,9 @@ export interface LegSizes {
   stride: number;
 }
 
-export function legSizes(bodyHalf: number): LegSizes {
-  return { bodyHalf, reach: bodyHalf * 0.42, stride: bodyHalf * 0.95 };
+/** @param legLength the leg-length gene (1 = normal, below 1 stubbier, above 1 longer). */
+export function legSizes(bodyHalf: number, legLength = 1): LegSizes {
+  return { bodyHalf, reach: bodyHalf * 0.42 * legLength, stride: bodyHalf * 0.95 };
 }
 
 /** Where the foot would rest right now: below the belly, the near one a little forward. */
