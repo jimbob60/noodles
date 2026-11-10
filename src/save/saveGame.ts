@@ -3,9 +3,10 @@ import { parseDecor, type DecorItem } from "../den/decor";
 import { emptyWallet, parseWallet, type Wallet } from "../care/coins";
 import { emptyStash, parseStash, type Stash } from "../care/shop";
 import { freshGrowth, parseGrowth, type Growth } from "../care/growth";
+import { genesFromSeed, parseGenes, type Genes } from "../noodle/genes";
 
 /** The save format version. Bump it (and add a migration below) whenever the format changes. */
-export const SAVE_VERSION = 8;
+export const SAVE_VERSION = 9;
 
 /**
  * Everything that makes your dragon yours.
@@ -17,26 +18,30 @@ export const SAVE_VERSION = 8;
  * - Version 6 (phase 25): plus the balls bought in the shop.
  * - Version 7 (phase 26): plus the best Noodle Catch score.
  * - Version 8 (phase 29): plus how grown up it is (hours of good care).
+ * - Version 9 (phase 30): plus its genes (everything that makes it itself).
  */
-export interface SaveV8 {
-  version: 8;
+export interface SaveV9 {
+  version: 9;
   /** When this was saved (milliseconds since 1970). */
   savedAt: number;
-  /** The seed its look comes from (and its favorite food and tickle spots). */
+  /** Its id number. A wild dragon's genes were first made from it. */
   seed: number;
+  /** Everything that makes it itself: looks, personality, favorite food, tickle spots. */
+  genes: Genes;
   needs: NeedsState;
   decor: DecorItem[];
   wallet: Wallet;
   stash: Stash;
   growth: Growth;
 }
-export type Save = SaveV8;
+export type Save = SaveV9;
 
 export function newSave(seed: number, now: number): Save {
   return {
-    version: 8,
+    version: 9,
     savedAt: now,
     seed,
+    genes: genesFromSeed(seed),
     needs: freshNeeds(now),
     decor: [],
     wallet: emptyWallet(),
@@ -53,8 +58,9 @@ export function makeSave(
   wallet: Wallet = emptyWallet(),
   stash: Stash = emptyStash(),
   growth: Growth = freshGrowth(),
+  genes: Genes = genesFromSeed(seed),
 ): Save {
-  return { version: 8, savedAt: now, seed, needs, decor, wallet, stash, growth };
+  return { version: 9, savedAt: now, seed, genes, needs, decor, wallet, stash, growth };
 }
 
 const validSeed = (v: unknown): v is number =>
@@ -75,6 +81,7 @@ export function parseSave(raw: unknown, now: number): Save | null {
     wallet?: unknown;
     stash?: unknown;
     growth?: unknown;
+    genes?: unknown;
   };
   if (typeof r.version !== "number" || r.version < 1 || !validSeed(r.seed)) return null;
   const savedAt = typeof r.savedAt === "number" && r.savedAt <= now ? r.savedAt : now;
@@ -92,10 +99,13 @@ export function parseSave(raw: unknown, now: number): Save | null {
       : emptyStash();
   // Versions 1–7 had no growing up: those dragons start again as babies, so you see them grow.
   const growth = r.version >= 8 ? parseGrowth(r.growth) : freshGrowth();
+  // Versions 1–8 had no genes: they come from the seed, exactly as those dragons always looked.
+  const genes = (r.version >= 9 ? parseGenes(r.genes) : null) ?? genesFromSeed(r.seed);
   return {
-    version: 8,
+    version: 9,
     savedAt,
     seed: r.seed,
+    genes,
     needs: parseNeeds(r.needs, now),
     decor,
     wallet,

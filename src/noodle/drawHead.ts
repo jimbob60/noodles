@@ -16,6 +16,10 @@ export interface HeadColors {
   scale: string;
   mane: string;
   maneLight: string;
+  /** Head shape from the genes: horn length and branches, and mane length. */
+  hornLength: number;
+  hornBranches: number;
+  maneLength: number;
 }
 
 /** Head colors that match a dragon's look. */
@@ -33,6 +37,9 @@ export function headColors(look: DragonLook): HeadColors {
     scale: hsl(rimOf(look.body), 0.32),
     mane: hsl(look.accent),
     maneLight: hsl(shade(look.accent, 10, 8)),
+    hornLength: look.hornLength,
+    hornBranches: look.hornBranches,
+    maneLength: look.maneLength,
   };
 }
 
@@ -53,8 +60,8 @@ export function drawHead(
   /** How grown up, 0 to 1: babies have little nub horns and a short mane. */
   grown = 1,
 ): void {
-  const hornSize = 0.45 + 0.55 * grown;
-  const maneSize = 0.6 + 0.4 * grown;
+  const hornSize = (0.45 + 0.55 * grown) * c.hornLength;
+  const maneSize = (0.6 + 0.4 * grown) * c.maneLength;
   ctx.save();
   ctx.translate(at.x, at.y);
   ctx.scale(face.facing, 1);
@@ -112,11 +119,16 @@ export function drawHead(
     ctx.bezierCurveTo(0.2 * r, -0.45 * r, -0.4 * r, -0.75 * r, -1.15 * r, -0.85 * r);
     ctx.bezierCurveTo(-0.6 * r, -0.6 * r, -0.2 * r, -0.4 * r, -0.2 * r, 0.12 * r);
     ctx.closePath();
-    // The branch: a short tine curling up from the middle.
-    ctx.moveTo(-0.3 * r, -0.62 * r);
-    ctx.quadraticCurveTo(-0.32 * r, -0.95 * r, -0.12 * r, -1.1 * r);
-    ctx.quadraticCurveTo(-0.15 * r, -0.85 * r, -0.05 * r, -0.5 * r);
-    ctx.closePath();
+    // Branches: short tines curling up from the horn (a baby's are too small to show).
+    const tines = grown < 0.3 ? 0 : c.hornBranches;
+    for (let k = 0; k < tines; k++) {
+      const at = k === 0 ? -0.3 : -0.62;
+      const lift = k === 0 ? -0.62 : -0.76;
+      ctx.moveTo(at * r, lift * r);
+      ctx.quadraticCurveTo((at - 0.02) * r, (lift - 0.33) * r, (at + 0.18) * r, (lift - 0.48) * r);
+      ctx.quadraticCurveTo((at + 0.15) * r, (lift - 0.23) * r, (at + 0.25) * r, (lift + 0.12) * r);
+      ctx.closePath();
+    }
     ctx.fillStyle = far ? c.hornShade : c.horn;
     ctx.fill();
     ctx.strokeStyle = c.rim;

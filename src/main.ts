@@ -10,7 +10,7 @@ import { startLoop } from "./engine/loop";
 import { Screen } from "./engine/screen";
 import { Gallery } from "./gallery";
 import { Dragon } from "./noodle/dragon";
-import { makeLook } from "./noodle/look";
+import { genesFromSeed, type Genes } from "./noodle/genes";
 import { NeedsBar } from "./ui/needsBar";
 import { Feeding } from "./ui/feeding";
 import { Toys } from "./ui/toys";
@@ -62,6 +62,8 @@ async function main(): Promise<void> {
   const randomSeed = () => Math.floor(Math.random() * 2 ** 32);
   const loaded = loadGame(store, Date.now(), randomSeed);
   let seed = loaded.save?.seed ?? randomSeed();
+  /** Your dragon's genes: everything that makes it itself (saved with it). */
+  let genes: Genes = loaded.save?.genes ?? genesFromSeed(seed);
   /**
    * How grown up your dragon is (hours of good care). Time away counts too, capped, if it was
    * left well cared for. Fast mode grows its own dragon from a baby, 600× faster.
@@ -75,13 +77,7 @@ async function main(): Promise<void> {
   let stageNote: { text: string; age: number } | null = null;
   const STAGE_NOTE_LIFE = 4;
   const makeDragon = () => {
-    const d = new Dragon(
-      screen.width / 2,
-      screen.height * 0.8,
-      segmentFor(screen),
-      world(),
-      makeLook(seed),
-    );
+    const d = new Dragon(screen.width / 2, screen.height * 0.8, segmentFor(screen), world(), genes);
     d.setGrowth(growthShare(growth));
     return d;
   };
@@ -134,7 +130,7 @@ async function main(): Promise<void> {
   const persist = () => {
     // Nothing is saved until a new player's egg has hatched.
     if (mode === "play" && !egg && !newPlayerEgg)
-      storeGame(store, makeSave(seed, needs, Date.now(), decor, wallet, stash, growth));
+      storeGame(store, makeSave(seed, needs, Date.now(), decor, wallet, stash, growth, genes));
   };
   window.addEventListener("pagehide", persist);
   document.addEventListener("visibilitychange", () => {
@@ -194,6 +190,7 @@ async function main(): Promise<void> {
     if (!save) return false;
     if (mode !== "play") enterMode("play");
     seed = save.seed;
+    genes = save.genes;
     dragon = makeDragon();
     needs = fromSave(save);
     decor = save.decor;
@@ -210,7 +207,7 @@ async function main(): Promise<void> {
   const showBackup = () => {
     persist();
     openBackupPanel(
-      encodeBackup(makeSave(seed, needs, Date.now(), decor, wallet, stash, growth)),
+      encodeBackup(makeSave(seed, needs, Date.now(), decor, wallet, stash, growth, genes)),
       restore,
       store !== null,
     );
@@ -374,7 +371,7 @@ async function main(): Promise<void> {
         const r = egg.update(dt, rubbed, tapped);
         if (r.hatched) {
           // Out pops the dragon, right where the egg was, thrilled to meet you.
-          dragon = new Dragon(at.x, at.y, segmentFor(screen), world(), makeLook(seed));
+          dragon = new Dragon(at.x, at.y, segmentFor(screen), world(), genes);
           // A new player's dragon hatches as a baby (the hatch test mode replays yours as one).
           if (mode === "play") growth = freshGrowth();
           dragon.setGrowth(0);

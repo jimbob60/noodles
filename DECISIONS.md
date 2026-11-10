@@ -2,6 +2,12 @@
 
 Newest first. Each entry says what we decided, why, and what it affects.
 
+## 2026-11-10: Genes — one record makes each dragon; saved as save version 9
+
+- **Decision:** every dragon carries **genes** (`src/noodle/genes.ts`): its colors and pattern (as before), horn length (0.75–1.3) and branches (0–2 tines each), mane length, whisker length, size (0.9–1.1: a big dragon is a few spine points longer and a little chunkier when grown), a personality (playful, sleepy, greedy and shy, each 0–1), its favorite food and its secret tickle spots. Drawing and behavior read only the genes, so the same genes always make the same dragon; a test draws two dragons from the same genes into a recording canvas and checks every drawing call matches. A wild dragon's genes come from its seed. The new body-shape genes come from a separate random stream, so every existing dragon kept its colors, favorite food and tickle spots. The save is now version 9 (adds `genes`); older saves get the genes their seed always made, and broken genes fall back to the seed the same way. Personality is only data for now: phase 31 makes dragons act on it.
+- **Why:** phase 30 ("the same genes always make the same dragon"), and so breeding (phase 38) can mix two dragons' genes.
+- **Affects:** phase 31 (personalities), phase 32 (profile card shows traits), phase 38 (breeding), phase 39 (rarity).
+
 ## 2026-11-10: Growing up — baby, kid, teen, grown-up; saved as save version 8
 
 - **Decision:** a dragon grows with **hours of good care**: kid at 24 h, teen at 60 h, grown-up at 96 h (about four days). Good care means the four needs average at least 45; sleeping counts. Neglect only pauses growing: a dragon never shrinks and never gets stuck (VISION: no punishment). Time away counts like the needs do, up to 12 hours at once, if it was left well cared for. Growing is smooth: the noodle gets longer bit by bit, from 12 spine points just hatched to 26 grown, and a little thicker. Babies have bigger heads for their size, tiny nub horns, a short mane and small back fins. Reaching a new stage shows a banner ("Your dragon is a kid now!"), a happy wiggle, and a 25-coin gift. A small badge under the coins shows the stage and a bar toward the next. Fast mode grows its own dragon from a baby 600× faster (grown-up in about 10 minutes) and never saves. The save is now version 8 (adds `growth.hours`). Older saves start again as babies, so every dragon gets to grow up; the egg had only just arrived, so no dragon was older than a few days anyway.

@@ -26,8 +26,10 @@ export class Whiskers {
   readonly strands: Spine[];
   private time = 0;
 
-  constructor(at: Point, segment: number) {
-    this.strands = ROOTS.map(() => new Spine(at.x, at.y, 7, segment, Math.PI / 5));
+  /** @param length whisker length from the genes (1 = seven links). */
+  constructor(at: Point, segment: number, length = 1) {
+    const links = Math.max(4, Math.round(7 * length));
+    this.strands = ROOTS.map(() => new Spine(at.x, at.y, links, segment, Math.PI / 5));
   }
 
   resize(segment: number): void {

@@ -1,6 +1,4 @@
 import type { FoodId } from "../care/food";
-import { favoriteFood } from "../care/food";
-import { tickleSpots } from "../care/petting";
 import { needOf, PACE, type Mood } from "../care/mood";
 import { drawNeedIcon } from "../ui/needsBar";
 import type { PointerState } from "../engine/input";
@@ -13,7 +11,8 @@ import { drawHead, headColors, MOUTH, type HeadColors } from "./drawHead";
 import { CHEW_TIME, Face, SHAKE_TIME, YAWN_TIME } from "./face";
 import { IdleBrain, type World } from "./idleBrain";
 import { legSizes, makeLegs, updateLegs, type Leg, type LegSizes } from "./legs";
-import { CLASSIC_LOOK, hsl, type DragonLook } from "./look";
+import { hsl, type DragonLook } from "./look";
+import { CLASSIC_GENES, type Genes } from "./genes";
 import { Spine, type Point } from "./spine";
 import { Swimmer } from "./swimmer";
 import { headToWorld, Whiskers } from "./whiskers";
@@ -23,8 +22,9 @@ const SPINE_POINTS = 26;
 const BABY_POINTS = 12;
 
 /** How many spine points long a dragon is at a given growth (0 baby, 1 grown). */
-export function lengthAt(growth: number): number {
-  return Math.round(BABY_POINTS + (SPINE_POINTS - BABY_POINTS) * Math.max(0, Math.min(1, growth)));
+export function lengthAt(growth: number, size = 1): number {
+  const grown = Math.round(SPINE_POINTS * size);
+  return Math.round(BABY_POINTS + (grown - BABY_POINTS) * Math.max(0, Math.min(1, growth)));
 }
 /** Seconds after the finger lets go before the dragon goes back to doing its own thing. */
 export const CALM_DOWN = 2.5;
@@ -109,6 +109,8 @@ export class Dragon {
   private thinkLeft = 0;
   private thinkClock = 0;
   private bits: Bit[] = [];
+  /** How it looks (from its genes). */
+  readonly look: DragonLook;
   /** How grown up, 0 (just hatched) to 1 (grown). Change it with setGrowth. */
   growth = 1;
   /** The spine spacing for a grown dragon on this screen. */
@@ -119,21 +121,25 @@ export class Dragon {
     y: number,
     segment: number,
     world: World,
-    public look: DragonLook = CLASSIC_LOOK,
+    /** Everything that makes this dragon itself: the same genes always make the same dragon. */
+    public genes: Genes = CLASSIC_GENES,
     random = Math.random,
   ) {
-    this.headPalette = headColors(look);
-    this.favorite = favoriteFood(look.seed);
-    this.tickles = tickleSpots(look.seed);
+    this.look = genes;
+    this.headPalette = headColors(genes);
+    this.favorite = genes.favorite;
+    this.tickles = genes.tickles;
     this.baseSegment = segment;
     this.spine = new Spine(x, y, SPINE_POINTS, segment);
     this.head = new Follower(x, y);
     this.swimmer = new Swimmer(x, y, -Math.PI / 2);
     this.brain = new IdleBrain(random);
     this.brain.start("wander", this.swimmer, world);
-    this.whiskers = new Whiskers(this.spine.head, segment * 0.95);
+    this.whiskers = new Whiskers(this.spine.head, segment * 0.95, genes.whiskerLength);
     this.sizes = legSizes(this.halfWidth);
     this.legs = makeLegs(this.spine.points, this.sizes);
+    // A grown dragon's length and build come from its size gene.
+    this.setGrowth(this.growth);
   }
 
   get halfWidth(): number {
@@ -151,7 +157,7 @@ export class Dragon {
    */
   setGrowth(growth: number): void {
     const g = Math.max(0, Math.min(1, growth));
-    const count = lengthAt(g);
+    const count = lengthAt(g, this.genes.size);
     const p = this.spine.points;
     const changed = count !== p.length;
     this.growth = g;
@@ -163,7 +169,7 @@ export class Dragon {
       const seg = this.spine.segment;
       p.push({ x: b.x + ((b.x - a.x) / d) * seg, y: b.y + ((b.y - a.y) / d) * seg });
     }
-    this.spine.resize(this.baseSegment * (0.78 + 0.22 * g));
+    this.spine.resize(this.segmentAt(g));
     this.sizes = legSizes(this.halfWidth);
     if (changed || !this.legs) this.legs = makeLegs(this.spine.points, this.sizes);
     this.whiskers?.resize(this.spine.segment * 0.95);
@@ -435,9 +441,15 @@ export class Dragon {
     if (this.face.chewLeft <= 0) this.face.shakeLeft = SHAKE_TIME;
   }
 
+  /** Spine spacing: slimmer as a baby, and a little chunkier for a big dragon. */
+  private segmentAt(growth: number): number {
+    const build = 0.94 + (this.genes.size - 0.9) * 0.6;
+    return this.baseSegment * (0.78 + 0.22 * growth) * build;
+  }
+
   resize(segment: number): void {
     this.baseSegment = segment;
-    this.spine.resize(segment * (0.78 + 0.22 * this.growth));
+    this.spine.resize(this.segmentAt(this.growth));
     this.sizes = legSizes(this.halfWidth);
     this.legs = makeLegs(this.spine.points, this.sizes);
     this.whiskers.resize(this.spine.segment * 0.95);

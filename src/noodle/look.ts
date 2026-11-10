@@ -18,6 +18,16 @@ export interface DragonLook {
   /** Tail tuft, toe beans and cheeks. */
   accent: Hsl;
   horn: Hsl;
+  /** Horn length, about 0.75 (stubby) to 1.3 (long and sweeping). */
+  hornLength: number;
+  /** Little branches (tines) on each horn: 0, 1 or 2. */
+  hornBranches: number;
+  /** Mane length, about 0.75 to 1.3. */
+  maneLength: number;
+  /** Whisker length, about 0.7 to 1.4. */
+  whiskerLength: number;
+  /** Grown-up size, about 0.9 (petite) to 1.1 (big and long). */
+  size: number;
 }
 
 export const hsl = (c: Hsl, alpha = 1): string =>
@@ -85,7 +95,22 @@ export function makeLook(seed: number): DragonLook {
   const accent: Hsl = { h: accentHue, s: range(85, 95), l: range(72, 80) };
 
   const horn: Hsl = r() < 0.7 ? { h: 45, s: 100, l: 89 } : shade(pattern, 12);
-  return { seed, body, pattern, patternKind, accent, horn };
+  // Body shape comes from its own stream, so adding it kept every dragon's colors the same.
+  const b = seededRandom(seed ^ 0x9e37_79b9);
+  const between = (a: number, z: number) => a + b() * (z - a);
+  return {
+    seed,
+    body,
+    pattern,
+    patternKind,
+    accent,
+    horn,
+    hornLength: between(0.75, 1.3),
+    hornBranches: Math.floor(b() * 3),
+    maneLength: between(0.75, 1.3),
+    whiskerLength: between(0.7, 1.4),
+    size: between(0.9, 1.1),
+  };
 }
 
 /** The original cyan dragon from phases 6–10, kept as the default look. */
@@ -96,4 +121,9 @@ export const CLASSIC_LOOK: DragonLook = {
   patternKind: "plain",
   accent: { h: 320, s: 100, l: 77 },
   horn: { h: 45, s: 100, l: 89 },
+  hornLength: 1,
+  hornBranches: 1,
+  maneLength: 1,
+  whiskerLength: 1,
+  size: 1,
 };

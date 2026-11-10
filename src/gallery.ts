@@ -1,7 +1,7 @@
 import type { PointerState } from "./engine/input";
 import type { Screen } from "./engine/screen";
 import { Dragon } from "./noodle/dragon";
-import { makeLook } from "./noodle/look";
+import { genesFromSeed } from "./noodle/genes";
 import { palette } from "./palette";
 
 const COUNT = 20;
@@ -44,7 +44,7 @@ export class Gallery {
       const cy = ch * Math.floor(i / cols) + ch / 2;
       const seed = seeds?.[i] ?? Math.floor(Math.random() * 1e9);
       const world = { width: w, height: h, unit: segment };
-      const dragon = new Dragon(cx, cy, segment, world, makeLook(seed));
+      const dragon = new Dragon(cx, cy, segment, world, genesFromSeed(seed));
       return { dragon, cx, cy, cw, ch, phase: i * 0.7, lead: { x: cx, y: cy, down: true } };
     });
   }

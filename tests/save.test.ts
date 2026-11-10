@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { genesFromSeed } from "../src/noodle/genes";
 import { advance, freshNeeds } from "../src/care/needs";
 import { decodeBackup, encodeBackup, makeSave, newSave, parseSave } from "../src/save/saveGame";
 import {
@@ -84,7 +85,7 @@ describe("saving", () => {
 
   it("starts new dragons with comfortable needs", () => {
     const s = newSave(9, T0);
-    expect(s.version).toBe(8);
+    expect(s.version).toBe(9);
     expect(s.decor).toEqual([]);
     expect(s.needs.values.fullness).toBeGreaterThan(50);
   });
@@ -94,7 +95,7 @@ describe("save versions", () => {
   it("upgrade a version 1 save (phase 21) with an empty den", () => {
     const v1 = { version: 1, savedAt: T0, seed: 55, needs: sample().needs };
     const up = parseSave(JSON.parse(JSON.stringify(v1)), T0 + HOUR)!;
-    expect(up.version).toBe(8);
+    expect(up.version).toBe(9);
     expect(up.seed).toBe(55);
     expect(up.decor).toEqual([]);
   });
@@ -144,5 +145,18 @@ describe("growing up in the save", () => {
     expect(parseSave(v7, T0 + HOUR)?.growth).toEqual({ hours: 0 });
     const odd = { ...save, growth: { hours: "lots" } };
     expect(parseSave(odd, T0 + HOUR)?.growth).toEqual({ hours: 0 });
+  });
+});
+
+describe("genes in the save", () => {
+  it("keeps a dragon's genes, and gives older saves the genes their seed always made", () => {
+    const genes = { ...genesFromSeed(5), size: 1.08, hornBranches: 2 };
+    const save = makeSave(5, sample().needs, T0, [], undefined, undefined, undefined, genes);
+    expect(parseSave(JSON.parse(JSON.stringify(save)), T0 + HOUR)?.genes).toEqual(genes);
+    expect(decodeBackup(encodeBackup(save), T0 + HOUR)?.genes).toEqual(genes);
+    const v8 = { version: 8, savedAt: T0, seed: 55, needs: sample().needs };
+    expect(parseSave(v8, T0 + HOUR)?.genes).toEqual(genesFromSeed(55));
+    const broken = { ...save, genes: { nope: true } };
+    expect(parseSave(broken, T0 + HOUR)?.genes).toEqual(genesFromSeed(5));
   });
 });
