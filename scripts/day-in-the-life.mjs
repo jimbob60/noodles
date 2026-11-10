@@ -91,7 +91,11 @@ for (let c = 0; c < 3; c++) {
 await step(4000);
 check((await data("egg")) === "hatched", "the egg hatches into the dragon");
 const fresh = await save();
-check(fresh.version >= 7, `a new dragon starts and saves (save version ${fresh.version})`);
+check(fresh.version >= 8, `a new dragon starts and saves (save version ${fresh.version})`);
+check(
+  (await data("stage")) === "baby" && fresh.growth.hours < 0.1,
+  `it hatches as a little baby (${await data("length")} spine points)`,
+);
 check((await num("coins")) === 10, "the daily hello gives 10 coins");
 
 // Morning care: a new dragon is nearly full (90%), so one snack fills it, and a second gets a
@@ -228,6 +232,10 @@ check(
   morning.stash.bestCatch === evening.stash.bestCatch,
   `best catch kept (${morning.stash.bestCatch})`,
 );
+check(
+  morning.growth.hours >= evening.growth.hours && evening.growth.hours > 0,
+  `growing up kept (${(evening.growth.hours * 60).toFixed(0)} minutes of good care so far)`,
+);
 
 // A long night away (36 h): gentle needs, nothing lost.
 await p.close();
@@ -241,6 +249,10 @@ check(
 check(
   later.seed === evening.seed && later.decor.length === evening.decor.length,
   "still the same dragon and den",
+);
+check(
+  later.growth.hours >= morning.growth.hours,
+  `it never shrinks while you're away (${later.growth.hours.toFixed(1)} h grown, ${await data("stage")})`,
 );
 
 await browser.close();

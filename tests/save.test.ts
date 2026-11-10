@@ -76,7 +76,7 @@ describe("saving", () => {
     expect(parseSave({ version: 1, seed: -5 }, T0)).toBeNull();
     expect(parseSave({ version: 0, seed: 5 }, T0)).toBeNull();
     const future = parseSave(
-      { version: 7, seed: 5, needs: sample().needs, savedAt: T0, pets: ["a"] },
+      { version: 9, seed: 5, needs: sample().needs, savedAt: T0, pets: ["a"] },
       T0 + HOUR,
     );
     expect(future?.seed).toBe(5);
@@ -84,7 +84,7 @@ describe("saving", () => {
 
   it("starts new dragons with comfortable needs", () => {
     const s = newSave(9, T0);
-    expect(s.version).toBe(7);
+    expect(s.version).toBe(8);
     expect(s.decor).toEqual([]);
     expect(s.needs.values.fullness).toBeGreaterThan(50);
   });
@@ -94,7 +94,7 @@ describe("save versions", () => {
   it("upgrade a version 1 save (phase 21) with an empty den", () => {
     const v1 = { version: 1, savedAt: T0, seed: 55, needs: sample().needs };
     const up = parseSave(JSON.parse(JSON.stringify(v1)), T0 + HOUR)!;
-    expect(up.version).toBe(7);
+    expect(up.version).toBe(8);
     expect(up.seed).toBe(55);
     expect(up.decor).toEqual([]);
   });
@@ -132,5 +132,17 @@ describe("backup codes", () => {
     expect(decodeBackup(typo, T0)).toBeNull();
     expect(decodeBackup("hello", T0)).toBeNull();
     expect(decodeBackup("", T0)).toBeNull();
+  });
+});
+
+describe("growing up in the save", () => {
+  it("keeps how grown up a dragon is, and starts older dragons again as babies", () => {
+    const save = makeSave(7, sample().needs, T0, [], undefined, undefined, { hours: 30.5 });
+    expect(parseSave(JSON.parse(JSON.stringify(save)), T0 + HOUR)?.growth).toEqual({ hours: 30.5 });
+    expect(decodeBackup(encodeBackup(save), T0 + HOUR)?.growth).toEqual({ hours: 30.5 });
+    const v7 = { version: 7, savedAt: T0, seed: 55, needs: sample().needs };
+    expect(parseSave(v7, T0 + HOUR)?.growth).toEqual({ hours: 0 });
+    const odd = { ...save, growth: { hours: "lots" } };
+    expect(parseSave(odd, T0 + HOUR)?.growth).toEqual({ hours: 0 });
   });
 });

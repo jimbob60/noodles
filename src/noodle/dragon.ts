@@ -19,6 +19,13 @@ import { Swimmer } from "./swimmer";
 import { headToWorld, Whiskers } from "./whiskers";
 
 const SPINE_POINTS = 26;
+/** A just-hatched baby's length, in spine points (it grows to SPINE_POINTS). */
+const BABY_POINTS = 12;
+
+/** How many spine points long a dragon is at a given growth (0 baby, 1 grown). */
+export function lengthAt(growth: number): number {
+  return Math.round(BABY_POINTS + (SPINE_POINTS - BABY_POINTS) * Math.max(0, Math.min(1, growth)));
+}
 /** Seconds after the finger lets go before the dragon goes back to doing its own thing. */
 export const CALM_DOWN = 2.5;
 
@@ -102,6 +109,10 @@ export class Dragon {
   private thinkLeft = 0;
   private thinkClock = 0;
   private bits: Bit[] = [];
+  /** How grown up, 0 (just hatched) to 1 (grown). Change it with setGrowth. */
+  growth = 1;
+  /** The spine spacing for a grown dragon on this screen. */
+  private baseSegment: number;
 
   constructor(
     x: number,
@@ -114,6 +125,7 @@ export class Dragon {
     this.headPalette = headColors(look);
     this.favorite = favoriteFood(look.seed);
     this.tickles = tickleSpots(look.seed);
+    this.baseSegment = segment;
     this.spine = new Spine(x, y, SPINE_POINTS, segment);
     this.head = new Follower(x, y);
     this.swimmer = new Swimmer(x, y, -Math.PI / 2);
@@ -128,8 +140,33 @@ export class Dragon {
     return bodyHalfWidth(this.spine);
   }
 
+  /** Babies have big heads for their size; it evens out as they grow. */
   get headRadius(): number {
-    return this.halfWidth * 1.3;
+    return this.halfWidth * 1.3 * (1 + 0.35 * (1 - this.growth));
+  }
+
+  /**
+   * How grown up it is, 0 (just hatched) to 1 (grown): a baby is short and a little slimmer,
+   * and the noodle gets longer as it grows. New spine points join at the tail.
+   */
+  setGrowth(growth: number): void {
+    const g = Math.max(0, Math.min(1, growth));
+    const count = lengthAt(g);
+    const p = this.spine.points;
+    const changed = count !== p.length;
+    this.growth = g;
+    while (p.length > count) p.pop();
+    while (p.length < count) {
+      const a = p[p.length - 2] ?? { x: p[0].x, y: p[0].y - 1 };
+      const b = p[p.length - 1];
+      const d = Math.hypot(b.x - a.x, b.y - a.y) || 1;
+      const seg = this.spine.segment;
+      p.push({ x: b.x + ((b.x - a.x) / d) * seg, y: b.y + ((b.y - a.y) / d) * seg });
+    }
+    this.spine.resize(this.baseSegment * (0.78 + 0.22 * g));
+    this.sizes = legSizes(this.halfWidth);
+    if (changed || !this.legs) this.legs = makeLegs(this.spine.points, this.sizes);
+    this.whiskers?.resize(this.spine.segment * 0.95);
   }
 
   get asleep(): boolean {
@@ -399,10 +436,11 @@ export class Dragon {
   }
 
   resize(segment: number): void {
-    this.spine.resize(segment);
+    this.baseSegment = segment;
+    this.spine.resize(segment * (0.78 + 0.22 * this.growth));
     this.sizes = legSizes(this.halfWidth);
     this.legs = makeLegs(this.spine.points, this.sizes);
-    this.whiskers.resize(segment * 0.95);
+    this.whiskers.resize(this.spine.segment * 0.95);
   }
 
   update(dt: number, input: PointerState, world: World): void {
@@ -531,13 +569,20 @@ export class Dragon {
       }
     }
     drawLegs(ctx, this.legs, this.spine.points, this.sizes, this.look);
-    drawRidge(ctx, this.spine, this.look, puff);
+    drawRidge(ctx, this.spine, this.look, puff, 0.5 + 0.5 * this.growth);
     drawBody(ctx, this.spine, this.look, puff);
     if (this.grime > 0) this.drawGrime(ctx, hw);
     drawTailTuft(ctx, this.spine.points, hw, this.asleep ? this.time * 0.3 : this.time, this.look);
     // Whiskers before the head, so they hang out from under the snout instead of over the eyes.
     drawWhiskers(ctx, this.whiskers, hw);
-    drawHead(ctx, this.spine.head, this.headRadius * puff, this.face, this.headPalette);
+    drawHead(
+      ctx,
+      this.spine.head,
+      this.headRadius * puff,
+      this.face,
+      this.headPalette,
+      this.growth,
+    );
     if (purr > 0.25) this.drawPurr(ctx, purr);
     if (this.asleep) this.drawSnoreBubble(ctx);
     ctx.restore();

@@ -2,9 +2,10 @@ import { freshNeeds, parseNeeds, type NeedsState } from "../care/needs";
 import { parseDecor, type DecorItem } from "../den/decor";
 import { emptyWallet, parseWallet, type Wallet } from "../care/coins";
 import { emptyStash, parseStash, type Stash } from "../care/shop";
+import { freshGrowth, parseGrowth, type Growth } from "../care/growth";
 
 /** The save format version. Bump it (and add a migration below) whenever the format changes. */
-export const SAVE_VERSION = 7;
+export const SAVE_VERSION = 8;
 
 /**
  * Everything that makes your dragon yours.
@@ -15,9 +16,10 @@ export const SAVE_VERSION = 7;
  * - Version 5 (phase 25): decorations are bought one at a time and kept in storage.
  * - Version 6 (phase 25): plus the balls bought in the shop.
  * - Version 7 (phase 26): plus the best Noodle Catch score.
+ * - Version 8 (phase 29): plus how grown up it is (hours of good care).
  */
-export interface SaveV7 {
-  version: 7;
+export interface SaveV8 {
+  version: 8;
   /** When this was saved (milliseconds since 1970). */
   savedAt: number;
   /** The seed its look comes from (and its favorite food and tickle spots). */
@@ -26,18 +28,20 @@ export interface SaveV7 {
   decor: DecorItem[];
   wallet: Wallet;
   stash: Stash;
+  growth: Growth;
 }
-export type Save = SaveV7;
+export type Save = SaveV8;
 
 export function newSave(seed: number, now: number): Save {
   return {
-    version: 7,
+    version: 8,
     savedAt: now,
     seed,
     needs: freshNeeds(now),
     decor: [],
     wallet: emptyWallet(),
     stash: emptyStash(),
+    growth: freshGrowth(),
   };
 }
 
@@ -48,8 +52,9 @@ export function makeSave(
   decor: DecorItem[] = [],
   wallet: Wallet = emptyWallet(),
   stash: Stash = emptyStash(),
+  growth: Growth = freshGrowth(),
 ): Save {
-  return { version: 7, savedAt: now, seed, needs, decor, wallet, stash };
+  return { version: 8, savedAt: now, seed, needs, decor, wallet, stash, growth };
 }
 
 const validSeed = (v: unknown): v is number =>
@@ -69,6 +74,7 @@ export function parseSave(raw: unknown, now: number): Save | null {
     decor?: unknown;
     wallet?: unknown;
     stash?: unknown;
+    growth?: unknown;
   };
   if (typeof r.version !== "number" || r.version < 1 || !validSeed(r.seed)) return null;
   const savedAt = typeof r.savedAt === "number" && r.savedAt <= now ? r.savedAt : now;
@@ -84,14 +90,17 @@ export function parseSave(raw: unknown, now: number): Save | null {
           decor.map((d) => d.kind),
         )
       : emptyStash();
+  // Versions 1–7 had no growing up: those dragons start again as babies, so you see them grow.
+  const growth = r.version >= 8 ? parseGrowth(r.growth) : freshGrowth();
   return {
-    version: 7,
+    version: 8,
     savedAt,
     seed: r.seed,
     needs: parseNeeds(r.needs, now),
     decor,
     wallet,
     stash,
+    growth,
   };
 }
 

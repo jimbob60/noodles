@@ -50,7 +50,11 @@ export function drawHead(
   r: number,
   face: Face,
   c = headColors(CLASSIC_LOOK),
+  /** How grown up, 0 to 1: babies have little nub horns and a short mane. */
+  grown = 1,
 ): void {
+  const hornSize = 0.45 + 0.55 * grown;
+  const maneSize = 0.6 + 0.4 * grown;
   ctx.save();
   ctx.translate(at.x, at.y);
   ctx.scale(face.facing, 1);
@@ -70,7 +74,7 @@ export function drawHead(
   for (const pass of [0, 1]) {
     for (const t of tufts) {
       const base = { x: Math.cos(t.a) * r * 0.55, y: Math.sin(t.a) * r * 0.5 };
-      const len = r * t.len * (pass ? 0.78 : 1);
+      const len = r * t.len * maneSize * (pass ? 0.78 : 1);
       const tip = { x: base.x + Math.cos(t.a) * len, y: base.y + Math.sin(t.a) * len - r * 0.15 };
       const side = r * (pass ? 0.2 : 0.32);
       const nx = -Math.sin(t.a) * side;
@@ -102,7 +106,7 @@ export function drawHead(
   ] as const) {
     ctx.save();
     ctx.translate(x * r, -0.6 * r);
-    ctx.scale(scale, scale);
+    ctx.scale(scale * hornSize, scale * hornSize);
     ctx.beginPath();
     ctx.moveTo(0.2 * r, 0.1 * r);
     ctx.bezierCurveTo(0.2 * r, -0.45 * r, -0.4 * r, -0.75 * r, -1.15 * r, -0.85 * r);
@@ -116,7 +120,7 @@ export function drawHead(
     ctx.fillStyle = far ? c.hornShade : c.horn;
     ctx.fill();
     ctx.strokeStyle = c.rim;
-    ctx.lineWidth = rimWidth / scale;
+    ctx.lineWidth = rimWidth / (scale * hornSize);
     ctx.stroke();
     ctx.restore();
   }

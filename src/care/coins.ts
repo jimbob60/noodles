@@ -1,6 +1,15 @@
 /** Noodle coins: earned only by caring and playing. No real money anywhere (phase 24). */
 export type CoinReason =
-  "snack" | "favorite" | "petting" | "boop" | "ribbon" | "bath" | "rested" | "hello" | "catch";
+  | "snack"
+  | "favorite"
+  | "petting"
+  | "boop"
+  | "ribbon"
+  | "bath"
+  | "rested"
+  | "hello"
+  | "catch"
+  | "grewUp";
 
 /** Coins for each kind of care. */
 export const REWARD: Record<CoinReason, number> = {
@@ -14,6 +23,8 @@ export const REWARD: Record<CoinReason, number> = {
   hello: 10,
   /** Noodle Catch pays by score (see `amount`). */
   catch: 0,
+  /** A birthday-style gift each time it reaches a new life stage. */
+  grewUp: 25,
 };
 
 /** After this many coins in a day, everyday care pays half (rounded up), so there's no grinding. */

@@ -1,6 +1,8 @@
 import "@fontsource/pacifico/latin-400.css";
 import { advance, change, freshNeeds, NEED_NAMES } from "./care/needs";
 import { deviceStore, loadGame, storeGame } from "./save/storage";
+import { freshGrowth, grow, growAway, growthShare, stageOf, type Growth } from "./care/growth";
+import { drawGrowthBadge, drawStageBanner, stageMessage } from "./ui/growthBadge";
 import { decodeBackup, encodeBackup, makeSave, type Save } from "./save/saveGame";
 import { drawBackupButton, onBackupButton, openBackupPanel } from "./ui/backupPanel";
 import { Input } from "./engine/input";
@@ -60,8 +62,29 @@ async function main(): Promise<void> {
   const randomSeed = () => Math.floor(Math.random() * 2 ** 32);
   const loaded = loadGame(store, Date.now(), randomSeed);
   let seed = loaded.save?.seed ?? randomSeed();
-  const makeDragon = () =>
-    new Dragon(screen.width / 2, screen.height * 0.8, segmentFor(screen), world(), makeLook(seed));
+  /**
+   * How grown up your dragon is (hours of good care). Time away counts too, capped, if it was
+   * left well cared for. Fast mode grows its own dragon from a baby, 600× faster.
+   */
+  let growth: Growth = loaded.save
+    ? growAway(loaded.save.growth, Date.now() - loaded.save.savedAt, loaded.save.needs.values)
+    : freshGrowth();
+  let fastGrowth: Growth = freshGrowth();
+  const shownGrowth = () => (mode === "fast" ? fastGrowth : growth);
+  /** The "a kid now!" banner: its text and how long it has been up. */
+  let stageNote: { text: string; age: number } | null = null;
+  const STAGE_NOTE_LIFE = 4;
+  const makeDragon = () => {
+    const d = new Dragon(
+      screen.width / 2,
+      screen.height * 0.8,
+      segmentFor(screen),
+      world(),
+      makeLook(seed),
+    );
+    d.setGrowth(growthShare(growth));
+    return d;
+  };
   let dragon = makeDragon();
   /** The den's decorations (saved with the dragon). */
   let decor: DecorItem[] = loaded.save?.decor ?? [];
@@ -111,7 +134,7 @@ async function main(): Promise<void> {
   const persist = () => {
     // Nothing is saved until a new player's egg has hatched.
     if (mode === "play" && !egg && !newPlayerEgg)
-      storeGame(store, makeSave(seed, needs, Date.now(), decor, wallet, stash));
+      storeGame(store, makeSave(seed, needs, Date.now(), decor, wallet, stash, growth));
   };
   window.addEventListener("pagehide", persist);
   document.addEventListener("visibilitychange", () => {
@@ -127,7 +150,9 @@ async function main(): Promise<void> {
       const full = { fullness: 100, happiness: 100, energy: 100, cleanliness: 100 };
       needs = change(freshNeeds(modeStartedAt), full);
       dragon.wakeUp(world());
+      fastGrowth = freshGrowth();
     }
+    if (mode === "play" || mode === "fast") dragon.setGrowth(growthShare(shownGrowth()));
     egg = mode === "hatch" || (mode === "play" && newPlayerEgg) ? new Egg() : null;
     if (mode === "play") {
       // Back from a test mode: pick up the real dragon's needs again.
@@ -174,6 +199,8 @@ async function main(): Promise<void> {
     decor = save.decor;
     wallet = save.wallet;
     stash = save.stash;
+    growth = save.growth;
+    dragon.setGrowth(growthShare(growth));
     if (needs.inBed) setBedtime(true);
     document.body.dataset.favorite = dragon.favorite;
     document.body.dataset.seed = String(seed);
@@ -183,7 +210,7 @@ async function main(): Promise<void> {
   const showBackup = () => {
     persist();
     openBackupPanel(
-      encodeBackup(makeSave(seed, needs, Date.now(), decor, wallet, stash)),
+      encodeBackup(makeSave(seed, needs, Date.now(), decor, wallet, stash, growth)),
       restore,
       store !== null,
     );
@@ -348,6 +375,9 @@ async function main(): Promise<void> {
         if (r.hatched) {
           // Out pops the dragon, right where the egg was, thrilled to meet you.
           dragon = new Dragon(at.x, at.y, segmentFor(screen), world(), makeLook(seed));
+          // A new player's dragon hatches as a baby (the hatch test mode replays yours as one).
+          if (mode === "play") growth = freshGrowth();
+          dragon.setGrowth(0);
           dragon.getExcited();
           egg = null;
           if (mode === "play") {
@@ -487,6 +517,27 @@ async function main(): Promise<void> {
       coinCounter.update(dt, wallet.coins);
       modeSeconds += dt;
       needs = advance(needs, needsNow(), dragon.asleep);
+      // Growing up: a little longer with every hour of good care.
+      if (mode === "play" || mode === "fast") {
+        const before = shownGrowth();
+        const hours = (dt / 3600) * (mode === "fast" ? 600 : 1);
+        const after = grow(before, hours, needs.values);
+        if (mode === "fast") fastGrowth = after;
+        else growth = after;
+        if (Math.abs(growthShare(after) - dragon.growth) > 0.002)
+          dragon.setGrowth(growthShare(after));
+        if (stageOf(after).id !== stageOf(before).id) {
+          stageNote = { text: stageMessage(after), age: 0 };
+          dragon.getExcited();
+          pay("grewUp", dragon.spine.head);
+        }
+        document.body.dataset.stage = stageOf(after).id;
+        document.body.dataset.length = String(dragon.spine.points.length);
+      }
+      if (stageNote) {
+        stageNote.age += dt;
+        if (stageNote.age > STAGE_NOTE_LIFE) stageNote = null;
+      }
       // Sleeping in bed refills Energy fast enough to watch; rested, it wakes by itself.
       const refill = bedRefill(dt, inBed && dragon.asleep);
       if (refill > 0) needs = change(needs, { energy: refill });
@@ -546,6 +597,9 @@ async function main(): Promise<void> {
           if (catchGame) drawFallers(ctx, catchGame, dragon.halfWidth * 1.1);
           needsBar.draw(ctx, screen.width, screen.height);
           if (mode === "play") coinCounter.draw(ctx);
+          if (mode === "play" || mode === "fast") drawGrowthBadge(ctx, shownGrowth());
+          if (stageNote)
+            drawStageBanner(ctx, screen.width, stageNote.text, stageNote.age, STAGE_NOTE_LIFE);
           if (catchGame) {
             // The trays and buttons are put away during a round.
           } else if (decorator.active) {

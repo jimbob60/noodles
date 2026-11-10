@@ -104,6 +104,8 @@ export function drawRidge(
   spine: Spine,
   look: DragonLook = CLASSIC_LOOK,
   puff = 1,
+  /** Smaller fins on a baby: 0.5 just hatched, 1 grown. */
+  size = 1,
 ): void {
   const p = spine.points;
   const n = p.length;
@@ -124,7 +126,7 @@ export function drawRidge(
     const up = Math.min(1, -ny * 1.6);
     if (up < 0.15) continue;
     const w = hw * bodyProfile(i / (n - 1));
-    const tall = w * 0.75 * up;
+    const tall = w * 0.75 * up * size;
     const half = w * 0.42;
     const ex = p[i].x + nx * w * 0.8;
     const ey = p[i].y + ny * w * 0.8;

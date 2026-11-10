@@ -2,6 +2,12 @@
 
 Newest first. Each entry says what we decided, why, and what it affects.
 
+## 2026-11-10: Growing up — baby, kid, teen, grown-up; saved as save version 8
+
+- **Decision:** a dragon grows with **hours of good care**: kid at 24 h, teen at 60 h, grown-up at 96 h (about four days). Good care means the four needs average at least 45; sleeping counts. Neglect only pauses growing: a dragon never shrinks and never gets stuck (VISION: no punishment). Time away counts like the needs do, up to 12 hours at once, if it was left well cared for. Growing is smooth: the noodle gets longer bit by bit, from 12 spine points just hatched to 26 grown, and a little thicker. Babies have bigger heads for their size, tiny nub horns, a short mane and small back fins. Reaching a new stage shows a banner ("Your dragon is a kid now!"), a happy wiggle, and a 25-coin gift. A small badge under the coins shows the stage and a bar toward the next. Fast mode grows its own dragon from a baby 600× faster (grown-up in about 10 minutes) and never saves. The save is now version 8 (adds `growth.hours`). Older saves start again as babies, so every dragon gets to grow up; the egg had only just arrived, so no dragon was older than a few days anyway.
+- **Why:** phase 29 ("a dragon grows over a few days of care").
+- **Affects:** phase 30 (genes can set grown size), phase 42 (balance: the hours), breeding later (only grown-ups).
+
 ## 2026-11-09: Corner buttons fit short screens; scales on the head
 
 - **Decision:** the four small top-right buttons (backup, decorate, shop, game) now share one layout (`cornerButton` in `src/ui/layout.ts`). On roomy screens nothing changes (18 px bubbles, 46 px apart). On short screens, like a phone on its side or inside the Claude app, the stack squeezes and the bubbles shrink so the last one stays clear of the sponge and moon buttons. The tray buttons share `trayRadius`. The head now has the same faint fish scales as the body over its crown and neck, stopping before the muzzle so the face stays clean.
