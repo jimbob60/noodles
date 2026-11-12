@@ -2,6 +2,7 @@
 
 Newest first. One line per finished phase.
 
+- **Phase 36 — Several dragons (4b72dd3, 2026-11-12):** a family of up to four; adopt an egg (a surprise or a gallery favorite), switch who is in the den; each keeps its own needs, age and outfit.
 - **Phase 35 — Gate: the 50-dragon test (91fda13, 2026-11-12):** a 50-dragon gallery with favorites; robot checks on 3,000 dragons fixed manes and horns that blended into the body. Stage E done.
 - **Phase 34 — Photo mode (d27e4df, 0ca4ed0, 2026-11-12):** a camera button; hold still, pick a face and a frame (polaroid with name and date, or stars), snap, then save or share the picture.
 - **Phase 33 — Accessories (d7f6cef … 7c9c428, 2026-11-12):** a closet of 30 code-drawn accessories in four slots (hats, neck, back, tail), including dragon, fairy and yellow-and-black butterfly wings; buy, wear and recolor; they follow the body. The head now grows up too.

@@ -72,6 +72,8 @@ export interface FamilyCard {
   egg: boolean;
   /** The one out in the den right now. */
   here: boolean;
+  /** In the den too, as a friend. */
+  visiting: boolean;
 }
 
 const css = (el: HTMLElement, style: Partial<CSSStyleDeclaration>) =>
@@ -150,6 +152,8 @@ export function openFamily(opts: {
   favorites: number[];
   /** Brings a family member (by its place in `cards`) out into the den. */
   onVisit: (index: number) => void;
+  /** Invites a family member over to play in the den as a friend, or sends it home. */
+  onInvite: (index: number, over: boolean) => void;
   /** Adopts an egg: a favorite's number, or null for a surprise. False if it couldn't. */
   onAdopt: (seed: number | null) => boolean;
 }): void {
@@ -251,7 +255,9 @@ export function openFamily(opts: {
         { fontSize: "13px", color: "#c9bdf0", margin: "2px 0 6px" },
         m.egg
           ? "Waiting to be warmed and hatched"
-          : `${STAGE[stageOf(m.growth).id]}${m.asleep ? " · 😴 asleep in bed" : ""}`,
+          : `${STAGE[stageOf(m.growth).id]}${m.asleep ? " · 😴 asleep in bed" : ""}${
+              m.visiting ? " · 🤝 playing in the den" : ""
+            }`,
       ),
     );
     if (!m.egg) {
@@ -289,12 +295,28 @@ export function openFamily(opts: {
         el("div", { color: "#9dffc8", fontWeight: "700", fontSize: "13px" }, "Here now"),
       );
     } else {
-      const visit = button(m.egg ? "Hatch" : "Visit", "#7af3ff");
+      const side = el("div", { display: "flex", flexDirection: "column", gap: "6px" });
+      if (!m.egg && !m.asleep) {
+        // A friend plays in the den alongside the one you're caring for.
+        const invite = button(
+          m.visiting ? "🏠 Send home" : "🤝 Invite over",
+          m.visiting ? "rgba(255,255,255,0.14)" : "#ffd6f5",
+          m.visiting ? "#f3ecff" : "#1a1040",
+        );
+        invite.dataset.invite = String(i);
+        invite.addEventListener("click", () => {
+          shade.remove();
+          opts.onInvite(i, !m.visiting);
+        });
+        side.appendChild(invite);
+      }
+      const visit = button(m.egg ? "Hatch" : "Care for", "#7af3ff");
       visit.addEventListener("click", () => {
         shade.remove();
         opts.onVisit(i);
       });
-      row.appendChild(visit);
+      side.appendChild(visit);
+      row.appendChild(side);
     }
     card.appendChild(row);
   });

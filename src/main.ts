@@ -23,6 +23,7 @@ import { pose } from "./noodle/pose";
 import { adopt, catchUp, newEgg, type FamilyMember } from "./care/family";
 import { drawFamilyButton, onFamilyButton, openFamily, type FamilyCard } from "./ui/familyPanel";
 import { parseFavorites } from "./gallery";
+import { Friendship } from "./noodle/friends";
 import { decodeBackup, encodeBackup, makeSave, type Save } from "./save/saveGame";
 import { drawBackupButton, onBackupButton, openBackupPanel } from "./ui/backupPanel";
 import { Input } from "./engine/input";
@@ -173,6 +174,46 @@ async function main(): Promise<void> {
     document.body.dataset.family = String(family.length + 1);
   };
   showFamily();
+  /**
+   * A friend: one of the family out in the den too, doing its own thing and playing with the
+   * dragon you're caring for (nuzzles, chases, the odd tangle).
+   */
+  let friend: Dragon | null = null;
+  let friendship = new Friendship();
+  /** The lure the friendship gave your dragon last frame (so it can be told from food). */
+  let socialLure: { x: number; y: number } | null = null;
+  const friendIndex = () => family.findIndex((m) => m.visiting && !m.egg);
+  /** Where a friend sleeps: beside the cushion, toward the middle of the den. */
+  const besideBed = () => {
+    const bed = bedSpot(screen.width, screen.height);
+    const toward = bed.x < screen.width / 2 ? 1 : -1;
+    return { x: bed.x + toward * dragon.halfWidth * 9, y: bed.y };
+  };
+  /** Makes (or clears) the friend's dragon to match who is visiting. */
+  function syncFriend(): void {
+    const i = friendIndex();
+    friendship = new Friendship();
+    socialLure = null;
+    if (i < 0) {
+      friend = null;
+      document.body.dataset.friend = "";
+      return;
+    }
+    family[i] = catchUp(family[i], Date.now());
+    const m = family[i];
+    const side = dragon.spine.head.x < screen.width / 2 ? 0.72 : 0.28;
+    friend = new Dragon(
+      screen.width * side,
+      screen.height * 0.45,
+      segmentFor(screen),
+      world(),
+      m.genes,
+    );
+    friend.setGrowth(growthShare(m.growth));
+    friend.outfit = m.worn;
+    if (needs.inBed) friend.goToBed(besideBed(), world());
+    document.body.dataset.friend = m.identity.name;
+  }
   const eggAt = () => ({ x: screen.width / 2, y: screen.height * 0.62 });
   const eggSize = () => Math.max(46, Math.min(80, Math.min(screen.width, screen.height) * 0.09));
   let eggLast: { x: number; y: number } | null = null;
@@ -234,10 +275,14 @@ async function main(): Promise<void> {
       feeding.sendHome();
       toys.sendHome();
       dragon.goToBed(bedSpot(screen.width, screen.height), world());
+      // A visiting friend curls up beside the cushion too.
+      friend?.goToBed(besideBed(), world());
     } else {
       dragon.wakeUp(world());
+      friend?.wakeUp(world());
     }
   }
+  syncFriend();
   if (needs.inBed) setBedtime(true);
 
   /** Coins for care: only in the real game (not fast mode), popping out at `from`. */
@@ -270,6 +315,7 @@ async function main(): Promise<void> {
     adoptedEgg = save.egg;
     egg = adoptedEgg ? new Egg() : null;
     showFamily();
+    syncFriend();
     if (needs.inBed) setBedtime(true);
     document.body.dataset.favorite = dragon.favorite;
     document.body.dataset.seed = String(seed);
@@ -286,6 +332,7 @@ async function main(): Promise<void> {
     worn: wardrobe.worn,
     seenAt: Date.now(),
     egg: adoptedEgg,
+    visiting: false,
   });
   /** Brings a family member out into the den, caught up on the time it was away. */
   function bring(member: FamilyMember): void {
@@ -307,24 +354,36 @@ async function main(): Promise<void> {
     showFamily();
     document.body.dataset.favorite = dragon.favorite;
     document.body.dataset.seed = String(seed);
+    syncFriend();
     if (needs.inBed) setBedtime(true);
     else dragon.getExcited(); // happy to see you!
+    persist();
+  }
+  /** Invites a family member over to play as a friend (one at a time), or sends it home. */
+  function invite(index: number, over: boolean): void {
+    family = family.map((m, k) => ({ ...m, visiting: over && k === index && !m.egg }));
+    syncFriend();
+    if (friend && over) friend.hearts(3);
     persist();
   }
   /** Swaps the dragon in the den with another of the family. */
   function visit(index: number): void {
     const arriving = family[index];
     if (!arriving) return;
-    const leaving = asMember();
+    // The one stepping aside stays in the den as a friend, unless another friend is over.
+    const otherFriend = family.some((m, k) => k !== index && m.visiting);
+    const leaving = { ...asMember(), visiting: !otherFriend && !adoptedEgg };
     family = family.map((m, k) => (k === index ? leaving : m));
-    bring(arriving);
+    bring({ ...arriving, visiting: false });
   }
   /** Adopts an egg (a favorite's number, or a surprise). The one in the den steps aside. */
   function adoptEgg(pick: number | null): boolean {
     const r = adopt(wallet, family.length + 1);
     if (!r.ok) return false;
     wallet = r.wallet;
-    family = [...family, asMember()];
+    // The one stepping aside will be there to meet the baby (unless a friend is already over).
+    const stays = !family.some((m) => m.visiting) && !adoptedEgg;
+    family = [...family, { ...asMember(), visiting: stays }];
     bring(newEgg(pick ?? randomSeed(), Date.now()));
     return true;
   }
@@ -340,6 +399,7 @@ async function main(): Promise<void> {
       hat: m.worn.head,
       egg: m.egg,
       here,
+      visiting: m.visiting,
     });
     let favorites: number[] = [];
     try {
@@ -354,6 +414,7 @@ async function main(): Promise<void> {
       coins: wallet.coins,
       favorites: favorites.filter((f) => !taken.has(f)),
       onVisit: (i) => visit(i - 1),
+      onInvite: (i, over) => invite(i - 1, over),
       onAdopt: adoptEgg,
     });
   };
@@ -364,6 +425,7 @@ async function main(): Promise<void> {
 
   screen.onResize(() => {
     dragon.resize(segmentFor(screen));
+    friend?.resize(segmentFor(screen));
   });
 
   /** The build tag doubles as the mode button: a generous tap area in the top-right corner. */
@@ -645,7 +707,8 @@ async function main(): Promise<void> {
         document.body.dataset.fed = String(Number(document.body.dataset.fed ?? 0) + 1);
       }
       // Then the toys. Food wins over toys if both want the dragon's attention.
-      const foodLure = dragon.lure;
+      const foodLure = dragon.lure === socialLure ? null : dragon.lure;
+      if (dragon.lure === socialLure) dragon.lure = null;
       const play = toys.update(
         dt,
         blocked || tray.busy || inBed ? noFinger : input,
@@ -733,6 +796,44 @@ async function main(): Promise<void> {
       const tray0 = feeding.slots()[0];
       dragon.foodTrayAt = tray0 ? { x: tray0.x, y: tray0.y } : null;
       const wasExcited = dragon.exciteLeft > 0;
+      // A friend in the den: it lives its own little life, and the two get together to play
+      // whenever both are free (your finger, food and bedtime always come first).
+      const fi = mode === "play" ? friendIndex() : -1;
+      if (friend && fi >= 0 && !photo?.frozen) {
+        const now = Date.now();
+        const m = family[fi];
+        let theirs = advance(m.needs, now, friend.asleep);
+        const grown = grow(m.growth, dt / 3600, theirs.values);
+        if (Math.abs(growthShare(grown) - friend.growth) > 0.002)
+          friend.setGrowth(growthShare(grown));
+        friend.mood = moodFrom(theirs.values);
+        friend.grime = Math.min(1, Math.max(0, (40 - theirs.values.cleanliness) / 25));
+        friend.lure = null;
+        const mine =
+          free &&
+          !catchGame &&
+          !inBed &&
+          !finger.down &&
+          dragon.lure === null &&
+          dragon.canPlay &&
+          !decorating;
+        const happened = friendship.update(dt, dragon, friend, [mine, friend.canPlay], world());
+        socialLure = mine ? dragon.lure : null;
+        if (happened) {
+          // A lovely time together: Love for both, and a couple of coins.
+          needs = change(needs, { happiness: happened.love });
+          theirs = change(theirs, { happiness: happened.love });
+          pay("friends", dragon.spine.head);
+          document.body.dataset.playdates = String(
+            Number(document.body.dataset.playdates ?? 0) + 1,
+          );
+        }
+        family[fi] = { ...m, needs: theirs, growth: grown, seenAt: now };
+        friend.update(dt, noFinger, world());
+        if (document.body.dataset.together !== friendship.mode)
+          document.body.dataset.together = friendship.mode;
+      }
+      if (photo && friend) pose(friend.face, photo.expression);
       // Holding still for a photo: the pose stays exactly put.
       if (!photo?.frozen) dragon.update(dt, finger, world());
       if (photo) pose(dragon.face, photo.expression);
@@ -843,6 +944,7 @@ async function main(): Promise<void> {
         } else {
           drawNight(ctx, screen.width, screen.height, night, bedAt);
           drawBed(ctx, bedAt, dragon.halfWidth * 4.2, night);
+          if (friend && mode === "play") friend.draw(ctx);
           dragon.draw(ctx);
           if (catchGame) drawFallers(ctx, catchGame, dragon.halfWidth * 1.1);
         }

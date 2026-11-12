@@ -75,7 +75,7 @@ describe("the family", () => {
       false,
     );
     const back = parseSave(JSON.parse(JSON.stringify(save)), T0 + HOUR)!;
-    expect(back.version).toBe(12);
+    expect(back.version).toBe(13);
     expect(back.family.map((m) => m.seed)).toEqual([11, 22]);
     expect(back.family[0].worn).toEqual({ head: { id: "crown", color: 2 } });
     expect(back.family[1].egg).toBe(true);
@@ -101,5 +101,17 @@ describe("the family", () => {
     expect(f[1].worn).toEqual({});
     expect(f[1].egg).toBe(true);
     expect(f[0].genes).toEqual(genesFromSeed(1));
+  });
+});
+
+describe("a friend visiting the den", () => {
+  it("is remembered in the save, one at a time, and never an egg", () => {
+    const raw = [
+      { seed: 1, visiting: true },
+      { seed: 2, visiting: true },
+      { seed: 3, visiting: true, egg: true },
+    ];
+    expect(parseFamily(raw, [], T0).map((m) => m.visiting)).toEqual([true, false, false]);
+    expect(newEgg(4, T0).visiting).toBe(false);
   });
 });

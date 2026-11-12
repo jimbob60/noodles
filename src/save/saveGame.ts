@@ -9,7 +9,7 @@ import { emptyWardrobe, parseWardrobe, type Wardrobe } from "../care/wardrobe";
 import { parseFamily, type FamilyMember } from "../care/family";
 
 /** The save format version. Bump it (and add a migration below) whenever the format changes. */
-export const SAVE_VERSION = 12;
+export const SAVE_VERSION = 13;
 
 /**
  * Everything that makes your dragon yours.
@@ -26,9 +26,10 @@ export const SAVE_VERSION = 12;
  * - Version 11 (phase 33): plus its accessories (bought, and what it's wearing).
  * - Version 12 (phase 36): plus the rest of the family. The fields above are the dragon that is
  *   out in the den; `family` holds the others, each with its own needs, growth and outfit.
+ * - Version 13 (phase 37): a family member can be `visiting` the den as a friend.
  */
-export interface SaveV12 {
-  version: 12;
+export interface SaveV13 {
+  version: 13;
   /** When this was saved (milliseconds since 1970). */
   savedAt: number;
   /** Its id number. A wild dragon's genes were first made from it. */
@@ -49,11 +50,11 @@ export interface SaveV12 {
   /** The dragon in the den is a newly adopted egg that hasn't hatched yet. */
   egg: boolean;
 }
-export type Save = SaveV12;
+export type Save = SaveV13;
 
 export function newSave(seed: number, now: number): Save {
   return {
-    version: 12,
+    version: 13,
     savedAt: now,
     family: [],
     egg: false,
@@ -84,7 +85,7 @@ export function makeSave(
   egg = false,
 ): Save {
   return {
-    version: 12,
+    version: 13,
     savedAt: now,
     family,
     egg,
@@ -154,7 +155,7 @@ export function parseSave(raw: unknown, now: number): Save | null {
   // Versions 1–11 had one dragon: no other family yet.
   const family = r.version >= 12 ? parseFamily(r.family, wardrobe.owned, now) : [];
   return {
-    version: 12,
+    version: 13,
     family,
     egg: r.version >= 12 && r.egg === true,
     savedAt,

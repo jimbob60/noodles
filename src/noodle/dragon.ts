@@ -116,6 +116,8 @@ export class Dragon {
   private thinkLeft = 0;
   private thinkClock = 0;
   private bits: Bit[] = [];
+  /** Seconds left of cuddling up to a friend: happy shut eyes, a smile and rosy cheeks. */
+  cuddle = 0;
   /** How it looks (from its genes). */
   readonly look: DragonLook;
   /** How it behaves (from its personality genes). */
@@ -296,6 +298,34 @@ export class Dragon {
     });
   }
 
+  /** A little burst of hearts above its head (for a friend, a nuzzle, a tag). */
+  hearts(n: number): void {
+    const h = this.spine.head;
+    const u = this.halfWidth;
+    for (let i = 0; i < n; i++) {
+      this.bits.push({
+        kind: "heart",
+        x: h.x + (Math.random() - 0.5) * u * 2,
+        y: h.y - this.headRadius,
+        vx: (Math.random() - 0.5) * u * 3,
+        vy: -u * (2 + Math.random() * 2),
+        age: 0,
+        life: 1.1,
+        color: "#ff8ad8",
+      });
+    }
+  }
+
+  /** The tip of its tail (what a friend chases). */
+  get tail(): Point {
+    return this.spine.points[this.spine.points.length - 1];
+  }
+
+  /** Free to play with a friend: awake, out of bed, not mid-loop and not being petted. */
+  get canPlay(): boolean {
+    return !this.asleep && !this.brain.inBed && this.exciteLeft === 0 && !this.pet.active;
+  }
+
   /** Giggle! Laughing mouth and a squirm. */
   giggle(): void {
     this.face.chewLeft = CHEW_TIME;
@@ -363,7 +393,7 @@ export class Dragon {
           : this.temper.droop;
     f.droop += (droopTo - f.droop) * (1 - Math.exp(-3 * dt));
     f.mouthShape =
-      m === "happy" || this.exciteLeft > 0
+      m === "happy" || this.exciteLeft > 0 || this.cuddle > 0
         ? "smile"
         : m === "hungry" || m === "lonely"
           ? "pout"
@@ -649,7 +679,15 @@ export class Dragon {
       !this.pet.active &&
       Math.hypot(input.x - head.x, input.y - head.y) < this.headRadius * 6;
     this.shyHiding = near && this.shyness > 0.15 && !this.asleep;
-    const blushTo = this.shyHiding ? this.shyness : this.pet.active ? this.shyness * 0.6 : 0;
+    this.cuddle = Math.max(0, this.cuddle - dt);
+    const blushTo =
+      this.cuddle > 0
+        ? 0.8
+        : this.shyHiding
+          ? this.shyness
+          : this.pet.active
+            ? this.shyness * 0.6
+            : 0;
     this.face.blush += (blushTo - this.face.blush) * (1 - Math.exp(-4 * dt));
     const target = this.shyHiding
       ? { x: head.x + (head.x - input.x), y: head.y + (head.y - input.y) * 0.3 }
@@ -662,7 +700,9 @@ export class Dragon {
             : { x: head.x + (head.x - neck.x) * 6, y: head.y + (head.y - neck.y) * 6 };
     this.face.asleep = this.asleep;
     this.face.happy =
-      (this.pet.active && (this.pet.purr > 0.3 || this.pet.giggle > 0)) || this.exciteLeft > 0;
+      (this.pet.active && (this.pet.purr > 0.3 || this.pet.giggle > 0)) ||
+      this.exciteLeft > 0 ||
+      this.cuddle > 0;
     this.face.update(dt, head, neck, target, this.halfWidth * 6);
     updateLegs(this.legs, this.spine.points, this.sizes, dt);
     this.whiskers.update(dt, head, this.headRadius, this.face);

@@ -26,6 +26,8 @@ export interface FamilyMember {
   seenAt: number;
   /** Still an egg: adopted but not hatched yet. */
   egg: boolean;
+  /** Out in the den as a friend, playing alongside the dragon you're caring for. */
+  visiting: boolean;
 }
 
 /** A freshly adopted egg. */
@@ -39,6 +41,7 @@ export function newEgg(seed: number, now: number): FamilyMember {
     worn: {},
     seenAt: now,
     egg: true,
+    visiting: false,
   };
 }
 
@@ -104,6 +107,8 @@ export function parseFamily(raw: unknown, owned: readonly string[], now: number)
       worn: parseWorn(item.worn, owned),
       seenAt,
       egg: item.egg === true,
+      // Only one friend visits at a time.
+      visiting: item.visiting === true && item.egg !== true && !out.some((m) => m.visiting),
     });
     if (out.length >= MAX_FAMILY - 1) break;
   }

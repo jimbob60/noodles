@@ -9,7 +9,8 @@ export type CoinReason =
   | "rested"
   | "hello"
   | "catch"
-  | "grewUp";
+  | "grewUp"
+  | "friends";
 
 /** Coins for each kind of care. */
 export const REWARD: Record<CoinReason, number> = {
@@ -25,6 +26,8 @@ export const REWARD: Record<CoinReason, number> = {
   catch: 0,
   /** A birthday-style gift each time it reaches a new life stage. */
   grewUp: 25,
+  /** Two dragons had a lovely time together (a nuzzle, a chase, a tangle). */
+  friends: 2,
 };
 
 /** After this many coins in a day, everyday care pays half (rounded up), so there's no grinding. */

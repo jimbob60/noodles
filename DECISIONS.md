@@ -2,6 +2,15 @@
 
 Newest first. Each entry says what we decided, why, and what it affects.
 
+## 2026-11-12: Dragon friends — nuzzles, chases and the odd tangle; save version 13
+
+- **Decision:** one family member can be in the den as a **friend** while you care for another. In the family card each dragon at home has **🤝 Invite over** / **🏠 Send home** (one friend at a time), and **Care for** swaps which one you look after; the one stepping aside stays as the friend by default, and when a new egg hatches the older dragon is there to meet the baby. The friend is a full dragon: its own looks, outfit, personality and moods (its thought bubbles hint when it wants care), wandering and napping by itself. It can't be fed or petted directly: tap **Care for** to swap.
+- **Playing together** (`src/noodle/friends.ts`): every 7–16 seconds, if both are free, they get together. Half the time they swim up for a **nose-to-nose nuzzle** (happy shut eyes, rosy cheeks, hearts; 2.8 s). Otherwise they play **chase** for 7 s: "it" goes for the other's tail, the other dashes for a far corner, and halfway they swap so both get a turn. Nearly half of the chases that end close together turn into a **tangle**: 3.2 s circling each other in a knot, then a giggle and they pop free. Each gives both dragons Love (nuzzle 4, chase 3, tangle 2) and pays 2 coins.
+- **Your finger always wins:** the friendship only steers a dragon that is free (awake, out of bed, not held, fed, petted, bathed or in a mini-game), using the same gentle pull as food; the moment either gets busy they simply part. A napping friend is left asleep. At bedtime the friend curls up beside the cushion; both wake together. In photo mode the friend is in the picture and holds still and makes the same face.
+- **Save version 13:** a family member has `visiting`. The friend's needs and growth tick along in the den like the main dragon's.
+- **Why:** phase 37 ("two dragons together are cute").
+- **Affects:** phase 38 (breeding: two grown friends could make an egg), phase 42 (the Love and coin amounts), phase 48 (speed with two dragons on the tablet).
+
 ## 2026-11-12: Several dragons — a family of up to four; save version 12
 
 - **Decision:** a 💕 family button (seventh in the top-right stack, with a little count) opens the family card: every dragon with its portrait (hat and all), stage, whether it's asleep in bed, and its own four need bars. **Visit** swaps which dragon is out in the den; only one is out at a time for now (phase 37 brings them together). **Adopt an egg** costs 150 coins (a first guess; balance in phase 42), up to four dragons: a 🎁 surprise egg, or one of your ♥ favorites from the 50-dragon gallery. The dragon in the den steps aside and the egg appears to be warmed, hatched and named; the family button still works while an egg waits, so you can go back to the others first.
