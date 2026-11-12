@@ -179,10 +179,10 @@ const tiles = await p.$$("#closet-panel [data-accessory]");
 await p.click('[data-accessory="crown"]');
 await step(100);
 check(
-  tiles.length === 29 &&
+  tiles.length === 30 &&
     (await num("coins")) === coinsBeforeCloset &&
     (await data("outfit")) === "",
-  `the closet opens with 29 accessories, and won't sell a crown for 80 with ${coinsBeforeCloset} coins`,
+  `the closet opens with 30 accessories, and won't sell a crown for 80 with ${coinsBeforeCloset} coins`,
 );
 await p.click("#closet-panel >> text=✕");
 await step(200);

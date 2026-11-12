@@ -80,6 +80,7 @@ const ICON: Record<AccessoryId, string> = {
   cape: "🦸",
   butterflyWings: "🦋",
   fairyWings: "🧚",
+  dragonWings: "🐲",
   tailBow: "🎀",
   tailFlower: "🌼",
   tailBell: "🔔",

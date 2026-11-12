@@ -767,6 +767,100 @@ export function drawBackWear(
       ctx.restore();
     }
     ctx.restore();
+  } else if (worn.id === "dragonWings") {
+    // Real dragon wings: a bony arm up to a clawed wrist, fingers fanning back from it, and a
+    // scalloped membrane stretched between them. Big, slow, strong flaps.
+    const L = hw * 3.3;
+    const beat = Math.sin(time * 3.2);
+    ctx.save();
+    ctx.translate(top.x, top.y);
+    // The body's own frame: x runs back toward the tail, y runs up off the back.
+    ctx.transform(-q.f.x, -q.f.y, up.x, up.y, 0, 0);
+    for (const far of [true, false]) {
+      ctx.save();
+      if (far) ctx.translate(L * 0.16, L * 0.05);
+      // A flap is a swing up and back plus a little stretch, not a squash.
+      ctx.rotate(-0.18 * beat + (far ? 0.12 : 0));
+      ctx.scale(1, (0.9 + 0.14 * beat) * (far ? 0.92 : 1));
+      const wrist = { x: -L * 0.12, y: L * 1.05 };
+      const tips = [
+        { x: L * 0.32, y: L * 1.3 },
+        { x: L * 0.78, y: L * 1.08 },
+        { x: L * 1.08, y: L * 0.62 },
+      ];
+      const root = { x: L * 0.7, y: 0 };
+      // The membrane, its trailing edge scalloped between the finger tips.
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(wrist.x, wrist.y);
+      ctx.lineTo(tips[0].x, tips[0].y);
+      const edge = [...tips, root];
+      for (let k = 1; k < edge.length; k++) {
+        const a = edge[k - 1];
+        const b = edge[k];
+        const mx = (a.x + b.x) / 2;
+        const my = (a.y + b.y) / 2;
+        ctx.quadraticCurveTo(mx + (wrist.x - mx) * 0.28, my + (wrist.y - my) * 0.28, b.x, b.y);
+      }
+      ctx.closePath();
+      ctx.globalAlpha = 0.93;
+      ctx.fillStyle = far ? tint(c, -0.3) : c;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      ctx.strokeStyle = INK;
+      ctx.lineWidth = Math.max(1.2, hw * 0.07);
+      ctx.stroke();
+      // A soft lighter glow on the membrane near the arm.
+      if (!far) {
+        ctx.save();
+        ctx.clip();
+        ctx.beginPath();
+        ctx.ellipse(L * 0.2, L * 0.65, L * 0.35, L * 0.22, -0.5, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(255,255,255,0.18)";
+        ctx.fill();
+        ctx.restore();
+      }
+      // The bones: the arm, then a finger to each tip.
+      const bone = far ? tint(c, -0.6) : tint(c, -0.45);
+      ctx.strokeStyle = bone;
+      ctx.lineCap = "round";
+      ctx.lineWidth = L * 0.07;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.quadraticCurveTo(-L * 0.18, L * 0.45, wrist.x, wrist.y);
+      ctx.stroke();
+      ctx.lineWidth = L * 0.04;
+      for (const t of tips) {
+        ctx.beginPath();
+        ctx.moveTo(wrist.x, wrist.y);
+        ctx.quadraticCurveTo((wrist.x + t.x) / 2, (wrist.y + t.y) / 2 + L * 0.06, t.x, t.y);
+        ctx.stroke();
+      }
+      // A little claw on the wrist.
+      ctx.beginPath();
+      ctx.moveTo(wrist.x - L * 0.04, wrist.y - L * 0.02);
+      ctx.quadraticCurveTo(
+        wrist.x - L * 0.18,
+        wrist.y + L * 0.06,
+        wrist.x - L * 0.16,
+        wrist.y + L * 0.16,
+      );
+      ctx.quadraticCurveTo(
+        wrist.x - L * 0.06,
+        wrist.y + L * 0.08,
+        wrist.x + L * 0.04,
+        wrist.y + L * 0.02,
+      );
+      ctx.closePath();
+      ctx.fillStyle = "#fff1c9";
+      ctx.fill();
+      ctx.strokeStyle = INK;
+      ctx.lineWidth = Math.max(1, hw * 0.05);
+      ctx.stroke();
+      dot(ctx, wrist.x, wrist.y, L * 0.05, bone);
+      ctx.restore();
+    }
+    ctx.restore();
   } else if (worn.id === "cape") {
     // A cape tied at the neck, streaming back over the body and fluttering at the hem.
     const from = Math.max(1, neck);

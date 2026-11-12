@@ -28,6 +28,7 @@ export const ACCESSORIES = [
   { id: "cape", slot: "back", name: "Hero cape", cost: 70 },
   { id: "butterflyWings", slot: "back", name: "Butterfly wings", cost: 85 },
   { id: "fairyWings", slot: "back", name: "Fairy wings", cost: 90 },
+  { id: "dragonWings", slot: "back", name: "Dragon wings", cost: 100 },
   { id: "tailBow", slot: "tail", name: "Tail bow", cost: 30 },
   { id: "tailFlower", slot: "tail", name: "Tail flower", cost: 35 },
   { id: "tailBell", slot: "tail", name: "Tail bell", cost: 35 },

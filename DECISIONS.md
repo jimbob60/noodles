@@ -2,6 +2,12 @@
 
 Newest first. Each entry says what we decided, why, and what it affects.
 
+## 2026-11-12: Dragon wings
+
+- **Decision:** "obviously" (Jacob) dragons need dragon wings: a new back accessory, the dearest at 100 coins. Drawn in the body's own frame like the other wings: a bony arm rising to a little clawed wrist, three finger bones fanning back from it, and a scalloped membrane stretched between them in the chosen color, with a soft sheen; a darker far wing sits just behind. They flap slowly and strongly (a swing up and back with a little stretch, not a squash), and are sized from the body, so a baby gets little wings. 30 accessories in all.
+- **Why:** Jacob asked.
+- **Affects:** phase 42 (prices); a "flying" pose could use them later.
+
 ## 2026-11-12: The head grows up too
 
 - **Decision:** the head used to stay the same size from baby to grown-up (its "big baby head" bonus shrank exactly as the body thickened), so grown-ups risked looking like small heads on big necks. Now the head grows too, just slower than the body: from 82% to 108% of a grown body's half-width × 1.3, about a third bigger by the time it's grown. A baby's head is still a little big for its slim body (cute), and a grown-up's head is a touch bigger than before. Hats and neck things follow, since they're sized from the head.
