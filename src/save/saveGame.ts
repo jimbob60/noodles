@@ -5,9 +5,10 @@ import { emptyStash, parseStash, type Stash } from "../care/shop";
 import { freshGrowth, parseGrowth, type Growth } from "../care/growth";
 import { genesFromSeed, parseGenes, type Genes } from "../noodle/genes";
 import { parseIdentity, type Identity } from "../care/identity";
+import { emptyWardrobe, parseWardrobe, type Wardrobe } from "../care/wardrobe";
 
 /** The save format version. Bump it (and add a migration below) whenever the format changes. */
-export const SAVE_VERSION = 10;
+export const SAVE_VERSION = 11;
 
 /**
  * Everything that makes your dragon yours.
@@ -21,9 +22,10 @@ export const SAVE_VERSION = 10;
  * - Version 8 (phase 29): plus how grown up it is (hours of good care).
  * - Version 9 (phase 30): plus its genes (everything that makes it itself).
  * - Version 10 (phase 32): plus its name and birthday.
+ * - Version 11 (phase 33): plus its accessories (bought, and what it's wearing).
  */
-export interface SaveV10 {
-  version: 10;
+export interface SaveV11 {
+  version: 11;
   /** When this was saved (milliseconds since 1970). */
   savedAt: number;
   /** Its id number. A wild dragon's genes were first made from it. */
@@ -32,21 +34,24 @@ export interface SaveV10 {
   genes: Genes;
   /** Its name and when it hatched. */
   identity: Identity;
+  /** Accessories bought, and what it's wearing. */
+  wardrobe: Wardrobe;
   needs: NeedsState;
   decor: DecorItem[];
   wallet: Wallet;
   stash: Stash;
   growth: Growth;
 }
-export type Save = SaveV10;
+export type Save = SaveV11;
 
 export function newSave(seed: number, now: number): Save {
   return {
-    version: 10,
+    version: 11,
     savedAt: now,
     seed,
     genes: genesFromSeed(seed),
     identity: parseIdentity(null, seed, now),
+    wardrobe: emptyWardrobe(),
     needs: freshNeeds(now),
     decor: [],
     wallet: emptyWallet(),
@@ -65,8 +70,21 @@ export function makeSave(
   growth: Growth = freshGrowth(),
   genes: Genes = genesFromSeed(seed),
   identity: Identity = parseIdentity(null, seed, now),
+  wardrobe: Wardrobe = emptyWardrobe(),
 ): Save {
-  return { version: 10, savedAt: now, seed, genes, identity, needs, decor, wallet, stash, growth };
+  return {
+    version: 11,
+    savedAt: now,
+    seed,
+    genes,
+    identity,
+    wardrobe,
+    needs,
+    decor,
+    wallet,
+    stash,
+    growth,
+  };
 }
 
 const validSeed = (v: unknown): v is number =>
@@ -89,6 +107,7 @@ export function parseSave(raw: unknown, now: number): Save | null {
     growth?: unknown;
     genes?: unknown;
     identity?: unknown;
+    wardrobe?: unknown;
   };
   if (typeof r.version !== "number" || r.version < 1 || !validSeed(r.seed)) return null;
   const savedAt = typeof r.savedAt === "number" && r.savedAt <= now ? r.savedAt : now;
@@ -115,12 +134,15 @@ export function parseSave(raw: unknown, now: number): Save | null {
     r.seed,
     savedAt - growth.hours * 3_600_000,
   );
+  // Versions 1–10 had no accessories: an empty closet.
+  const wardrobe = r.version >= 11 ? parseWardrobe(r.wardrobe) : emptyWardrobe();
   return {
-    version: 10,
+    version: 11,
     savedAt,
     seed: r.seed,
     genes,
     identity,
+    wardrobe,
     needs: parseNeeds(r.needs, now),
     decor,
     wallet,

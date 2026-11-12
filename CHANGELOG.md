@@ -2,6 +2,7 @@
 
 Newest first. One line per finished phase.
 
+- **Phase 32 — Name and profile (a83775d, 2026-11-12):** name your dragon when it hatches; a profile card with its portrait, hatch day, age, stage, personality meters, favorite food and special looks.
 - **Phase 31 — Personalities (8b7586e, 2026-11-10):** playful dragons do zoomies, sleepy ones nap and yawn, greedy ones beg for snacks, shy ones blush and keep their distance.
 - **Phase 30 — Genes (4d59822, 52039b3, 2026-11-10):** 31 genes make each dragon: colors, horns, mane, whiskers, size, eyes, snout, marks, frills, ridge, tail, teeth (some with lots of sharp teeth) and personality. Same genes, same dragon.
 - **Phase 29 — Growing up (cfb1d43, 2026-11-10):** baby, kid, teen and grown-up over about four days of good care; the noodle gets longer and its horns grow in. Also: buttons fit a phone on its side, and scales on the head.

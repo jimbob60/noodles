@@ -2,6 +2,8 @@ import { rimOf } from "./drawBody";
 import type { Face } from "./face";
 import { CLASSIC_LOOK, hsl, shade, type DragonLook, type Hsl } from "./look";
 import type { Point } from "./spine";
+import { drawHeadWear } from "./accessories";
+import type { Worn } from "../care/wardrobe";
 
 export interface HeadColors {
   head: string;
@@ -74,6 +76,9 @@ export function drawHead(
   c = headColors(CLASSIC_LOOK),
   /** How grown up, 0 to 1: babies have little nub horns and a short mane. */
   grown = 1,
+  /** A hat (or crown) it's wearing. */
+  hat?: Worn,
+  time = 0,
 ): void {
   const hornSize = (0.45 + 0.55 * grown) * c.hornLength;
   const maneSize = (0.6 + 0.4 * grown) * c.maneLength;
@@ -384,6 +389,7 @@ export function drawHead(
     face.droop,
     face.pleading,
   );
+  if (hat) drawHeadWear(ctx, r, hat, time);
 
   ctx.restore();
 }

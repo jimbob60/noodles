@@ -14,6 +14,8 @@ import { legSizes, makeLegs, updateLegs, type Leg, type LegSizes } from "./legs"
 import { hsl, type DragonLook } from "./look";
 import { CLASSIC_GENES, type Genes } from "./genes";
 import { temperOf, type Temper } from "./personality";
+import { drawBodyWear } from "./accessories";
+import type { Wardrobe } from "../care/wardrobe";
 import { Spine, type Point } from "./spine";
 import { Swimmer } from "./swimmer";
 import { headToWorld, Whiskers } from "./whiskers";
@@ -130,6 +132,8 @@ export class Dragon {
   private trustLeft = 0;
   /** Shy: the finger is close and it's hiding its face. */
   private shyHiding = false;
+  /** What it's wearing (hat, neck and tail accessories). */
+  outfit: Wardrobe["worn"] = {};
   /** How grown up, 0 (just hatched) to 1 (grown). Change it with setGrowth. */
   growth = 1;
   /** The spine spacing for a grown dragon on this screen. */
@@ -689,6 +693,7 @@ export class Dragon {
     if (this.grime > 0) this.drawGrime(ctx, hw);
     drawTailTuft(ctx, this.spine.points, hw, this.asleep ? this.time * 0.3 : this.time, this.look);
     // Whiskers before the head, so they hang out from under the snout instead of over the eyes.
+    drawBodyWear(ctx, this.spine.points, hw, this.outfit, this.time, this.headRadius);
     drawWhiskers(ctx, this.whiskers, hw, this.look);
     drawHead(
       ctx,
@@ -697,6 +702,8 @@ export class Dragon {
       this.face,
       this.headPalette,
       this.growth,
+      this.outfit.head,
+      this.time,
     );
     if (purr > 0.25) this.drawPurr(ctx, purr);
     if (this.asleep) this.drawSnoreBubble(ctx);

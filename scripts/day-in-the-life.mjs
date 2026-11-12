@@ -64,7 +64,7 @@ const line = (a, b, n = 10) =>
     x: a.x + ((b.x - a.x) * (i + 1)) / n,
     y: a.y + ((b.y - a.y) * (i + 1)) / n,
   }));
-const topButton = (i) => ({ x: W - 32, y: 44 + i * 46 + 18 }); // 0 backup, 1 decorate, 2 shop, 3 game
+const topButton = (i) => ({ x: W - 32, y: 44 + i * 46 + 18 }); // 0 backup, 1 decorate, 2 shop, 3 game, 4 closet
 const foodSlot = (i) => ({ x: 14 + R + i * (2 * R + GAP), y: H - 14 - R });
 const ball = { x: W - 14 - R, y: H - 14 - R };
 const sponge = { x: W - 14 - R - (2 * R + GAP), y: H - 14 - R - (2 * R + GAP) };
@@ -169,6 +169,23 @@ await p.click("#shop-panel >> text=Paper lantern >> xpath=.. >> button");
 await p.click("#shop-panel >> text=✕");
 await step(200);
 check((await num("coins")) === coinsBefore - 10, "the shop sells a lantern for 10 coins");
+
+// Dressing up: the closet (the fifth corner button). A new dragon can't afford much yet,
+// so check it won't sell what you can't pay for.
+const coinsBeforeCloset = await num("coins");
+await tap(topButton(4).x, topButton(4).y);
+await p.waitForSelector("#closet-panel");
+const tiles = await p.$$("#closet-panel [data-accessory]");
+await p.click('[data-accessory="crown"]');
+await step(100);
+check(
+  tiles.length === 12 &&
+    (await num("coins")) === coinsBeforeCloset &&
+    (await data("outfit")) === "",
+  `the closet opens with 12 accessories, and won't sell a crown for 80 with ${coinsBeforeCloset} coins`,
+);
+await p.click("#closet-panel >> text=✕");
+await step(200);
 
 // Decorating: place it in the den.
 await tap(topButton(1).x, topButton(1).y);

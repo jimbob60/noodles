@@ -1,4 +1,25 @@
 import { mainTrait, TRAIT_LABEL } from "./noodle/personality";
+import { ACCESSORIES, ACCESSORY_COLORS, type Wardrobe } from "./care/wardrobe";
+import { seededRandom } from "./noodle/look";
+
+/** A random outfit for a gallery dragon, to show dressing up works on any dragon. */
+function dressUp(seed: number): Wardrobe["worn"] {
+  const r = seededRandom(seed ^ 0xd2e55);
+  const worn: Wardrobe["worn"] = {};
+  for (const [slot, chance] of [
+    ["head", 0.6],
+    ["neck", 0.5],
+    ["tail", 0.4],
+  ] as const) {
+    const options = ACCESSORIES.filter((a) => a.slot === slot);
+    if (r() < chance)
+      worn[slot] = {
+        id: options[Math.floor(r() * options.length)].id,
+        color: Math.floor(r() * ACCESSORY_COLORS.length),
+      };
+  }
+  return worn;
+}
 import type { PointerState } from "./engine/input";
 import type { Screen } from "./engine/screen";
 import { Dragon } from "./noodle/dragon";
@@ -46,6 +67,7 @@ export class Gallery {
       const seed = seeds?.[i] ?? Math.floor(Math.random() * 1e9);
       const world = { width: w, height: h, unit: segment };
       const dragon = new Dragon(cx, cy, segment, world, genesFromSeed(seed));
+      dragon.outfit = dressUp(seed);
       return { dragon, cx, cy, cw, ch, phase: i * 0.7, lead: { x: cx, y: cy, down: true } };
     });
   }

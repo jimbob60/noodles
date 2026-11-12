@@ -5,6 +5,8 @@ import { freshGrowth, grow, growAway, growthShare, stageOf, type Growth } from "
 import { drawGrowthBadge, drawStageBanner, onGrowthBadge, stageMessage } from "./ui/growthBadge";
 import { newIdentity, type Identity } from "./care/identity";
 import { openNamePanel, openProfile } from "./ui/profilePanel";
+import { emptyWardrobe, type Wardrobe } from "./care/wardrobe";
+import { drawClosetButton, onClosetButton, openCloset } from "./ui/closetPanel";
 import { decodeBackup, encodeBackup, makeSave, type Save } from "./save/saveGame";
 import { drawBackupButton, onBackupButton, openBackupPanel } from "./ui/backupPanel";
 import { Input } from "./engine/input";
@@ -94,7 +96,17 @@ async function main(): Promise<void> {
     d.setGrowth(growthShare(growth));
     return d;
   };
+  /** Accessories bought, and what it's wearing (saved with it). */
+  let wardrobe: Wardrobe = loaded.save?.wardrobe ?? emptyWardrobe();
   let dragon = makeDragon();
+  const dress = () => {
+    dragon.outfit = wardrobe.worn;
+    const worn = Object.values(wardrobe.worn)
+      .map((w) => w.id)
+      .join(",");
+    if (document.body.dataset.outfit !== worn) document.body.dataset.outfit = worn;
+  };
+  dress();
   /** The den's decorations (saved with the dragon). */
   let decor: DecorItem[] = loaded.save?.decor ?? [];
   const decorator = new Decorator();
@@ -145,7 +157,7 @@ async function main(): Promise<void> {
     if (mode === "play" && !egg && !newPlayerEgg)
       storeGame(
         store,
-        makeSave(seed, needs, Date.now(), decor, wallet, stash, growth, genes, identity),
+        makeSave(seed, needs, Date.now(), decor, wallet, stash, growth, genes, identity, wardrobe),
       );
   };
   window.addEventListener("pagehide", persist);
@@ -209,7 +221,9 @@ async function main(): Promise<void> {
     genes = save.genes;
     identity = save.identity;
     showName();
+    wardrobe = save.wardrobe;
     dragon = makeDragon();
+    dress();
     needs = fromSave(save);
     decor = save.decor;
     wallet = save.wallet;
@@ -226,7 +240,7 @@ async function main(): Promise<void> {
     persist();
     openBackupPanel(
       encodeBackup(
-        makeSave(seed, needs, Date.now(), decor, wallet, stash, growth, genes, identity),
+        makeSave(seed, needs, Date.now(), decor, wallet, stash, growth, genes, identity, wardrobe),
       ),
       restore,
       store !== null,
@@ -318,6 +332,29 @@ async function main(): Promise<void> {
           return { wallet, stash };
         });
       }
+      // The closet (🎀): buy accessories, dress up, change colors.
+      if (
+        pressAt &&
+        !swallowing &&
+        mode === "play" &&
+        !catchGame &&
+        !decorator.active &&
+        onClosetButton(pressAt, screen.width, screen.height)
+      ) {
+        swallowing = true;
+        openCloset({
+          wardrobe,
+          wallet,
+          genes,
+          growthShare: dragon.growth,
+          onChange: (w, money) => {
+            wardrobe = w;
+            wallet = money;
+            dress();
+            persist();
+          },
+        });
+      }
       // The name badge under the coins opens the dragon's profile card.
       if (pressAt && !swallowing && mode === "play" && !catchGame && onGrowthBadge(pressAt)) {
         swallowing = true;
@@ -326,6 +363,7 @@ async function main(): Promise<void> {
           genes,
           growth,
           growthShare: dragon.growth,
+          hat: wardrobe.worn.head,
           now: Date.now(),
           onRename: rename,
         });
@@ -404,6 +442,7 @@ async function main(): Promise<void> {
         if (r.hatched) {
           // Out pops the dragon, right where the egg was, thrilled to meet you.
           dragon = new Dragon(at.x, at.y, segmentFor(screen), world(), genes);
+          dress();
           // A new player's dragon hatches as a baby (the hatch test mode replays yours as one).
           if (mode === "play") growth = freshGrowth();
           dragon.setGrowth(0);
@@ -665,6 +704,7 @@ async function main(): Promise<void> {
             );
             if (!decorator.active) drawShopButton(ctx, screen.width, screen.height);
             if (!decorator.active && !catchGame) drawGameButton(ctx, screen.width, screen.height);
+            if (!decorator.active && !catchGame) drawClosetButton(ctx, screen.width, screen.height);
           }
           if (catchGame) {
             drawCatchHud(

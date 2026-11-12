@@ -13,6 +13,7 @@ import { Face } from "../noodle/face";
 import { TRAITS, type Genes } from "../noodle/genes";
 import { mainTrait, TRAIT_LABEL } from "../noodle/personality";
 import { towardNext } from "./growthBadge";
+import type { Worn } from "../care/wardrobe";
 
 const css = (el: HTMLElement, style: Partial<CSSStyleDeclaration>) =>
   Object.assign(el.style, style);
@@ -200,6 +201,8 @@ export function openProfile(info: {
   genes: Genes;
   growth: Growth;
   growthShare: number;
+  /** The hat it's wearing, for the portrait. */
+  hat?: Worn;
   now: number;
   onRename: (name: string) => void;
 }): void {
@@ -258,7 +261,7 @@ export function openProfile(info: {
     pc.scale(dpr, dpr);
     const face = new Face(() => 0.5);
     face.mouthShape = "smile";
-    drawHead(pc, { x: W * 0.46, y: H * 0.56 }, 54, face, headColors(g), info.growthShare);
+    drawHead(pc, { x: W * 0.46, y: H * 0.6 }, 50, face, headColors(g), info.growthShare, info.hat);
   }
 
   const line = (text: string) => el("div", { margin: "6px 0" }, text);
