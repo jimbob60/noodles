@@ -64,7 +64,7 @@ const line = (a, b, n = 10) =>
     x: a.x + ((b.x - a.x) * (i + 1)) / n,
     y: a.y + ((b.y - a.y) * (i + 1)) / n,
   }));
-const topButton = (i) => ({ x: W - 32, y: 44 + i * 46 + 18 }); // 0 backup, 1 decorate, 2 shop, 3 game, 4 closet, 5 camera
+const topButton = (i) => ({ x: W - 32, y: 44 + i * 46 + 18 }); // 0 backup, 1 decorate, 2 shop, 3 game, 4 closet, 5 camera, 6 family
 const foodSlot = (i) => ({ x: 14 + R + i * (2 * R + GAP), y: H - 14 - R });
 const ball = { x: W - 14 - R, y: H - 14 - R };
 const sponge = { x: W - 14 - R - (2 * R + GAP), y: H - 14 - R - (2 * R + GAP) };
@@ -209,6 +209,19 @@ await p.click('#photo-bar [aria-label="Done"]');
 await step(200);
 check((await data("photo")) === "off", "leaving photo mode brings the buttons back");
 
+// The family (the seventh corner button): just Biscuit so far, and an egg costs more coins
+// than a brand-new player has.
+await tap(topButton(6).x, topButton(6).y);
+await p.waitForSelector("#family-panel");
+check(
+  (await p.$$("#family-panel [data-member]")).length === 1 &&
+    (await p.textContent('#family-panel [data-member="0"]')).includes("Biscuit") &&
+    (await p.isDisabled("#adopt-surprise")),
+  "the family card shows Biscuit, and an egg can't be adopted without enough coins",
+);
+await p.click("#family-panel >> text=✕");
+await step(200);
+
 // Decorating: place it in the den.
 await tap(topButton(1).x, topButton(1).y);
 const slotY = 112 + Math.max(22, Math.min(30, 800 * 0.04)) * 1.4;
@@ -290,6 +303,7 @@ check(
   "same dragon after reopening (still called Biscuit)",
 );
 check(JSON.stringify(morning.decor) === JSON.stringify(evening.decor), "decorations kept");
+check(morning.version >= 12 && morning.family.length === 0, "still a family of one");
 check(morning.wallet.coins === evening.wallet.coins, `coins kept (${morning.wallet.coins})`);
 check(
   morning.stash.bestCatch === evening.stash.bestCatch,

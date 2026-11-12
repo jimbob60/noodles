@@ -7,9 +7,9 @@ export function trayRadius(width: number, height: number): number {
 
 /**
  * How many small buttons stack down the top-right corner (backup, decorate, shop, game, closet,
- * camera).
+ * camera, family).
  */
-export const CORNER_BUTTONS = 6;
+export const CORNER_BUTTONS = 7;
 /** Where the stack starts: just under the build tag. */
 const CORNER_TOP = 44;
 

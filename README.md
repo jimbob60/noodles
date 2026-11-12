@@ -45,4 +45,5 @@ The screenshot step needs Playwright with Chromium installed on the machine; it 
 | B. The Noodle         | 6–12   | Done        |
 | C. Pet care           | 13–20  | Done        |
 | D. Home and world     | 21–27  | Done        |
-| E. Growth and variety | 28–35  | In progress |
+| E. Growth and variety | 28–35  | Done        |
+| F. Collection         | 36–42  | In progress |

@@ -2,6 +2,15 @@
 
 Newest first. Each entry says what we decided, why, and what it affects.
 
+## 2026-11-12: Several dragons — a family of up to four; save version 12
+
+- **Decision:** a 💕 family button (seventh in the top-right stack, with a little count) opens the family card: every dragon with its portrait (hat and all), stage, whether it's asleep in bed, and its own four need bars. **Visit** swaps which dragon is out in the den; only one is out at a time for now (phase 37 brings them together). **Adopt an egg** costs 150 coins (a first guess; balance in phase 42), up to four dragons: a 🎁 surprise egg, or one of your ♥ favorites from the 50-dragon gallery. The dragon in the den steps aside and the egg appears to be warmed, hatched and named; the family button still works while an egg waits, so you can go back to the others first.
+- **What's each dragon's own, and what's shared:** each keeps its own genes, name, birthday, needs, bedtime, growth and outfit. The family shares the coins, the den and its decorations, the pantry, the toys and the closet of bought accessories (so one hat can be passed around; each dragon's outfit is remembered).
+- **While a dragon is at home out of sight** its needs follow the real clock exactly as if the game had been closed: gently, capped at 12 hours, never below 15, asleep if it was tucked in; and it keeps growing if it was left well cared for. This is worked out when it comes back out (the family card shows where it stands now). Nobody is ever harmed by not being picked.
+- **Save version 12** adds `family` (the other dragons) and `egg` (the one in the den is an unhatched adopted egg). The top-level fields stay the dragon in the den, so older saves load as a family of one. Buttons no longer react while an egg is on screen (they were hidden but still tappable for a new player).
+- **Why:** phase 36 ("each keeps its own needs and save").
+- **Affects:** phase 37 (friends together in the den), phase 38 (breeding makes eggs too), phase 42 (the egg price).
+
 ## 2026-11-12: The 50-dragon test, and a look back over the plan
 
 - **Look back (Jacob asked, before phase 35):** every ticked phase (1–34) was checked against the plan. All "done when" lines are met. Known, already-agreed differences: the repo is `noodles` (not `noodle-dragons`); the preview page is now public (anyone with the link) instead of private; Noodle Catch lasts 45 seconds; prices are first guesses until the balance gate (phase 42). Old saves from versions 1, 2, 4, 7 and 9, a broken save and a save from a "future" version were loaded into the real game at tablet, phone and sideways-phone sizes, and the fast, gallery and hatch test modes were opened: no errors, and test modes never overwrite the real save. Fixed on the way: stale README lines, this log's order (newest first again), and a stale comment. Worth knowing: all 86 commits are on the branch `claude/hopeful-planck-61yapb`; `main` still only has the first commit until Jacob wants a pull request.

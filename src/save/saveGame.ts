@@ -6,9 +6,10 @@ import { freshGrowth, parseGrowth, type Growth } from "../care/growth";
 import { genesFromSeed, parseGenes, type Genes } from "../noodle/genes";
 import { parseIdentity, type Identity } from "../care/identity";
 import { emptyWardrobe, parseWardrobe, type Wardrobe } from "../care/wardrobe";
+import { parseFamily, type FamilyMember } from "../care/family";
 
 /** The save format version. Bump it (and add a migration below) whenever the format changes. */
-export const SAVE_VERSION = 11;
+export const SAVE_VERSION = 12;
 
 /**
  * Everything that makes your dragon yours.
@@ -23,9 +24,11 @@ export const SAVE_VERSION = 11;
  * - Version 9 (phase 30): plus its genes (everything that makes it itself).
  * - Version 10 (phase 32): plus its name and birthday.
  * - Version 11 (phase 33): plus its accessories (bought, and what it's wearing).
+ * - Version 12 (phase 36): plus the rest of the family. The fields above are the dragon that is
+ *   out in the den; `family` holds the others, each with its own needs, growth and outfit.
  */
-export interface SaveV11 {
-  version: 11;
+export interface SaveV12 {
+  version: 12;
   /** When this was saved (milliseconds since 1970). */
   savedAt: number;
   /** Its id number. A wild dragon's genes were first made from it. */
@@ -41,13 +44,19 @@ export interface SaveV11 {
   wallet: Wallet;
   stash: Stash;
   growth: Growth;
+  /** The family's other dragons (not the one out in the den). */
+  family: FamilyMember[];
+  /** The dragon in the den is a newly adopted egg that hasn't hatched yet. */
+  egg: boolean;
 }
-export type Save = SaveV11;
+export type Save = SaveV12;
 
 export function newSave(seed: number, now: number): Save {
   return {
-    version: 11,
+    version: 12,
     savedAt: now,
+    family: [],
+    egg: false,
     seed,
     genes: genesFromSeed(seed),
     identity: parseIdentity(null, seed, now),
@@ -71,10 +80,14 @@ export function makeSave(
   genes: Genes = genesFromSeed(seed),
   identity: Identity = parseIdentity(null, seed, now),
   wardrobe: Wardrobe = emptyWardrobe(),
+  family: FamilyMember[] = [],
+  egg = false,
 ): Save {
   return {
-    version: 11,
+    version: 12,
     savedAt: now,
+    family,
+    egg,
     seed,
     genes,
     identity,
@@ -108,6 +121,8 @@ export function parseSave(raw: unknown, now: number): Save | null {
     genes?: unknown;
     identity?: unknown;
     wardrobe?: unknown;
+    family?: unknown;
+    egg?: unknown;
   };
   if (typeof r.version !== "number" || r.version < 1 || !validSeed(r.seed)) return null;
   const savedAt = typeof r.savedAt === "number" && r.savedAt <= now ? r.savedAt : now;
@@ -136,8 +151,12 @@ export function parseSave(raw: unknown, now: number): Save | null {
   );
   // Versions 1–10 had no accessories: an empty closet.
   const wardrobe = r.version >= 11 ? parseWardrobe(r.wardrobe) : emptyWardrobe();
+  // Versions 1–11 had one dragon: no other family yet.
+  const family = r.version >= 12 ? parseFamily(r.family, wardrobe.owned, now) : [];
   return {
-    version: 11,
+    version: 12,
+    family,
+    egg: r.version >= 12 && r.egg === true,
     savedAt,
     seed: r.seed,
     genes,

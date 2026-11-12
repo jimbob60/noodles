@@ -20,6 +20,9 @@ import {
   type PhotoState,
 } from "./ui/photoMode";
 import { pose } from "./noodle/pose";
+import { adopt, catchUp, newEgg, type FamilyMember } from "./care/family";
+import { drawFamilyButton, onFamilyButton, openFamily, type FamilyCard } from "./ui/familyPanel";
+import { parseFavorites } from "./gallery";
 import { decodeBackup, encodeBackup, makeSave, type Save } from "./save/saveGame";
 import { drawBackupButton, onBackupButton, openBackupPanel } from "./ui/backupPanel";
 import { Input } from "./engine/input";
@@ -162,16 +165,36 @@ async function main(): Promise<void> {
    */
   let newPlayerEgg = !loaded.save;
   let egg: Egg | null = null;
+  /** The rest of the family: the dragons that aren't out in the den right now. */
+  let family: FamilyMember[] = loaded.save?.family ?? [];
+  /** The dragon in the den is a newly adopted egg that hasn't hatched yet. */
+  let adoptedEgg = loaded.save?.egg ?? false;
+  const showFamily = () => {
+    document.body.dataset.family = String(family.length + 1);
+  };
+  showFamily();
   const eggAt = () => ({ x: screen.width / 2, y: screen.height * 0.62 });
   const eggSize = () => Math.max(46, Math.min(80, Math.min(screen.width, screen.height) * 0.09));
   let eggLast: { x: number; y: number } | null = null;
+  const saveNow = () =>
+    makeSave(
+      seed,
+      needs,
+      Date.now(),
+      decor,
+      wallet,
+      stash,
+      growth,
+      genes,
+      identity,
+      wardrobe,
+      family,
+      adoptedEgg,
+    );
   const persist = () => {
     // Nothing is saved until a new player's egg has hatched.
-    if (mode === "play" && !egg && !newPlayerEgg)
-      storeGame(
-        store,
-        makeSave(seed, needs, Date.now(), decor, wallet, stash, growth, genes, identity, wardrobe),
-      );
+    // (An adopted egg is saved, so it's still waiting if the game is closed.)
+    if (mode === "play" && !newPlayerEgg && (!egg || adoptedEgg)) storeGame(store, saveNow());
   };
   window.addEventListener("pagehide", persist);
   document.addEventListener("visibilitychange", () => {
@@ -190,7 +213,7 @@ async function main(): Promise<void> {
       fastGrowth = freshGrowth();
     }
     if (mode === "play" || mode === "fast") dragon.setGrowth(growthShare(shownGrowth()));
-    egg = mode === "hatch" || (mode === "play" && newPlayerEgg) ? new Egg() : null;
+    egg = mode === "hatch" || (mode === "play" && (newPlayerEgg || adoptedEgg)) ? new Egg() : null;
     if (mode === "play") {
       // Back from a test mode: pick up the real dragon's needs again.
       const again = loadGame(store, Date.now(), randomSeed).save;
@@ -243,21 +266,100 @@ async function main(): Promise<void> {
     stash = save.stash;
     growth = save.growth;
     dragon.setGrowth(growthShare(growth));
+    family = save.family;
+    adoptedEgg = save.egg;
+    egg = adoptedEgg ? new Egg() : null;
+    showFamily();
     if (needs.inBed) setBedtime(true);
     document.body.dataset.favorite = dragon.favorite;
     document.body.dataset.seed = String(seed);
     persist();
     return true;
   }
+  /** The dragon out in the den, as a family member (for when it steps aside). */
+  const asMember = (): FamilyMember => ({
+    seed,
+    genes,
+    identity,
+    needs,
+    growth,
+    worn: wardrobe.worn,
+    seenAt: Date.now(),
+    egg: adoptedEgg,
+  });
+  /** Brings a family member out into the den, caught up on the time it was away. */
+  function bring(member: FamilyMember): void {
+    const m = catchUp(member, Date.now());
+    seed = m.seed;
+    genes = m.genes;
+    identity = m.identity;
+    needs = m.needs;
+    growth = m.growth;
+    wardrobe = { owned: wardrobe.owned, worn: m.worn };
+    adoptedEgg = m.egg;
+    egg = adoptedEgg ? new Egg() : null;
+    stageNote = null;
+    feeding.sendHome();
+    toys.sendHome();
+    dragon = makeDragon();
+    dress();
+    showName();
+    showFamily();
+    document.body.dataset.favorite = dragon.favorite;
+    document.body.dataset.seed = String(seed);
+    if (needs.inBed) setBedtime(true);
+    else dragon.getExcited(); // happy to see you!
+    persist();
+  }
+  /** Swaps the dragon in the den with another of the family. */
+  function visit(index: number): void {
+    const arriving = family[index];
+    if (!arriving) return;
+    const leaving = asMember();
+    family = family.map((m, k) => (k === index ? leaving : m));
+    bring(arriving);
+  }
+  /** Adopts an egg (a favorite's number, or a surprise). The one in the den steps aside. */
+  function adoptEgg(pick: number | null): boolean {
+    const r = adopt(wallet, family.length + 1);
+    if (!r.ok) return false;
+    wallet = r.wallet;
+    family = [...family, asMember()];
+    bring(newEgg(pick ?? randomSeed(), Date.now()));
+    return true;
+  }
+  const showFamilyPanel = () => {
+    const now = Date.now();
+    const cardOf = (m: FamilyMember, here: boolean): FamilyCard => ({
+      name: m.identity.name,
+      genes: m.genes,
+      growth: m.growth,
+      growthShare: growthShare(m.growth),
+      needs: m.needs.values,
+      asleep: m.needs.inBed === true,
+      hat: m.worn.head,
+      egg: m.egg,
+      here,
+    });
+    let favorites: number[] = [];
+    try {
+      favorites = parseFavorites(localStorage.getItem("noodle-dragons.favorites"));
+    } catch {
+      // No storage here: no favorites to offer.
+    }
+    const taken = new Set([seed, ...family.map((m) => m.seed)]);
+    openFamily({
+      // What the others look like right now (they only really catch up when they come out).
+      cards: [cardOf(asMember(), true), ...family.map((m) => cardOf(catchUp(m, now), false))],
+      coins: wallet.coins,
+      favorites: favorites.filter((f) => !taken.has(f)),
+      onVisit: (i) => visit(i - 1),
+      onAdopt: adoptEgg,
+    });
+  };
   const showBackup = () => {
     persist();
-    openBackupPanel(
-      encodeBackup(
-        makeSave(seed, needs, Date.now(), decor, wallet, stash, growth, genes, identity, wardrobe),
-      ),
-      restore,
-      store !== null,
-    );
+    openBackupPanel(encodeBackup(saveNow()), restore, store !== null);
   };
 
   screen.onResize(() => {
@@ -308,11 +410,13 @@ async function main(): Promise<void> {
         enterMode(MODES[(MODES.indexOf(mode) + 1) % MODES.length]);
       }
       if (!input.down) swallowing = false;
+      // Really playing: the real game, with a hatched dragon out in the den.
+      const playing = mode === "play" && !egg;
       // The backup button (top right, under the mode tag).
       if (
         pressAt &&
         !swallowing &&
-        mode === "play" &&
+        playing &&
         onBackupButton(pressAt, screen.width, screen.height)
       ) {
         swallowing = true;
@@ -322,7 +426,7 @@ async function main(): Promise<void> {
       if (
         pressAt &&
         !swallowing &&
-        mode === "play" &&
+        playing &&
         onDecorateButton(pressAt, screen.width, screen.height)
       ) {
         swallowing = true;
@@ -347,12 +451,7 @@ async function main(): Promise<void> {
       // Decorating blocks everything else, for this frame only (so the decorator keeps the finger).
       let blocked = swallowing || decorating || photo !== null;
       // The shop button: spend noodle coins.
-      if (
-        pressAt &&
-        !swallowing &&
-        mode === "play" &&
-        onShopButton(pressAt, screen.width, screen.height)
-      ) {
+      if (pressAt && !swallowing && playing && onShopButton(pressAt, screen.width, screen.height)) {
         swallowing = true;
         openShop(wallet, stash, (item) => {
           const r = buy(item, wallet, stash);
@@ -367,7 +466,7 @@ async function main(): Promise<void> {
       if (
         pressAt &&
         !swallowing &&
-        mode === "play" &&
+        playing &&
         !catchGame &&
         !decorator.active &&
         onClosetButton(pressAt, screen.width, screen.height)
@@ -390,7 +489,7 @@ async function main(): Promise<void> {
       if (
         pressAt &&
         !swallowing &&
-        mode === "play" &&
+        playing &&
         !catchGame &&
         !decorator.active &&
         onCameraButton(pressAt, screen.width, screen.height)
@@ -402,8 +501,21 @@ async function main(): Promise<void> {
         document.body.dataset.photo = "on";
         openPhotoBar(photo, snapPhoto, leavePhoto, () => {});
       }
+      // The family (💕): see everyone, swap who's out in the den, adopt an egg.
+      if (
+        pressAt &&
+        !swallowing &&
+        mode === "play" &&
+        !newPlayerEgg &&
+        !catchGame &&
+        !decorator.active &&
+        onFamilyButton(pressAt, screen.width, screen.height)
+      ) {
+        swallowing = true;
+        showFamilyPanel();
+      }
       // The name badge under the coins opens the dragon's profile card.
-      if (pressAt && !swallowing && mode === "play" && !catchGame && onGrowthBadge(pressAt)) {
+      if (pressAt && !swallowing && playing && !catchGame && onGrowthBadge(pressAt)) {
         swallowing = true;
         openProfile({
           identity,
@@ -428,7 +540,7 @@ async function main(): Promise<void> {
       } else if (
         pressAt &&
         !blocked &&
-        mode === "play" &&
+        playing &&
         !needs.inBed &&
         Math.hypot(pressAt.x - gb.x, pressAt.y - gb.y) <= gb.r * 1.3
       ) {
@@ -498,6 +610,8 @@ async function main(): Promise<void> {
           egg = null;
           if (mode === "play") {
             newPlayerEgg = false;
+            adoptedEgg = false;
+            needs = freshNeeds(Date.now());
             // Hatch day! Then a name: a cute one is suggested, and any name will do.
             identity = newIdentity(Date.now());
             showName();
@@ -723,6 +837,9 @@ async function main(): Promise<void> {
         if (egg) {
           drawEgg(ctx, egg, eggAt(), eggSize(), dragon.look);
           drawEggHint(ctx, egg, eggAt(), eggSize());
+          // An adopted egg can wait: the family button takes you back to the others.
+          if (mode === "play" && adoptedEgg)
+            drawFamilyButton(ctx, screen.width, screen.height, family.length + 1);
         } else {
           drawNight(ctx, screen.width, screen.height, night, bedAt);
           drawBed(ctx, bedAt, dragon.halfWidth * 4.2, night);
@@ -773,6 +890,8 @@ async function main(): Promise<void> {
             if (!decorator.active && !catchGame) drawGameButton(ctx, screen.width, screen.height);
             if (!decorator.active && !catchGame) drawClosetButton(ctx, screen.width, screen.height);
             if (!decorator.active && !catchGame) drawCameraButton(ctx, screen.width, screen.height);
+            if (!decorator.active && !catchGame)
+              drawFamilyButton(ctx, screen.width, screen.height, family.length + 1);
           }
           if (catchGame) {
             drawCatchHud(
