@@ -7,6 +7,19 @@ import { newIdentity, type Identity } from "./care/identity";
 import { openNamePanel, openProfile } from "./ui/profilePanel";
 import { emptyWardrobe, type Wardrobe } from "./care/wardrobe";
 import { drawClosetButton, onClosetButton, openCloset } from "./ui/closetPanel";
+import {
+  closePhotoBar,
+  drawCameraButton,
+  drawPhotoFrame,
+  flash,
+  newPhoto,
+  onCameraButton,
+  openPhotoBar,
+  photoFileName,
+  showPhoto,
+  type PhotoState,
+} from "./ui/photoMode";
+import { pose } from "./noodle/pose";
 import { decodeBackup, encodeBackup, makeSave, type Save } from "./save/saveGame";
 import { drawBackupButton, onBackupButton, openBackupPanel } from "./ui/backupPanel";
 import { Input } from "./engine/input";
@@ -264,6 +277,23 @@ async function main(): Promise<void> {
   let bestBefore = 0;
   let swallowing = false;
   const noFinger = { x: 0, y: 0, down: false };
+  /** Photo mode: the buttons step aside so you can pose your dragon and snap it. */
+  let photo: PhotoState | null = null;
+  const snapPhoto = () => {
+    flash();
+    const when = new Date();
+    screen.canvas.toBlob((blob) => {
+      if (!blob) return;
+      document.body.dataset.photos = String(Number(document.body.dataset.photos ?? 0) + 1);
+      showPhoto(blob, photoFileName(identity.name, when));
+    }, "image/png");
+  };
+  const leavePhoto = () => {
+    photo = null;
+    closePhotoBar();
+    document.getElementById("photo-preview")?.remove();
+    document.body.dataset.photo = "off";
+  };
 
   const loop = startLoop({
     update(dt) {
@@ -271,7 +301,8 @@ async function main(): Promise<void> {
       // A new press since last frame, even a tap too quick to still be down now.
       const pressed = input.presses !== seenPresses;
       seenPresses = input.presses;
-      const pressAt = pressed ? { x: input.pressX, y: input.pressY } : null;
+      // In photo mode the buttons are put away, so a press only ever moves the dragon.
+      const pressAt = pressed && !photo ? { x: input.pressX, y: input.pressY } : null;
       if (pressAt && onTag(pressAt.x, pressAt.y)) {
         swallowing = true;
         enterMode(MODES[(MODES.indexOf(mode) + 1) % MODES.length]);
@@ -314,7 +345,7 @@ async function main(): Promise<void> {
         screen.height,
       );
       // Decorating blocks everything else, for this frame only (so the decorator keeps the finger).
-      let blocked = swallowing || decorating;
+      let blocked = swallowing || decorating || photo !== null;
       // The shop button: spend noodle coins.
       if (
         pressAt &&
@@ -354,6 +385,22 @@ async function main(): Promise<void> {
             persist();
           },
         });
+      }
+      // The camera (📷): photo mode.
+      if (
+        pressAt &&
+        !swallowing &&
+        mode === "play" &&
+        !catchGame &&
+        !decorator.active &&
+        onCameraButton(pressAt, screen.width, screen.height)
+      ) {
+        swallowing = true;
+        feeding.sendHome();
+        toys.sendHome();
+        photo = newPhoto();
+        document.body.dataset.photo = "on";
+        openPhotoBar(photo, snapPhoto, leavePhoto, () => {});
       }
       // The name badge under the coins opens the dragon's profile card.
       if (pressAt && !swallowing && mode === "play" && !catchGame && onGrowthBadge(pressAt)) {
@@ -549,13 +596,17 @@ async function main(): Promise<void> {
       // For automated checks: is it being petted, and how deep is the purr.
       const petState = pet.active ? petting.purr.toFixed(1) : "no";
       if (document.body.dataset.pet !== petState) document.body.dataset.pet = petState;
-      const finger = catchGame
-        ? swallowing
+      const finger = photo
+        ? photo.frozen || swallowing
           ? noFinger
           : input
-        : !free || pet.active || inBed
-          ? noFinger
-          : input;
+        : catchGame
+          ? swallowing
+            ? noFinger
+            : input
+          : !free || pet.active || inBed
+            ? noFinger
+            : input;
       // For automated checks: how many foods are floating about right now.
       if (document.body.dataset.coins !== String(wallet.coins))
         document.body.dataset.coins = String(wallet.coins);
@@ -567,7 +618,9 @@ async function main(): Promise<void> {
       const tray0 = feeding.slots()[0];
       dragon.foodTrayAt = tray0 ? { x: tray0.x, y: tray0.y } : null;
       const wasExcited = dragon.exciteLeft > 0;
-      dragon.update(dt, finger, world());
+      // Holding still for a photo: the pose stays exactly put.
+      if (!photo?.frozen) dragon.update(dt, finger, world());
+      if (photo) pose(dragon.face, photo.expression);
       if (!wasExcited && dragon.exciteLeft > 0) pay("petting", dragon.spine.head);
       if (catchGame) {
         const wasDone = catchGame.phase === "done";
@@ -674,6 +727,19 @@ async function main(): Promise<void> {
           drawBed(ctx, bedAt, dragon.halfWidth * 4.2, night);
           dragon.draw(ctx);
           if (catchGame) drawFallers(ctx, catchGame, dragon.halfWidth * 1.1);
+        }
+        if (photo && !egg) {
+          // Photo mode: no buttons, just the dragon in its den, in a frame.
+          drawPhotoFrame(
+            ctx,
+            screen.width,
+            screen.height,
+            photo.frame,
+            identity.name,
+            new Date(),
+            modeSeconds,
+          );
+        } else if (!egg) {
           needsBar.draw(ctx, screen.width, screen.height);
           if (mode === "play") coinCounter.draw(ctx);
           if (mode === "play" || mode === "fast")
@@ -705,6 +771,7 @@ async function main(): Promise<void> {
             if (!decorator.active) drawShopButton(ctx, screen.width, screen.height);
             if (!decorator.active && !catchGame) drawGameButton(ctx, screen.width, screen.height);
             if (!decorator.active && !catchGame) drawClosetButton(ctx, screen.width, screen.height);
+            if (!decorator.active && !catchGame) drawCameraButton(ctx, screen.width, screen.height);
           }
           if (catchGame) {
             drawCatchHud(
@@ -745,11 +812,12 @@ async function main(): Promise<void> {
       ctx.fillStyle = mode === "play" ? "rgba(255,255,255,0.08)" : "rgba(183,160,255,0.3)";
       ctx.beginPath();
       ctx.roundRect(screen.width - w - 6, 8, w, 26, 13);
-      ctx.fill();
+      // No build tag in photos.
+      if (!photo) ctx.fill();
       ctx.textAlign = "right";
       ctx.textBaseline = "middle";
       ctx.fillStyle = mode === "play" ? "rgba(255,255,255,0.45)" : "rgba(255,255,255,0.9)";
-      ctx.fillText(label, screen.width - 16, 21);
+      if (!photo) ctx.fillText(label, screen.width - 16, 21);
     },
   });
   // A daily hello: a few coins the first time you visit each day.

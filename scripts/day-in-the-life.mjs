@@ -64,7 +64,7 @@ const line = (a, b, n = 10) =>
     x: a.x + ((b.x - a.x) * (i + 1)) / n,
     y: a.y + ((b.y - a.y) * (i + 1)) / n,
   }));
-const topButton = (i) => ({ x: W - 32, y: 44 + i * 46 + 18 }); // 0 backup, 1 decorate, 2 shop, 3 game, 4 closet
+const topButton = (i) => ({ x: W - 32, y: 44 + i * 46 + 18 }); // 0 backup, 1 decorate, 2 shop, 3 game, 4 closet, 5 camera
 const foodSlot = (i) => ({ x: 14 + R + i * (2 * R + GAP), y: H - 14 - R });
 const ball = { x: W - 14 - R, y: H - 14 - R };
 const sponge = { x: W - 14 - R - (2 * R + GAP), y: H - 14 - R - (2 * R + GAP) };
@@ -186,6 +186,28 @@ check(
 );
 await p.click("#closet-panel >> text=✕");
 await step(200);
+
+// Photo mode (the sixth corner button): hold still, grin, snap and save a picture.
+await tap(topButton(5).x, topButton(5).y);
+await p.waitForSelector("#photo-bar");
+await p.click("#photo-bar >> text=Hold still");
+await p.click('#photo-bar [aria-label="Face: happy"]');
+await step(100);
+await p.click("#photo-bar >> text=Snap");
+await p.waitForSelector("#photo-preview img");
+const [download] = await Promise.all([
+  p.waitForEvent("download"),
+  p.click("#photo-preview >> text=Save"),
+]);
+const photoName = download.suggestedFilename();
+check(
+  /^biscuit-\d{4}-\d{2}-\d{2}-\d{4}\.png$/.test(photoName),
+  `a photo saves to the device (${photoName})`,
+);
+await p.click("#photo-preview >> text=Another");
+await p.click('#photo-bar [aria-label="Done"]');
+await step(200);
+check((await data("photo")) === "off", "leaving photo mode brings the buttons back");
 
 // Decorating: place it in the den.
 await tap(topButton(1).x, topButton(1).y);

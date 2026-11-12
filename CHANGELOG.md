@@ -2,6 +2,7 @@
 
 Newest first. One line per finished phase.
 
+- **Phase 33 — Accessories (d7f6cef … 7c9c428, 2026-11-12):** a closet of 30 code-drawn accessories in four slots (hats, neck, back, tail), including dragon, fairy and yellow-and-black butterfly wings; buy, wear and recolor; they follow the body. The head now grows up too.
 - **Phase 32 — Name and profile (a83775d, 2026-11-12):** name your dragon when it hatches; a profile card with its portrait, hatch day, age, stage, personality meters, favorite food and special looks.
 - **Phase 31 — Personalities (8b7586e, 2026-11-10):** playful dragons do zoomies, sleepy ones nap and yawn, greedy ones beg for snacks, shy ones blush and keep their distance.
 - **Phase 30 — Genes (4d59822, 52039b3, 2026-11-10):** 31 genes make each dragon: colors, horns, mane, whiskers, size, eyes, snout, marks, frills, ridge, tail, teeth (some with lots of sharp teeth) and personality. Same genes, same dragon.
