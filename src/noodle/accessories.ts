@@ -968,7 +968,11 @@ function fairyWing(
   }
 }
 
-/** Butterfly wings: a big round upper wing and a smaller lower one, with a border and spots. */
+/**
+ * Butterfly wings, yellow and black like a swallowtail (Jacob's pick): sunny yellow wings with a
+ * thick black border, black stripes fanning out from the body and white dots round the edge.
+ * The chosen color tints the little eye spot on the lower wing.
+ */
 function butterflyWing(
   ctx: CanvasRenderingContext2D,
   L: number,
@@ -979,44 +983,58 @@ function butterflyWing(
   const beat = Math.sin(time * 5);
   ctx.rotate(0.16 * beat + (far ? 0.4 : 0));
   ctx.scale(far ? 0.8 : 0.86, far ? 0.8 : 0.86);
-  const body = far ? tint(c, -0.3) : c;
-  const border = tint(c, far ? -0.65 : -0.55);
+  const yellow = far ? "#c9a21e" : "#ffd23f";
+  const black = far ? "#2b2338" : "#1b1425";
   const shapes: [number, number, number][] = [
     // [len, wide, angle]: the upper wing points up and back, the lower one back.
     [L * 1.0, L * 0.55, 1.2],
     [L * 0.7, L * 0.38, 0.5],
   ];
-  for (const [len, wide, angle] of shapes) {
+  shapes.forEach(([len, wide, angle], k) => {
+    const ca = Math.cos(angle);
+    const sa = Math.sin(angle);
+    // The black wing, then the yellow inside it.
     lobe(ctx, len, wide, angle);
-    ctx.fillStyle = border;
+    ctx.fillStyle = black;
     ctx.fill();
     ctx.save();
-    ctx.translate(Math.cos(angle) * len * 0.06, Math.sin(angle) * len * 0.06);
-    lobe(ctx, len * 0.84, wide * 0.8, angle);
-    ctx.fillStyle = body;
+    ctx.translate(ca * len * 0.05, sa * len * 0.05);
+    lobe(ctx, len * 0.82, wide * 0.76, angle);
+    ctx.fillStyle = yellow;
     ctx.fill();
-    ctx.restore();
-    if (!far) {
-      // White spots along the border, and a big eye spot.
-      const ca = Math.cos(angle);
-      const sa = Math.sin(angle);
-      dot(
-        ctx,
-        ca * len * 0.62 - sa * wide * 0.05,
-        sa * len * 0.62 + ca * wide * 0.05,
-        wide * 0.22,
-        tint(c, 0.6),
-      );
-      dot(
-        ctx,
-        ca * len * 0.62 - sa * wide * 0.05,
-        sa * len * 0.62 + ca * wide * 0.05,
-        wide * 0.1,
-        border,
-      );
-      for (const t of [0.85, 0.98]) dot(ctx, ca * len * t, sa * len * t, wide * 0.07, "#ffffff");
+    // Black stripes fanning out from the body across the yellow.
+    ctx.clip();
+    ctx.strokeStyle = black;
+    ctx.lineCap = "round";
+    for (const [off, thick] of [
+      [-0.32, 0.07],
+      [0.0, 0.05],
+      [0.3, 0.07],
+    ]) {
+      const a2 = angle + off;
+      ctx.lineWidth = len * thick;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(Math.cos(a2) * len * 1.2, Math.sin(a2) * len * 1.2);
+      ctx.stroke();
     }
-  }
+    ctx.restore();
+    if (far) return;
+    // White dots round the black border.
+    for (let d = 0; d < 5; d++) {
+      const t = -0.55 + d * 0.27;
+      const along = len * (0.9 - Math.abs(t) * 0.25);
+      const across = wide * t * 0.95;
+      dot(ctx, ca * along - sa * across, sa * along + ca * across, wide * 0.055, "#ffffff");
+    }
+    if (k === 1) {
+      // A little eye spot, in the chosen color, near the tip of the lower wing.
+      const ex = ca * len * 0.72 - sa * wide * 0.25;
+      const ey = sa * len * 0.72 + ca * wide * 0.25;
+      dot(ctx, ex, ey, wide * 0.17, c);
+      dot(ctx, ex, ey, wide * 0.08, black);
+    }
+  });
 }
 
 /** Something near the tip of the tail. */
