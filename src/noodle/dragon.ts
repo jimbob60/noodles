@@ -176,10 +176,15 @@ export class Dragon {
     return bodyHalfWidth(this.spine, this.genes.chubby);
   }
 
-  /** Babies have big heads for their size; it evens out as they grow. */
+  /**
+   * The head grows up too, just slower than the body: from 82% to 108% of a grown body's
+   * half-width × 1.3 (about a third bigger by the time it's grown). A baby's head is still a
+   * little big for its slim body, and a grown-up's is big enough that the neck never looks huge.
+   * Chubbiness is the body only: the head keeps its size.
+   */
   get headRadius(): number {
-    // Chubbiness is the body only: the head keeps its size.
-    return bodyHalfWidth(this.spine) * 1.3 * (1 + 0.35 * (1 - this.growth));
+    const grownHalf = this.segmentAt(1) * 1.95;
+    return grownHalf * 1.3 * (0.82 + 0.26 * this.growth);
   }
 
   /**

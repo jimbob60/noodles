@@ -2,6 +2,12 @@
 
 Newest first. Each entry says what we decided, why, and what it affects.
 
+## 2026-11-12: The head grows up too
+
+- **Decision:** the head used to stay the same size from baby to grown-up (its "big baby head" bonus shrank exactly as the body thickened), so grown-ups risked looking like small heads on big necks. Now the head grows too, just slower than the body: from 82% to 108% of a grown body's half-width × 1.3, about a third bigger by the time it's grown. A baby's head is still a little big for its slim body (cute), and a grown-up's head is a touch bigger than before. Hats and neck things follow, since they're sized from the head.
+- **Why:** Jacob asked ("make the head grow too so we don't end up with huge-neck dragons").
+- **Affects:** nothing else; sizes only.
+
 ## 2026-11-12: More accessories, and the bad ones redrawn
 
 - **Decision:** after Jacob's look ("fix the ones that look bad, like the tail bow"), every accessory was checked at full size. Fixed: hats were far too small for the head (now drawn 1.45× bigger); neck things were hidden under the mane, so they now sit just behind it, are drawn after the head, and collars are clipped to the body's outline so they wrap the neck instead of poking out like poles; the tail bow looked like a stick person, so bows are now real ribbon bows (two puffy loops with folds, a knot, notched ribbon ends); tail rings are chunky gold bands with a gem. Added 17 more, 29 in all, and a fourth slot, **back**: hats and headwear (hair bow, chef hat, Santa hat, propeller cap with a spinning propeller, cowboy hat, halo that floats and glows), neck (flower lei, heart locket, pearl necklace), back (tiny backpack, hero cape that flutters, butterfly wings and fairy wings that flap and sparkle) and tail (tail flower, swinging tail bell, ribbon streamers, star charm). Prices 30–90 coins (balance in phase 42). The save format is unchanged (the back slot just appears in the closet; older closets have nothing on their back).
