@@ -95,3 +95,19 @@ describe("personalities", () => {
     expect(bold.face.blush).toBeLessThan(0.05);
   });
 });
+
+describe("personality at bedtime", () => {
+  it("a playful dragon's zoomies never cancel going to bed", () => {
+    const d = new Dragon(640, 400, 16, world, only("playful"), seededRandom(5));
+    d.goToBed({ x: 300, y: 600 }, world);
+    let slept = false;
+    for (let t = 0; t < 40 * 30 && !slept; t++) {
+      d.update(1 / 30, idle, world);
+      // Even a loop-de-loop on the way (as after a lovely petting) mustn't cancel bedtime.
+      if (t === 30) d.zoomies();
+      slept = d.asleep;
+    }
+    expect(slept).toBe(true);
+    expect(d.inBed).toBe(true);
+  });
+});

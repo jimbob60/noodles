@@ -90,8 +90,29 @@ for (let c = 0; c < 3; c++) {
 }
 await step(4000);
 check((await data("egg")) === "hatched", "the egg hatches into the dragon");
+// Naming: a card pops up with a suggestion; type a name and press the button.
+check((await p.$("#name-panel input")) !== null, "a name card pops up after hatching");
+await p.fill("#name-panel input", "Biscuit");
+await p.click("#name-panel >> text=That's the one");
+await step(200);
+check((await data("name")) === "Biscuit", "the new dragon is named Biscuit");
 const fresh = await save();
-check(fresh.version >= 8, `a new dragon starts and saves (save version ${fresh.version})`);
+check(fresh.version >= 10, `a new dragon starts and saves (save version ${fresh.version})`);
+check(
+  fresh.identity.name === "Biscuit" &&
+    Math.abs(fresh.identity.birthday - (await p.evaluate(() => Date.now()))) < 60_000,
+  "its name and hatch day are saved",
+);
+// The profile card: tap the name badge under the coins.
+await tap(40, 160);
+await p.waitForSelector("#profile-panel");
+check(
+  (await p.textContent("#profile-name")) === "Biscuit" &&
+    (await p.textContent("#profile-panel")).includes("Hatched today"),
+  "tapping the name badge opens its profile card",
+);
+await p.click("#profile-panel >> text=✕");
+await step(200);
 check(
   (await data("stage")) === "baby" && fresh.growth.hours < 0.1,
   `it hatches as a little baby (${await data("length")} spine points)`,
@@ -225,7 +246,10 @@ await p.screenshot({ path: "screenshots/day-in-the-life.png" });
 await p.close();
 await open();
 const morning = await save();
-check(morning.seed === evening.seed, "same dragon after reopening");
+check(
+  morning.seed === evening.seed && morning.identity.name === "Biscuit",
+  "same dragon after reopening (still called Biscuit)",
+);
 check(JSON.stringify(morning.decor) === JSON.stringify(evening.decor), "decorations kept");
 check(morning.wallet.coins === evening.wallet.coins, `coins kept (${morning.wallet.coins})`);
 check(

@@ -85,7 +85,7 @@ describe("saving", () => {
 
   it("starts new dragons with comfortable needs", () => {
     const s = newSave(9, T0);
-    expect(s.version).toBe(9);
+    expect(s.version).toBe(10);
     expect(s.decor).toEqual([]);
     expect(s.needs.values.fullness).toBeGreaterThan(50);
   });
@@ -95,7 +95,7 @@ describe("save versions", () => {
   it("upgrade a version 1 save (phase 21) with an empty den", () => {
     const v1 = { version: 1, savedAt: T0, seed: 55, needs: sample().needs };
     const up = parseSave(JSON.parse(JSON.stringify(v1)), T0 + HOUR)!;
-    expect(up.version).toBe(9);
+    expect(up.version).toBe(10);
     expect(up.seed).toBe(55);
     expect(up.decor).toEqual([]);
   });
@@ -158,5 +158,29 @@ describe("genes in the save", () => {
     expect(parseSave(v8, T0 + HOUR)?.genes).toEqual(genesFromSeed(55));
     const broken = { ...save, genes: { nope: true } };
     expect(parseSave(broken, T0 + HOUR)?.genes).toEqual(genesFromSeed(5));
+  });
+});
+
+describe("names and birthdays in the save", () => {
+  it("keeps the name and birthday, and names older dragons from their seed", () => {
+    const identity = { name: "Biscuit", birthday: T0 - 3 * 24 * HOUR };
+    const save = makeSave(
+      5,
+      sample().needs,
+      T0,
+      [],
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      identity,
+    );
+    expect(parseSave(JSON.parse(JSON.stringify(save)), T0 + HOUR)?.identity).toEqual(identity);
+    expect(decodeBackup(encodeBackup(save), T0 + HOUR)?.identity).toEqual(identity);
+    const v9 = { version: 9, savedAt: T0, seed: 55, needs: sample().needs, growth: { hours: 30 } };
+    const a = parseSave(v9, T0 + HOUR)!.identity;
+    expect(a.name.length).toBeGreaterThan(1);
+    expect(parseSave(v9, T0 + 5 * HOUR)!.identity.name).toBe(a.name);
+    expect(a.birthday).toBe(T0 - 30 * HOUR);
   });
 });

@@ -2,7 +2,9 @@ import "@fontsource/pacifico/latin-400.css";
 import { advance, change, freshNeeds, NEED_NAMES } from "./care/needs";
 import { deviceStore, loadGame, storeGame } from "./save/storage";
 import { freshGrowth, grow, growAway, growthShare, stageOf, type Growth } from "./care/growth";
-import { drawGrowthBadge, drawStageBanner, stageMessage } from "./ui/growthBadge";
+import { drawGrowthBadge, drawStageBanner, onGrowthBadge, stageMessage } from "./ui/growthBadge";
+import { newIdentity, type Identity } from "./care/identity";
+import { openNamePanel, openProfile } from "./ui/profilePanel";
 import { decodeBackup, encodeBackup, makeSave, type Save } from "./save/saveGame";
 import { drawBackupButton, onBackupButton, openBackupPanel } from "./ui/backupPanel";
 import { Input } from "./engine/input";
@@ -64,6 +66,17 @@ async function main(): Promise<void> {
   let seed = loaded.save?.seed ?? randomSeed();
   /** Your dragon's genes: everything that makes it itself (saved with it). */
   let genes: Genes = loaded.save?.genes ?? genesFromSeed(seed);
+  /** Its name and birthday (a new player names theirs when it hatches). */
+  let identity: Identity = loaded.save?.identity ?? newIdentity(Date.now());
+  const showName = () => {
+    if (document.body.dataset.name !== identity.name) document.body.dataset.name = identity.name;
+  };
+  showName();
+  const rename = (name: string) => {
+    identity = { ...identity, name };
+    showName();
+    persist();
+  };
   /**
    * How grown up your dragon is (hours of good care). Time away counts too, capped, if it was
    * left well cared for. Fast mode grows its own dragon from a baby, 600× faster.
@@ -130,7 +143,10 @@ async function main(): Promise<void> {
   const persist = () => {
     // Nothing is saved until a new player's egg has hatched.
     if (mode === "play" && !egg && !newPlayerEgg)
-      storeGame(store, makeSave(seed, needs, Date.now(), decor, wallet, stash, growth, genes));
+      storeGame(
+        store,
+        makeSave(seed, needs, Date.now(), decor, wallet, stash, growth, genes, identity),
+      );
   };
   window.addEventListener("pagehide", persist);
   document.addEventListener("visibilitychange", () => {
@@ -191,6 +207,8 @@ async function main(): Promise<void> {
     if (mode !== "play") enterMode("play");
     seed = save.seed;
     genes = save.genes;
+    identity = save.identity;
+    showName();
     dragon = makeDragon();
     needs = fromSave(save);
     decor = save.decor;
@@ -207,7 +225,9 @@ async function main(): Promise<void> {
   const showBackup = () => {
     persist();
     openBackupPanel(
-      encodeBackup(makeSave(seed, needs, Date.now(), decor, wallet, stash, growth, genes)),
+      encodeBackup(
+        makeSave(seed, needs, Date.now(), decor, wallet, stash, growth, genes, identity),
+      ),
       restore,
       store !== null,
     );
@@ -298,6 +318,18 @@ async function main(): Promise<void> {
           return { wallet, stash };
         });
       }
+      // The name badge under the coins opens the dragon's profile card.
+      if (pressAt && !swallowing && mode === "play" && !catchGame && onGrowthBadge(pressAt)) {
+        swallowing = true;
+        openProfile({
+          identity,
+          genes,
+          growth,
+          growthShare: dragon.growth,
+          now: Date.now(),
+          onRename: rename,
+        });
+      }
       // Noodle Catch: the 🎮 button starts a round; while it's on, everything else steps aside
       // and the finger steers the dragon.
       const gb = gameButton(screen.width, screen.height);
@@ -379,7 +411,16 @@ async function main(): Promise<void> {
           egg = null;
           if (mode === "play") {
             newPlayerEgg = false;
+            // Hatch day! Then a name: a cute one is suggested, and any name will do.
+            identity = newIdentity(Date.now());
+            showName();
             persist();
+            openNamePanel({
+              title: "Name your baby dragon!",
+              initial: identity.name,
+              canCancel: false,
+              onDone: rename,
+            });
           }
         }
         document.body.dataset.egg = egg
@@ -596,7 +637,8 @@ async function main(): Promise<void> {
           if (catchGame) drawFallers(ctx, catchGame, dragon.halfWidth * 1.1);
           needsBar.draw(ctx, screen.width, screen.height);
           if (mode === "play") coinCounter.draw(ctx);
-          if (mode === "play" || mode === "fast") drawGrowthBadge(ctx, shownGrowth());
+          if (mode === "play" || mode === "fast")
+            drawGrowthBadge(ctx, shownGrowth(), mode === "play" ? identity.name : "");
           if (stageNote)
             drawStageBanner(ctx, screen.width, stageNote.text, stageNote.age, STAGE_NOTE_LIFE);
           if (catchGame) {

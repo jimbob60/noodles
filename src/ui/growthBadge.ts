@@ -21,37 +21,56 @@ export function towardNext(g: Growth): number {
   return (g.hours - STAGES[i].hours) / (next.hours - STAGES[i].hours);
 }
 
-/** A little pill under the coins: the life stage, with a bar filling toward the next one. */
-export function drawGrowthBadge(ctx: CanvasRenderingContext2D, g: Growth): void {
+/** Where the badge was last drawn, so a tap on it can open the profile. */
+let lastBox = { x: 12, y: 138, w: 120, h: 44 };
+
+/** True if a point is on the name badge. */
+export function onGrowthBadge(p: { x: number; y: number }): boolean {
+  const b = lastBox;
+  return p.x >= b.x - 6 && p.x <= b.x + b.w + 6 && p.y >= b.y - 6 && p.y <= b.y + b.h + 6;
+}
+
+/**
+ * A little pill under the coins: the dragon's name, its life stage, and a bar filling toward the
+ * next stage. Tap it for the profile card.
+ */
+export function drawGrowthBadge(ctx: CanvasRenderingContext2D, g: Growth, name = ""): void {
   const stage = stageOf(g);
-  const x = 12;
-  const y = 140;
-  const w = 104;
-  const h = 30;
   ctx.save();
+  ctx.font = "700 14px system-ui, sans-serif";
+  const nameW = name ? ctx.measureText(name).width : 0;
+  const x = 12;
+  const y = 138;
+  const w = Math.max(120, Math.min(220, nameW + 44));
+  const h = 44;
+  lastBox = { x, y, w, h };
   ctx.fillStyle = "rgba(20,14,60,0.75)";
   ctx.beginPath();
-  ctx.roundRect(x, y, w, h, 15);
+  ctx.roundRect(x, y, w, h, 16);
   ctx.fill();
-  ctx.font = "15px system-ui, sans-serif";
+  ctx.font = "16px system-ui, sans-serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText(ICON[stage.id], x + 17, y + h / 2);
-  ctx.font = "600 13px system-ui, sans-serif";
   ctx.textAlign = "left";
+  ctx.font = "700 14px system-ui, sans-serif";
+  ctx.fillStyle = "#ffd6f5";
+  if (name) ctx.fillText(name, x + 33, y + 13, w - 42);
+  ctx.font = "600 11px system-ui, sans-serif";
   ctx.fillStyle = "#e6dcff";
-  ctx.fillText(LABEL[stage.id], x + 31, y + 11);
+  ctx.fillText(LABEL[stage.id], x + 33, name ? y + 28 : y + 18);
   // The bar toward the next stage (full and gold once grown up).
   const done = towardNext(g);
-  const bx = x + 31;
-  const bw = w - 31 - 12;
+  const bx = x + 33 + (name ? 54 : 0);
+  const by = name ? y + 26 : y + 30;
+  const bw = Math.max(20, x + w - 12 - bx);
   ctx.fillStyle = "rgba(255,255,255,0.15)";
   ctx.beginPath();
-  ctx.roundRect(bx, y + 19, bw, 5, 2.5);
+  ctx.roundRect(bx, by, bw, 5, 2.5);
   ctx.fill();
   ctx.fillStyle = done >= 1 ? "#ffe08a" : "#9dffc8";
   ctx.beginPath();
-  ctx.roundRect(bx, y + 19, Math.max(5, bw * done), 5, 2.5);
+  ctx.roundRect(bx, by, Math.max(5, bw * done), 5, 2.5);
   ctx.fill();
   ctx.restore();
 }

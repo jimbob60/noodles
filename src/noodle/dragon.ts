@@ -364,10 +364,11 @@ export class Dragon {
     this.trustLeft = Math.max(0, this.trustLeft - dt);
     if (this.wiggleAfterEat > 0) {
       this.wiggleAfterEat -= dt;
-      if (this.wiggleAfterEat <= 0 && !this.held && !this.asleep) this.zoomies();
+      if (this.wiggleAfterEat <= 0 && !this.held && !this.asleep && !this.brain.inBed)
+        this.zoomies();
     }
     if (!this.free) return;
-    this.personalityBeats(dt, m);
+    if (!this.brain.inBed) this.personalityBeats(dt, m);
 
     this.moodClock += dt;
     if (this.moodClock >= this.nextMoodBeat) {
@@ -567,7 +568,8 @@ export class Dragon {
       if (this.exciteLeft === 0) {
         const [h, n] = this.spine.points;
         this.swimmer.reset(h.x, h.y, Math.atan2(h.y - n.y, h.x - n.x), 0);
-        this.brain.start("float", this.swimmer, world);
+        // Off to bed still means off to bed: only a free dragon floats off after a loop.
+        if (!this.brain.inBed) this.brain.start("float", this.swimmer, world);
       }
     } else if (this.lure) {
       // Food is being held out: wake up and swim over so the mouth meets it.
