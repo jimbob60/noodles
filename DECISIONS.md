@@ -2,11 +2,11 @@
 
 Newest first. Each entry says what we decided, why, and what it affects.
 
-## 2026-11-12: Dragon wings
+## 2026-11-12: Dragon wings, and all wings redone
 
-- **Decision:** "obviously" (Jacob) dragons need dragon wings: a new back accessory, the dearest at 100 coins. Drawn in the body's own frame like the other wings: a bony arm rising to a little clawed wrist, three finger bones fanning back from it, and a scalloped membrane stretched between them in the chosen color, with a soft sheen; a darker far wing sits just behind. They flap slowly and strongly (a swing up and back with a little stretch, not a squash), and are sized from the body, so a baby gets little wings. 30 accessories in all.
-- **Why:** Jacob asked.
-- **Affects:** phase 42 (prices); a "flying" pose could use them later.
+- **Decision:** a new back accessory, **dragon wings** (100 coins, the dearest). Then, after Jacob said all the wings still looked bad, every wing was redone. Wings now have real depth: the far wing is drawn behind the body and tilted up so it peeks out, and the near wing in front; they attach at the shoulders, are bigger, and are outlined in a darker shade of their own color instead of black ink. **Dragon wings** are bat-like: an arm rising to a little clawed wrist, a long top edge sweeping back to a pointed tip, finger bones out to a four-scallop trailing edge, and a soft sheen; slow, strong flaps (a swing, not a squash). **Fairy wings** are two pairs of long see-through teardrops, lighter toward the tips, with white veins and twinkling stars, fluttering fast. **Butterfly wings** are a big round upper wing and a smaller lower one, each with a dark border, an eye spot and white dots. All are sized from the body, so babies get small wings. 30 accessories in all.
+- **Why:** Jacob asked for dragon wings, then for all wings to be redone.
+- **Affects:** phase 42 (prices); a flying pose could use the wings later.
 
 ## 2026-11-12: The head grows up too
 

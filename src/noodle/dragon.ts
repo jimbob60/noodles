@@ -14,7 +14,7 @@ import { legSizes, makeLegs, updateLegs, type Leg, type LegSizes } from "./legs"
 import { hsl, type DragonLook } from "./look";
 import { CLASSIC_GENES, type Genes } from "./genes";
 import { temperOf, type Temper } from "./personality";
-import { drawBodyWear, drawNeckWear } from "./accessories";
+import { drawBodyWear, drawNeckWear, drawWings } from "./accessories";
 import type { Wardrobe } from "../care/wardrobe";
 import { Spine, type Point } from "./spine";
 import { Swimmer } from "./swimmer";
@@ -693,6 +693,9 @@ export class Dragon {
       }
     }
     drawLegs(ctx, this.legs, this.spine.points, this.sizes, this.look);
+    // The far wing peeks up from behind the body.
+    if (this.outfit.back)
+      drawWings(ctx, this.spine.points, hw, this.outfit.back, this.time, this.headRadius, true);
     drawRidge(ctx, this.spine, this.look, puff, 0.5 + 0.5 * this.growth);
     drawBody(ctx, this.spine, this.look, puff);
     if (this.grime > 0) this.drawGrime(ctx, hw);

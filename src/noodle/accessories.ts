@@ -695,172 +695,9 @@ export function drawBackWear(
   ctx.lineCap = "round";
   ctx.strokeStyle = INK;
   ctx.lineWidth = Math.max(1.2, hw * 0.07);
-  if (worn.id === "fairyWings" || worn.id === "butterflyWings") {
-    // Wings drawn in the body's own frame: x runs back toward the tail, y runs up off the back.
-    const L = hw * 2.6;
-    const flap = 0.8 + 0.2 * Math.sin(time * 7);
-    ctx.save();
-    ctx.translate(top.x, top.y);
-    ctx.transform(-q.f.x, -q.f.y, up.x, up.y, 0, 0);
-    ctx.lineWidth = Math.max(1.2, hw * 0.07);
-    for (const far of [true, false]) {
-      ctx.save();
-      // The far pair sits a little further back and higher, a shade darker.
-      if (far) ctx.translate(L * 0.12, L * 0.05);
-      ctx.scale(1, flap * (far ? 0.92 : 1));
-      if (worn.id === "fairyWings") {
-        for (const [tx, ty, wide] of [
-          [0.55, 1.05, 0.32],
-          [0.95, 0.5, 0.22],
-        ]) {
-          ctx.beginPath();
-          ctx.moveTo(0, 0);
-          ctx.bezierCurveTo(-L * wide, L * ty * 0.6, L * (tx - wide), L * ty, L * tx, L * ty);
-          ctx.bezierCurveTo(L * (tx + wide), L * ty * 0.9, L * tx * 0.6, L * ty * 0.2, 0, 0);
-          ctx.closePath();
-          ctx.globalAlpha = 0.72;
-          ctx.fillStyle = far ? tint(c, 0.15) : tint(c, 0.5);
-          ctx.fill();
-          ctx.globalAlpha = 1;
-          ctx.strokeStyle = "rgba(255,255,255,0.95)";
-          ctx.stroke();
-          ctx.beginPath();
-          ctx.moveTo(0, 0);
-          ctx.quadraticCurveTo(L * tx * 0.4, L * ty * 0.55, L * tx * 0.85, L * ty * 0.9);
-          ctx.strokeStyle = "rgba(255,255,255,0.6)";
-          ctx.stroke();
-        }
-        if (!far) {
-          ctx.fillStyle = "#ffffff";
-          for (let k = 0; k < 3; k++) {
-            const tw = 0.6 + 0.5 * (Math.sin(time * 5 + k * 2) * 0.5 + 0.5);
-            star(ctx, L * (0.3 + k * 0.18), L * (0.75 - k * 0.12), L * 0.05 * tw, time);
-            ctx.fill();
-          }
-        }
-      } else {
-        // Butterfly: a big rounded upper wing and a smaller lower one, with spots.
-        for (const [tx, ty, rr] of [
-          [0.45, 0.95, 0.45],
-          [0.95, 0.4, 0.3],
-        ]) {
-          ctx.beginPath();
-          ctx.moveTo(0, 0);
-          ctx.quadraticCurveTo(L * (tx - rr), L * (ty + rr * 0.3), L * tx, L * ty);
-          ctx.quadraticCurveTo(
-            L * (tx + rr * 1.1),
-            L * (ty - rr * 0.2),
-            L * tx * 0.5,
-            L * ty * 0.15,
-          );
-          ctx.closePath();
-          ctx.fillStyle = far ? tint(c, -0.25) : c;
-          ctx.fill();
-          ctx.strokeStyle = INK;
-          ctx.stroke();
-          if (!far) {
-            dot(ctx, L * tx * 0.85, L * ty * 0.8, L * rr * 0.22, "#ffffff");
-            dot(ctx, L * tx * 0.6, L * ty * 0.5, L * rr * 0.12, tint(c, -0.45));
-          }
-        }
-      }
-      ctx.restore();
-    }
-    ctx.restore();
-  } else if (worn.id === "dragonWings") {
-    // Real dragon wings: a bony arm up to a clawed wrist, fingers fanning back from it, and a
-    // scalloped membrane stretched between them. Big, slow, strong flaps.
-    const L = hw * 3.3;
-    const beat = Math.sin(time * 3.2);
-    ctx.save();
-    ctx.translate(top.x, top.y);
-    // The body's own frame: x runs back toward the tail, y runs up off the back.
-    ctx.transform(-q.f.x, -q.f.y, up.x, up.y, 0, 0);
-    for (const far of [true, false]) {
-      ctx.save();
-      if (far) ctx.translate(L * 0.16, L * 0.05);
-      // A flap is a swing up and back plus a little stretch, not a squash.
-      ctx.rotate(-0.18 * beat + (far ? 0.12 : 0));
-      ctx.scale(1, (0.9 + 0.14 * beat) * (far ? 0.92 : 1));
-      const wrist = { x: -L * 0.12, y: L * 1.05 };
-      const tips = [
-        { x: L * 0.32, y: L * 1.3 },
-        { x: L * 0.78, y: L * 1.08 },
-        { x: L * 1.08, y: L * 0.62 },
-      ];
-      const root = { x: L * 0.7, y: 0 };
-      // The membrane, its trailing edge scalloped between the finger tips.
-      ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.lineTo(wrist.x, wrist.y);
-      ctx.lineTo(tips[0].x, tips[0].y);
-      const edge = [...tips, root];
-      for (let k = 1; k < edge.length; k++) {
-        const a = edge[k - 1];
-        const b = edge[k];
-        const mx = (a.x + b.x) / 2;
-        const my = (a.y + b.y) / 2;
-        ctx.quadraticCurveTo(mx + (wrist.x - mx) * 0.28, my + (wrist.y - my) * 0.28, b.x, b.y);
-      }
-      ctx.closePath();
-      ctx.globalAlpha = 0.93;
-      ctx.fillStyle = far ? tint(c, -0.3) : c;
-      ctx.fill();
-      ctx.globalAlpha = 1;
-      ctx.strokeStyle = INK;
-      ctx.lineWidth = Math.max(1.2, hw * 0.07);
-      ctx.stroke();
-      // A soft lighter glow on the membrane near the arm.
-      if (!far) {
-        ctx.save();
-        ctx.clip();
-        ctx.beginPath();
-        ctx.ellipse(L * 0.2, L * 0.65, L * 0.35, L * 0.22, -0.5, 0, Math.PI * 2);
-        ctx.fillStyle = "rgba(255,255,255,0.18)";
-        ctx.fill();
-        ctx.restore();
-      }
-      // The bones: the arm, then a finger to each tip.
-      const bone = far ? tint(c, -0.6) : tint(c, -0.45);
-      ctx.strokeStyle = bone;
-      ctx.lineCap = "round";
-      ctx.lineWidth = L * 0.07;
-      ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.quadraticCurveTo(-L * 0.18, L * 0.45, wrist.x, wrist.y);
-      ctx.stroke();
-      ctx.lineWidth = L * 0.04;
-      for (const t of tips) {
-        ctx.beginPath();
-        ctx.moveTo(wrist.x, wrist.y);
-        ctx.quadraticCurveTo((wrist.x + t.x) / 2, (wrist.y + t.y) / 2 + L * 0.06, t.x, t.y);
-        ctx.stroke();
-      }
-      // A little claw on the wrist.
-      ctx.beginPath();
-      ctx.moveTo(wrist.x - L * 0.04, wrist.y - L * 0.02);
-      ctx.quadraticCurveTo(
-        wrist.x - L * 0.18,
-        wrist.y + L * 0.06,
-        wrist.x - L * 0.16,
-        wrist.y + L * 0.16,
-      );
-      ctx.quadraticCurveTo(
-        wrist.x - L * 0.06,
-        wrist.y + L * 0.08,
-        wrist.x + L * 0.04,
-        wrist.y + L * 0.02,
-      );
-      ctx.closePath();
-      ctx.fillStyle = "#fff1c9";
-      ctx.fill();
-      ctx.strokeStyle = INK;
-      ctx.lineWidth = Math.max(1, hw * 0.05);
-      ctx.stroke();
-      dot(ctx, wrist.x, wrist.y, L * 0.05, bone);
-      ctx.restore();
-    }
-    ctx.restore();
+  if (worn.id === "fairyWings" || worn.id === "butterflyWings" || worn.id === "dragonWings") {
+    // Wings are drawn by drawWings, in two layers (far wing behind the body, near wing in
+    // front), so nothing more to do here.
   } else if (worn.id === "cape") {
     // A cape tied at the neck, streaming back over the body and fluttering at the hem.
     const from = Math.max(1, neck);
@@ -923,6 +760,263 @@ export function drawBackWear(
     dot(ctx, centre.x, centre.y, w * 0.07, GOLD);
   }
   ctx.restore();
+}
+
+const WINGS = ["dragonWings", "fairyWings", "butterflyWings"] as const;
+
+/** True if what's worn on the back is a pair of wings. */
+export const isWings = (worn?: Worn): boolean =>
+  !!worn && (WINGS as readonly string[]).includes(worn.id);
+
+/**
+ * A pair of wings at the shoulders. Drawn in two layers for depth: call it with `far` before
+ * the body (the far wing peeks up from behind) and without after it (the near wing in front).
+ */
+export function drawWings(
+  ctx: CanvasRenderingContext2D,
+  p: Point[],
+  hw: number,
+  worn: Worn,
+  time: number,
+  headR: number,
+  far: boolean,
+): void {
+  if (!isWings(worn)) return;
+  const c = ACCESSORY_COLORS[worn.color] ?? ACCESSORY_COLORS[0];
+  const shoulder = Math.min(p.length - 3, neckIndex(p, headR) + 2);
+  const q = bodySpot(p, shoulder, hw);
+  const up = { x: -q.n.x, y: -q.n.y };
+  // The root sits just inside the top edge of the back; the far wing a little further forward.
+  const root = onBody(q, far ? q.w * 0.35 : 0, -q.w * 0.6);
+  const L = hw * 3.4;
+  ctx.save();
+  ctx.translate(root.x, root.y);
+  // The body's own frame: x runs back toward the tail, y runs up off the back.
+  ctx.transform(-q.f.x, -q.f.y, up.x, up.y, 0, 0);
+  ctx.lineJoin = "round";
+  ctx.lineCap = "round";
+  if (worn.id === "dragonWings") dragonWing(ctx, L, c, time, far);
+  else if (worn.id === "fairyWings") fairyWing(ctx, L, c, time, far);
+  else butterflyWing(ctx, L, c, time, far);
+  ctx.restore();
+}
+
+/** A bat-like dragon wing: arched leading edge, finger bones, a scalloped trailing edge. */
+function dragonWing(
+  ctx: CanvasRenderingContext2D,
+  L: number,
+  c: string,
+  time: number,
+  far: boolean,
+): void {
+  const beat = Math.sin(time * 3);
+  // The far wing tilts up, so it peeks out above and ahead of the near one.
+  ctx.rotate(0.2 * beat + (far ? 0.42 : 0));
+  ctx.scale(far ? 0.88 : 1, 0.95 + 0.07 * beat);
+  const fill = far ? tint(c, -0.35) : c;
+  const edge = tint(c, far ? -0.62 : -0.5);
+  // The arm rises to the wrist, then the top edge sweeps far back to a pointed tip.
+  const wrist = { x: L * 0.1, y: L * 0.95 };
+  const tip = { x: L * 1.45, y: L * 1.0 };
+  const trail = [
+    tip,
+    { x: L * 1.2, y: L * 0.62 },
+    { x: L * 1.0, y: L * 0.32 },
+    { x: L * 0.78, y: L * 0.08 },
+    { x: L * 0.5, y: 0 },
+  ];
+  const outline = () => {
+    ctx.beginPath();
+    ctx.moveTo(-L * 0.06, 0);
+    ctx.quadraticCurveTo(-L * 0.1, L * 0.55, wrist.x, wrist.y);
+    ctx.quadraticCurveTo(L * 0.75, L * 1.22, tip.x, tip.y);
+    for (let k = 1; k < trail.length; k++) {
+      const a = trail[k - 1];
+      const b = trail[k];
+      const mx = (a.x + b.x) / 2;
+      const my = (a.y + b.y) / 2;
+      // Each scallop bows in toward the wrist.
+      ctx.quadraticCurveTo(mx + (wrist.x - mx) * 0.22, my + (wrist.y - my) * 0.22, b.x, b.y);
+    }
+    ctx.closePath();
+  };
+  outline();
+  ctx.fillStyle = fill;
+  ctx.fill();
+  ctx.save();
+  ctx.clip();
+  const g = ctx.createLinearGradient(0, L * 1.1, L * 0.6, L * 0.2);
+  g.addColorStop(0, "rgba(255,255,255,0.3)");
+  g.addColorStop(1, "rgba(255,255,255,0)");
+  ctx.fillStyle = g;
+  ctx.fillRect(-L, -L, L * 4, L * 4);
+  ctx.restore();
+  outline();
+  ctx.strokeStyle = edge;
+  ctx.lineWidth = L * 0.028;
+  ctx.stroke();
+  // Bones: the arm and top edge thick, then a finger out to each point of the trailing edge.
+  ctx.lineWidth = L * 0.06;
+  ctx.beginPath();
+  ctx.moveTo(-L * 0.06, 0);
+  ctx.quadraticCurveTo(-L * 0.1, L * 0.55, wrist.x, wrist.y);
+  ctx.stroke();
+  ctx.lineWidth = L * 0.04;
+  ctx.beginPath();
+  ctx.moveTo(wrist.x, wrist.y);
+  ctx.quadraticCurveTo(L * 0.75, L * 1.22, tip.x, tip.y);
+  ctx.stroke();
+  ctx.lineWidth = L * 0.026;
+  for (const t of trail.slice(1, 4)) {
+    ctx.beginPath();
+    ctx.moveTo(wrist.x, wrist.y);
+    ctx.quadraticCurveTo((wrist.x + t.x) / 2, (wrist.y + t.y) / 2 + L * 0.08, t.x, t.y);
+    ctx.stroke();
+  }
+  // A little claw on the wrist.
+  ctx.beginPath();
+  ctx.moveTo(wrist.x - L * 0.03, wrist.y + L * 0.02);
+  ctx.quadraticCurveTo(
+    wrist.x - L * 0.16,
+    wrist.y + L * 0.1,
+    wrist.x - L * 0.12,
+    wrist.y + L * 0.22,
+  );
+  ctx.quadraticCurveTo(
+    wrist.x - L * 0.04,
+    wrist.y + L * 0.1,
+    wrist.x + L * 0.05,
+    wrist.y + L * 0.03,
+  );
+  ctx.closePath();
+  ctx.fillStyle = "#fff4d6";
+  ctx.fill();
+  ctx.lineWidth = L * 0.018;
+  ctx.stroke();
+}
+
+/** A see-through teardrop lobe from the root, pointing at `angle` (0 = straight back). */
+function lobe(ctx: CanvasRenderingContext2D, len: number, wide: number, angle: number): void {
+  const ca = Math.cos(angle);
+  const sa = Math.sin(angle);
+  const P = (u: number, v: number) => ({ x: u * ca - v * sa, y: u * sa + v * ca });
+  const a = P(len * 0.45, wide);
+  const b = P(len * 1.0, wide * 0.55);
+  const t = P(len * 1.08, 0);
+  const d = P(len * 1.0, -wide * 0.5);
+  const e = P(len * 0.45, -wide * 0.75);
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.bezierCurveTo(a.x * 0.4, a.y * 0.4, a.x, a.y, (a.x + b.x) / 2, (a.y + b.y) / 2);
+  ctx.quadraticCurveTo(b.x, b.y, t.x, t.y);
+  ctx.quadraticCurveTo(d.x, d.y, (d.x + e.x) / 2, (d.y + e.y) / 2);
+  ctx.bezierCurveTo(e.x, e.y, e.x * 0.4, e.y * 0.4, 0, 0);
+  ctx.closePath();
+}
+
+/** Fairy wings: two pairs of long, see-through, sparkly teardrops that flutter fast. */
+function fairyWing(
+  ctx: CanvasRenderingContext2D,
+  L: number,
+  c: string,
+  time: number,
+  far: boolean,
+): void {
+  const flutter = Math.sin(time * 9);
+  ctx.rotate(0.12 * flutter + (far ? 0.38 : 0));
+  for (const [len, wide, angle] of [
+    [L * 1.15, L * 0.36, 1.05],
+    [L * 0.8, L * 0.24, 0.45],
+  ]) {
+    lobe(ctx, len, wide, angle);
+    const g = ctx.createLinearGradient(0, 0, Math.cos(angle) * len, Math.sin(angle) * len);
+    g.addColorStop(0, far ? tint(c, 0.1) : tint(c, 0.35));
+    g.addColorStop(1, far ? tint(c, 0.45) : tint(c, 0.8));
+    ctx.globalAlpha = far ? 0.55 : 0.72;
+    ctx.fillStyle = g;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = far ? "rgba(255,255,255,0.55)" : "rgba(255,255,255,0.95)";
+    ctx.lineWidth = L * 0.022;
+    ctx.stroke();
+    // Veins.
+    ctx.strokeStyle = "rgba(255,255,255,0.5)";
+    ctx.lineWidth = L * 0.012;
+    for (const off of [-0.18, 0.12]) {
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      const a2 = angle + off;
+      ctx.quadraticCurveTo(
+        Math.cos(a2) * len * 0.5,
+        Math.sin(a2) * len * 0.5,
+        Math.cos(angle + off * 0.5) * len * 0.92,
+        Math.sin(angle + off * 0.5) * len * 0.92,
+      );
+      ctx.stroke();
+    }
+  }
+  if (!far) {
+    // Twinkles on the wings.
+    ctx.fillStyle = "#ffffff";
+    for (let k = 0; k < 4; k++) {
+      const tw = 0.5 + 0.5 * Math.sin(time * 5 + k * 1.9);
+      const a = 0.6 + k * 0.17;
+      const r = L * (0.45 + (k % 2) * 0.3);
+      star(ctx, Math.cos(a) * r, Math.sin(a) * r, L * 0.045 * (0.5 + tw), time + k);
+      ctx.fill();
+    }
+  }
+}
+
+/** Butterfly wings: a big round upper wing and a smaller lower one, with a border and spots. */
+function butterflyWing(
+  ctx: CanvasRenderingContext2D,
+  L: number,
+  c: string,
+  time: number,
+  far: boolean,
+): void {
+  const beat = Math.sin(time * 5);
+  ctx.rotate(0.16 * beat + (far ? 0.4 : 0));
+  ctx.scale(far ? 0.8 : 0.86, far ? 0.8 : 0.86);
+  const body = far ? tint(c, -0.3) : c;
+  const border = tint(c, far ? -0.65 : -0.55);
+  const shapes: [number, number, number][] = [
+    // [len, wide, angle]: the upper wing points up and back, the lower one back.
+    [L * 1.0, L * 0.55, 1.2],
+    [L * 0.7, L * 0.38, 0.5],
+  ];
+  for (const [len, wide, angle] of shapes) {
+    lobe(ctx, len, wide, angle);
+    ctx.fillStyle = border;
+    ctx.fill();
+    ctx.save();
+    ctx.translate(Math.cos(angle) * len * 0.06, Math.sin(angle) * len * 0.06);
+    lobe(ctx, len * 0.84, wide * 0.8, angle);
+    ctx.fillStyle = body;
+    ctx.fill();
+    ctx.restore();
+    if (!far) {
+      // White spots along the border, and a big eye spot.
+      const ca = Math.cos(angle);
+      const sa = Math.sin(angle);
+      dot(
+        ctx,
+        ca * len * 0.62 - sa * wide * 0.05,
+        sa * len * 0.62 + ca * wide * 0.05,
+        wide * 0.22,
+        tint(c, 0.6),
+      );
+      dot(
+        ctx,
+        ca * len * 0.62 - sa * wide * 0.05,
+        sa * len * 0.62 + ca * wide * 0.05,
+        wide * 0.1,
+        border,
+      );
+      for (const t of [0.85, 0.98]) dot(ctx, ca * len * t, sa * len * t, wide * 0.07, "#ffffff");
+    }
+  }
 }
 
 /** Something near the tip of the tail. */
@@ -1095,4 +1189,7 @@ export function drawBodyWear(
 ): void {
   if (wardrobe.tail) drawTailWear(ctx, p, hw, wardrobe.tail, time);
   if (wardrobe.back) drawBackWear(ctx, p, hw, wardrobe.back, time, headR);
+  // The near wing, in front of the body (the far one was drawn behind it).
+  if (wardrobe.back && isWings(wardrobe.back))
+    drawWings(ctx, p, hw, wardrobe.back, time, headR, false);
 }
