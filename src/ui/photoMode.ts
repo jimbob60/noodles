@@ -288,6 +288,57 @@ export function flash(): void {
   setTimeout(() => f.remove(), 600);
 }
 
+/** The Claude app's file saver, when the game runs inside it (null everywhere else). */
+interface Saver {
+  save(r: { filename: string; data: Blob }): Promise<{ status: string }>;
+}
+type ClaudeHost = { use?: (name: string) => Promise<unknown> };
+let saver: Saver | null = null;
+let saverAsked = false;
+/** Starts asking for the Claude app's file saver early, so it's ready by the time you save. */
+function askForSaver(): Promise<Saver | null> {
+  const host = (window as unknown as { claude?: ClaudeHost }).claude;
+  if (!host?.use) return Promise.resolve(null);
+  saverAsked = true;
+  return host
+    .use("downloads")
+    .then((d) => (saver = (d as Saver | null) ?? null))
+    .catch(() => null);
+}
+const saverReady: Promise<Saver | null> =
+  typeof window !== "undefined" ? askForSaver() : Promise.resolve(null);
+
+/**
+ * Saves a photo to the device: through the Claude app's saver when the game runs inside it
+ * (the viewer confirms), otherwise as an ordinary download.
+ */
+async function savePhoto(blob: Blob, fileName: string): Promise<"saved" | "declined"> {
+  const s =
+    saver ??
+    (saverAsked
+      ? await Promise.race([saverReady, new Promise<null>((r) => setTimeout(() => r(null), 1500))])
+      : null);
+  if (s) {
+    try {
+      await s.save({ filename: fileName, data: blob });
+      return "saved";
+    } catch (e) {
+      const code = (e as { code?: string }).code;
+      if (code === "declined" || code === "rate_limited") return "declined";
+      // Any other trouble: fall back to an ordinary download.
+    }
+  }
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10_000);
+  return "saved";
+}
+
 /** Shows the photo just taken, with Save (to the device) and Share (where the device can). */
 export function showPhoto(blob: Blob, fileName: string): void {
   document.getElementById("photo-preview")?.remove();
@@ -320,13 +371,10 @@ export function showPhoto(blob: Blob, fileName: string): void {
   css(row, { display: "flex", gap: "8px", flexWrap: "wrap", justifyContent: "center" });
   const save = chip("💾 Save", true);
   save.addEventListener("click", () => {
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = fileName;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    save.textContent = "✓ Saved";
+    save.textContent = "Saving…";
+    void savePhoto(blob, fileName).then((r) => {
+      save.textContent = r === "saved" ? "✓ Saved" : "💾 Save";
+    });
   });
   row.appendChild(save);
   const file = new File([blob], fileName, { type: "image/png" });
