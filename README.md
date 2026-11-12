@@ -14,7 +14,7 @@ The game is built as a web game first (TypeScript and an HTML canvas). Later it 
 
 ## Play the latest build
 
-**[Noodle Dragons preview](https://claude.ai/artifact/Lj5vZ5pjRLpFKhJ7ENxiwv)**: a private page that always holds the newest build. The build tag in the bottom-right corner shows which commit you are playing.
+**[Noodle Dragons preview](https://claude.ai/artifact/Lj5vZ5pjRLpFKhJ7ENxiwv)**: a page that always holds the newest build (anyone with the link can play). The build tag in the top-right corner shows which commit you are playing; tap it to switch between test modes (fast time, the dragon gallery, hatching).
 
 ## The plan
 
@@ -24,15 +24,16 @@ The full 64-phase build plan lives in the [Noodle Dragons build plan doc](https:
 
 You need Node.js 22 or newer.
 
-| Command              | What it does                                                                                                            |
-| -------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `npm install`        | Installs the tools                                                                                                      |
-| `npm run dev`        | Runs the game locally with live reload                                                                                  |
-| `npm run build`      | Type-checks and builds the game into `dist/`                                                                            |
-| `npm test`           | Runs the unit tests                                                                                                     |
-| `npm run format`     | Tidies the code style                                                                                                   |
-| `npm run screenshot` | Opens the built game in headless Chromium as a tablet, saves screenshots to `screenshots/`, and fails on any page error |
-| `npm run check`      | All of the above checks in one go                                                                                       |
+| Command              | What it does                                                                                                              |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `npm install`        | Installs the tools                                                                                                        |
+| `npm run dev`        | Runs the game locally with live reload                                                                                    |
+| `npm run build`      | Type-checks and builds the game into `dist/`                                                                              |
+| `npm test`           | Runs the unit tests                                                                                                       |
+| `npm run format`     | Tidies the code style                                                                                                     |
+| `npm run screenshot` | Opens the built game in headless Chromium as a tablet, saves screenshots to `screenshots/`, and fails on any page error   |
+| `npm run check`      | All of the above checks in one go                                                                                         |
+| `npm run day`        | A robot plays a whole day (hatch, name, feed, pet, play, shop, dress up, photo, sleep, reload) and checks nothing is lost |
 
 The screenshot step needs Playwright with Chromium installed on the machine; it is not a project dependency.
 

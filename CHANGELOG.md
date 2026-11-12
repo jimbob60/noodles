@@ -2,6 +2,7 @@
 
 Newest first. One line per finished phase.
 
+- **Phase 34 — Photo mode (d27e4df, 0ca4ed0, 2026-11-12):** a camera button; hold still, pick a face and a frame (polaroid with name and date, or stars), snap, then save or share the picture.
 - **Phase 33 — Accessories (d7f6cef … 7c9c428, 2026-11-12):** a closet of 30 code-drawn accessories in four slots (hats, neck, back, tail), including dragon, fairy and yellow-and-black butterfly wings; buy, wear and recolor; they follow the body. The head now grows up too.
 - **Phase 32 — Name and profile (a83775d, 2026-11-12):** name your dragon when it hatches; a profile card with its portrait, hatch day, age, stage, personality meters, favorite food and special looks.
 - **Phase 31 — Personalities (8b7586e, 2026-11-10):** playful dragons do zoomies, sleepy ones nap and yawn, greedy ones beg for snacks, shy ones blush and keep their distance.

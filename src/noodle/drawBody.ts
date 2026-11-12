@@ -83,13 +83,17 @@ function drawScales(ctx: CanvasRenderingContext2D, p: Point[], hw: number, look:
     const size = Math.max(2, w * 0.42);
     ctx.lineWidth = Math.max(1, size * 0.18);
     const across = i % 2 === 0 ? [-0.62, 0, 0.62] : [-0.31, 0.31];
+    // One stroke for the whole row (much cheaper than one per scale).
+    const from = back - Math.PI / 2 - 0.35;
+    const to = back + Math.PI / 2 + 0.35;
+    ctx.beginPath();
     for (const a of across) {
       const x = p[i].x - f.y * w * a;
       const y = p[i].y + f.x * w * a;
-      ctx.beginPath();
-      ctx.arc(x, y, size, back - Math.PI / 2 - 0.35, back + Math.PI / 2 + 0.35);
-      ctx.stroke();
+      ctx.moveTo(x + Math.cos(from) * size, y + Math.sin(from) * size);
+      ctx.arc(x, y, size, from, to);
     }
+    ctx.stroke();
   }
 }
 

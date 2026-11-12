@@ -785,9 +785,16 @@ export function drawWings(
   const c = ACCESSORY_COLORS[worn.color] ?? ACCESSORY_COLORS[0];
   const shoulder = Math.min(p.length - 3, neckIndex(p, headR) + 2);
   const q = bodySpot(p, shoulder, hw);
-  const up = { x: -q.n.x, y: -q.n.y };
+  // Which way is "up off the back" slides smoothly through zero as the body turns straight up
+  // or down, so the wings fold flat and open on the other side instead of snapping across.
+  const side = bellySide(p, shoulder);
+  if (Math.abs(side) < 0.04) return;
+  const up = { x: q.f.y * side, y: -q.f.x * side };
   // The root sits just inside the top edge of the back; the far wing a little further forward.
-  const root = onBody(q, far ? q.w * 0.35 : 0, -q.w * 0.6);
+  const root = {
+    x: q.at.x + up.x * q.w * 0.6 + (far ? q.f.x * q.w * 0.35 : 0),
+    y: q.at.y + up.y * q.w * 0.6 + (far ? q.f.y * q.w * 0.35 : 0),
+  };
   const L = hw * 3.4;
   ctx.save();
   ctx.translate(root.x, root.y);

@@ -2,6 +2,15 @@
 
 Newest first. Each entry says what we decided, why, and what it affects.
 
+## 2026-11-12: The 50-dragon test, and a look back over the plan
+
+- **Look back (Jacob asked, before phase 35):** every ticked phase (1–34) was checked against the plan. All "done when" lines are met. Known, already-agreed differences: the repo is `noodles` (not `noodle-dragons`); the preview page is now public (anyone with the link) instead of private; Noodle Catch lasts 45 seconds; prices are first guesses until the balance gate (phase 42). Old saves from versions 1, 2, 4, 7 and 9, a broken save and a save from a "future" version were loaded into the real game at tablet, phone and sideways-phone sizes, and the fast, gallery and hatch test modes were opened: no errors, and test modes never overwrite the real save. Fixed on the way: stale README lines, this log's order (newest first again), and a stale comment. Worth knowing: all 86 commits are on the branch `claude/hopeful-planck-61yapb`; `main` still only has the first commit until Jacob wants a pull request.
+- **Decision (phase 35):** the gallery is now the 50-dragon test: fifty random dragons, ten to a page (so each is big enough to judge), already swimming when a page opens. Tap a dragon to ♥ it; favorites are kept on the device (`noodle-dragons.favorites`) and have their own page. The bar also rolls fifty new ones and switches outfits (👗) and babies (🐣) on and off. Each shows its number and main personality.
+- **Robot checks:** a test checks 3,000 dragons for colors that blend, and draws 50 dragons as babies, teens and grown-ups, dressed up, swimming a full loop, failing on any broken number or stretched body. It found two real problems, now fixed for new dragons (saved dragons keep their saved colors): about 8% had a mane, ridge and tail almost the same color as the body (pink on pink), and 2% had horns that blended in. Accents now swing across the color wheel when they would clash, horns fall back to cream (or a deep body shade on pale gold), and a mane gene that would blend uses the accent instead. Also: wings now fold flat and reopen on the other side as a dragon turns straight up or down, instead of snapping across.
+- **Speed (the plan's phase 35 check):** a grown, dressed dragon costs about 2.6 ms to draw in a software-rendered test browser (a baby about 1.7 ms; moving it costs almost nothing), against 16 ms for a smooth frame; ten at once run at 44 frames a second there. Fine for one dragon; to be measured again on the tablet when several dragons share the den (phases 36–37) and at the bug bash (phase 48).
+- **Why:** phase 35 gate ("Jacob picks favorites and nothing looks wrong").
+- **Affects:** phase 36 (favorites could become adoptable), phase 39 (rarity), phase 48 (speed).
+
 ## 2026-11-12: Photo mode
 
 - **Decision:** a 📷 camera button (sixth in the top-right stack) opens photo mode. Every button, the need orbs, coins, badge and build tag step aside; the den, decorations and the dragon (in its outfit) stay. A toolbar along the top (so it never covers the caption) has: **✋ Hold still** (the dragon freezes exactly where it is, so you can drag it into place first and then lock the pose; **▶ Move** lets it go again), four **faces** (as it is, 😊 happy "^ ^" grin, 😮 wow with big shiny eyes, 😴 sleepy), three **frames** (none, 🖼️ polaroid with a white border and the dragon's name and date in the corner of a cream strip, ⭐ starry vignette with twinkling gold stars), **📸 Snap** and ✕. The frame is drawn onto the screen itself, so what you see is the photo. Snap flashes white and shows the picture, with **💾 Save** (a PNG named like `sprinkles-2026-11-12-1741.png`, at the screen's full resolution: inside the Claude app it goes through the app's own file saver, which asks you to confirm, since plain download links don't work there; everywhere else it is an ordinary download), **📤 Share** where the device can share files, and **📸 Another**. A small "Noodle Dragons" mark sits in the corner of every photo. Photos aren't kept inside the game (they're big); stickers for Panda Studios can come from them later.
@@ -80,30 +89,6 @@ Newest first. Each entry says what we decided, why, and what it affects.
 - **Why:** Jacob asked for it; it fits the vision (still super cute and glowing).
 - **Affects:** phase 29 (growing up: babies can have smaller horns and ridge), phase 30+ (colors and rarity can use the new parts).
 
-## 2026-11-07: Decorations — drag, tap, put away; saved as save version 2
-
-- **Decision:** a decorate button (top right, under 💾) opens a drawer near the top (below the need orbs, wrapping into rows on phones) with ten detailed code-drawn decorations: a paper lantern, fairy lights, a moon mobile, a firefly jar, a crystal lamp, a tufted cushion with tassels, a mushroom stool, a flowering potted plant, a tea set and a fringed rug. Drag one out to place it, drag placed ones to move them, tap one to cycle through its three colors, and drag one onto the drawer to put it away. Floor things (cushion, stool, plant, crystal lamp, tea set, rug) stay on the floor; lanterns, lights, the mobile and jars can float, and the glowing ones glow more at night. At most 16. Positions are kept as a share of the screen so they fit any size. The save format is now version 2 (adds the decorations); version 1 saves upgrade with an empty den. While decorating, food, toys and care buttons step aside. The drawer sits up top so the whole floor is free. More detail and five more kinds were added at Jacob's request.
-- **Why:** phase 23 ("Jacob can decorate").
-- **Affects:** phases 24–25 (the shop can sell more decorations), phase 44 (menus).
-
-## 2026-11-07: The den — a cave with a window on a real-clock sky
-
-- **Decision:** the play screen is now the den: rounded rock walls with glowing crystals frame a big arched opening onto two rows of hills and the sky; a mossy floor with grass and glowing mushrooms; vines with lantern bulbs; fireflies. Layers are painted once (again on resize and every 15 minutes of sky time) and drift slightly at different speeds as the dragon moves (parallax). The sky follows the device's local clock through night (stars, moon), dawn (pink), day (a soft twilight, never above 62% lightness) and dusk (peach), blending smoothly; crystals, mushrooms and fireflies glow brighter in the dark. Fast mode runs the day 600× too. The title leaves the play screen until the title screen in phase 44. The bed sits lower, on the den floor.
-- **Why:** phase 22 ("the den feels like home"), in the night-and-glow look of VISION.md.
-- **Affects:** phase 23 (decorations go in the den), phase 26 (the mini-game can reuse the sky).
-
-## 2026-11-07: Saving — one versioned save, a spare, and backup codes
-
-- **Decision:** the whole dragon (its seed, needs and bedtime) is one save, stamped `version: 1`, stored on the device (`noodle-dragons.save`) every 5 s and when the app is hidden or closed. Before each write the last good save is kept as a spare (`noodle-dragons.save.previous`), used if the latest is ever damaged. Needs saved by the phase 13–20 builds are carried over, with a new seed. Saves are read carefully: anything broken is ignored, and a newer version is read as far as this one understands. A 💾 button (top right) shows a backup code (`ND1-…` with a checksum, so typos and cut-off codes are refused) to copy, and a box to paste one back. If the device can't save (for example a locked-down preview window), the panel says so. Fast mode and the gallery never save.
-- **Why:** phase 21 ("closing and reopening keeps everything"), and so a dragon can survive a preview window that can't store anything, or move to a new device.
-- **Affects:** every later phase that adds something to remember (names, eggs, the den, coins, several dragons) adds a version and a migration.
-
-## 2026-11-07: Eating and playing are a little messy
-
-- **Decision:** each snack takes 4 off Hygiene, each ball boop 1.5, and chasing the ribbon 0.6 a second. A full care session still ends happy (bath before the ball game).
-- **Why:** Jacob's ask, and it gives the bath sponge a reason to come out regularly.
-- **Affects:** phase 42 (balance).
-
 ## 2026-11-09: Eggs — every new dragon hatches
 
 - **Decision:** a brand-new player starts with an egg in a nest in the den. Rub it to warm it (about 600 px of rubbing; it cools gently if left, never below cold), then tap it three times to crack it (cracks spread and light shines through), and it bursts open: the top of the shell tumbles away with crumbs, sparkles and a flash, and the dragon pops out with the excited loop-de-loop and hearts. The egg is tinted with the dragon's own colors and speckled with its pattern color, so it hints at who is inside. A wordless finger hint shows rubbing, then tapping. Nothing is saved until it hatches. Existing dragons stay hatched; the mode button's 🥚 hatch test mode replays your own dragon's hatching without saving anything.
@@ -139,6 +124,30 @@ Newest first. Each entry says what we decided, why, and what it affects.
 - **Decision:** a 🛍️ button (top right, under the decorate button) opens the shop. It sells treats in packs of 3, which go in the pantry and show in a row above the food tray with a count: berry bowls (6 coins; Food +15 and extra Love) and moon cakes (15 coins; Food +30, more Love and a little Energy). It also unlocks three new decorations for good: a star beanbag (30), a blossom bonsai (40) and a planet lamp (50). The three everyday foods, the toys and the 10 starter decorations stay free forever, so care never depends on coins. The pantry holds up to 30 of each treat. Save version 4 adds the stash (pantry and unlocked decorations); older saves start empty.
 - **Why:** phase 25 ("buying works and prices feel fair"), keeping the no-stress vision.
 - **Affects:** phase 26 (the mini-game earns coins), phase 42 (balance), and later gems (phase 64).
+
+## 2026-11-07: Decorations — drag, tap, put away; saved as save version 2
+
+- **Decision:** a decorate button (top right, under 💾) opens a drawer near the top (below the need orbs, wrapping into rows on phones) with ten detailed code-drawn decorations: a paper lantern, fairy lights, a moon mobile, a firefly jar, a crystal lamp, a tufted cushion with tassels, a mushroom stool, a flowering potted plant, a tea set and a fringed rug. Drag one out to place it, drag placed ones to move them, tap one to cycle through its three colors, and drag one onto the drawer to put it away. Floor things (cushion, stool, plant, crystal lamp, tea set, rug) stay on the floor; lanterns, lights, the mobile and jars can float, and the glowing ones glow more at night. At most 16. Positions are kept as a share of the screen so they fit any size. The save format is now version 2 (adds the decorations); version 1 saves upgrade with an empty den. While decorating, food, toys and care buttons step aside. The drawer sits up top so the whole floor is free. More detail and five more kinds were added at Jacob's request.
+- **Why:** phase 23 ("Jacob can decorate").
+- **Affects:** phases 24–25 (the shop can sell more decorations), phase 44 (menus).
+
+## 2026-11-07: The den — a cave with a window on a real-clock sky
+
+- **Decision:** the play screen is now the den: rounded rock walls with glowing crystals frame a big arched opening onto two rows of hills and the sky; a mossy floor with grass and glowing mushrooms; vines with lantern bulbs; fireflies. Layers are painted once (again on resize and every 15 minutes of sky time) and drift slightly at different speeds as the dragon moves (parallax). The sky follows the device's local clock through night (stars, moon), dawn (pink), day (a soft twilight, never above 62% lightness) and dusk (peach), blending smoothly; crystals, mushrooms and fireflies glow brighter in the dark. Fast mode runs the day 600× too. The title leaves the play screen until the title screen in phase 44. The bed sits lower, on the den floor.
+- **Why:** phase 22 ("the den feels like home"), in the night-and-glow look of VISION.md.
+- **Affects:** phase 23 (decorations go in the den), phase 26 (the mini-game can reuse the sky).
+
+## 2026-11-07: Saving — one versioned save, a spare, and backup codes
+
+- **Decision:** the whole dragon (its seed, needs and bedtime) is one save, stamped `version: 1`, stored on the device (`noodle-dragons.save`) every 5 s and when the app is hidden or closed. Before each write the last good save is kept as a spare (`noodle-dragons.save.previous`), used if the latest is ever damaged. Needs saved by the phase 13–20 builds are carried over, with a new seed. Saves are read carefully: anything broken is ignored, and a newer version is read as far as this one understands. A 💾 button (top right) shows a backup code (`ND1-…` with a checksum, so typos and cut-off codes are refused) to copy, and a box to paste one back. If the device can't save (for example a locked-down preview window), the panel says so. Fast mode and the gallery never save.
+- **Why:** phase 21 ("closing and reopening keeps everything"), and so a dragon can survive a preview window that can't store anything, or move to a new device.
+- **Affects:** every later phase that adds something to remember (names, eggs, the den, coins, several dragons) adds a version and a migration.
+
+## 2026-11-07: Eating and playing are a little messy
+
+- **Decision:** each snack takes 4 off Hygiene, each ball boop 1.5, and chasing the ribbon 0.6 a second. A full care session still ends happy (bath before the ball game).
+- **Why:** Jacob's ask, and it gives the bath sponge a reason to come out regularly.
+- **Affects:** phase 42 (balance).
 
 ## 2026-11-07: Noodle coins — earned only by caring and playing
 

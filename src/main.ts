@@ -133,7 +133,7 @@ async function main(): Promise<void> {
    * or #gallery also work in a normal browser, but Claude's app viewer can drop the #):
    * - play: the real game.
    * - fast: needs time runs 600× faster (an hour every 6 s) from full; never saves.
-   * - gallery: twenty random dragons.
+   * - gallery: fifty random dragons, ten to a page; tap one to favorite it.
    */
   type Mode = "play" | "fast" | "gallery" | "hatch";
   const MODES: Mode[] = ["play", "fast", "gallery", "hatch"];
@@ -468,7 +468,8 @@ async function main(): Promise<void> {
       const inBed = needs.inBed === true;
 
       if (mode === "gallery" && gallery) {
-        gallery.update(dt, blocked ? noFinger : input);
+        // A press counts even if the tap was too quick to still be down this frame.
+        gallery.update(dt, swallowing ? null : pressAt);
         return;
       }
       if (egg) {

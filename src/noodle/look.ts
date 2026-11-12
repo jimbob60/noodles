@@ -31,7 +31,7 @@ export interface DragonLook {
   /** Pattern color (stripes, spots, back stripe) or the tail color of a gradient. */
   pattern: Hsl;
   patternKind: Pattern;
-  /** Tail tuft, toe beans and cheeks. */
+  /** Mane, back ridge, tail tip and cheeks. */
   accent: Hsl;
   horn: Hsl;
   /** Horn length, about 0.75 (stubby) to 1.3 (long and sweeping). */
@@ -126,6 +126,17 @@ const HARMONY_SHIFTS = [0, 30, -30, 60, -60, 150, 180];
 /** Pattern lightness must differ from the body by at least this much, so it shows. */
 export const MIN_CONTRAST = 16;
 
+/**
+ * Roughly how different two colors look: the hue gap (counting less for washed-out colors) plus
+ * twice the lightness gap. Under about 25 they blend into each other.
+ */
+export function colorGap(a: Hsl, b: Hsl): number {
+  const dh = Math.min(Math.abs(a.h - b.h), 360 - Math.abs(a.h - b.h));
+  return dh * (Math.min(a.s, b.s) / 100) + Math.abs(a.l - b.l) * 2;
+}
+/** Colors closer than this to the body would blend into it. */
+export const MIN_GAP = 30;
+
 export function makeLook(seed: number): DragonLook {
   const r = seededRandom(seed);
   const pick = <T>(list: T[]) => list[Math.floor(r() * list.length)];
@@ -145,9 +156,14 @@ export function makeLook(seed: number): DragonLook {
 
   // Accent: pink by default (cute!), or a hue far from the body for contrast.
   const accentHue = r() < 0.5 ? range(318, 335) : (body.h + range(140, 200)) % 360;
-  const accent: Hsl = { h: accentHue, s: range(85, 95), l: range(72, 80) };
+  let accent: Hsl = { h: accentHue, s: range(85, 95), l: range(72, 80) };
+  // A pink mane on a pink dragon would vanish: swing it across the color wheel instead.
+  if (colorGap(accent, body) < MIN_GAP) accent = { ...accent, h: (body.h + 165) % 360 };
 
-  const horn: Hsl = r() < 0.7 ? { h: 45, s: 100, l: 89 } : shade(pattern, 12);
+  let horn: Hsl = r() < 0.7 ? { h: 45, s: 100, l: 89 } : shade(pattern, 12);
+  // Horns must stand out from the head too: cream, or a deep shade of the body on pale gold.
+  if (colorGap(horn, body) < MIN_GAP) horn = { h: 45, s: 100, l: 89 };
+  if (colorGap(horn, body) < MIN_GAP) horn = shade(body, -30, -10);
   // Body shape comes from its own stream, so adding it kept every dragon's colors the same.
   const b = seededRandom(seed ^ 0x9e37_79b9);
   const between = (a: number, z: number) => a + b() * (z - a);

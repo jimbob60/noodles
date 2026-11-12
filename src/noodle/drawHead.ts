@@ -1,6 +1,6 @@
 import { rimOf } from "./drawBody";
 import type { Face } from "./face";
-import { CLASSIC_LOOK, hsl, shade, type DragonLook, type Hsl } from "./look";
+import { CLASSIC_LOOK, colorGap, hsl, MIN_GAP, shade, type DragonLook, type Hsl } from "./look";
 import type { Point } from "./spine";
 import { drawHeadWear } from "./accessories";
 import type { Worn } from "../care/wardrobe";
@@ -27,10 +27,15 @@ export interface HeadColors {
 }
 
 /** The mane's color from its gene: the accent, the pattern or the horn color. */
-function maneOf(look: DragonLook): Hsl {
-  if (look.maneColor === "pattern") return look.pattern;
-  if (look.maneColor === "horn") return shade(look.horn, -6);
-  return look.accent;
+export function maneOf(look: DragonLook): Hsl {
+  const pick =
+    look.maneColor === "pattern"
+      ? look.pattern
+      : look.maneColor === "horn"
+        ? shade(look.horn, -6)
+        : look.accent;
+  // Whatever the gene says, a mane that would blend into the head uses the accent instead.
+  return colorGap(pick, look.body) < MIN_GAP ? look.accent : pick;
 }
 
 /** Head colors that match a dragon's look. */
@@ -247,6 +252,10 @@ export function drawHead(
   ctx.strokeStyle = c.scale;
   ctx.lineWidth = Math.max(1, r * 0.045);
   const sz = r * 0.2;
+  const a0 = Math.PI * 0.5 + 0.35;
+  const a1 = Math.PI * 1.5 - 0.35;
+  // All the head's scales in one stroke.
+  ctx.beginPath();
   for (let row = 0; row < 7; row++) {
     const y = -r * 0.95 + row * sz * 1.25;
     const shift = row % 2 === 0 ? 0 : sz;
@@ -254,11 +263,12 @@ export function drawHead(
       // Fewer, smaller scales toward the face.
       const near = Math.max(0, Math.min(1, (x + r * 0.2) / (r * 0.7)));
       if (near > 0.85) continue;
-      ctx.beginPath();
-      ctx.arc(x, y, sz * (1 - near * 0.4), Math.PI * 0.5 + 0.35, Math.PI * 1.5 - 0.35);
-      ctx.stroke();
+      const rr = sz * (1 - near * 0.4);
+      ctx.moveTo(x + Math.cos(a0) * rr, y + Math.sin(a0) * rr);
+      ctx.arc(x, y, rr, a0, a1);
     }
   }
+  ctx.stroke();
   // Pale chin and lower jaw.
   ctx.beginPath();
   ctx.ellipse(X(0.7), r * 0.62, r * 0.85, r * 0.32, -0.12, 0, Math.PI * 2);
