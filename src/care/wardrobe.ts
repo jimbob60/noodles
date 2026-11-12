@@ -1,21 +1,38 @@
 import { spend, type Wallet } from "./coins";
 
 /** Where an accessory goes. One of each can be worn at once. */
-export type Slot = "head" | "neck" | "tail";
-export const SLOTS: Slot[] = ["head", "neck", "tail"];
+export type Slot = "head" | "neck" | "back" | "tail";
+export const SLOTS: Slot[] = ["head", "neck", "back", "tail"];
 
 export const ACCESSORIES = [
+  { id: "hairBow", slot: "head", name: "Hair bow", cost: 30 },
   { id: "partyHat", slot: "head", name: "Party hat", cost: 40 },
-  { id: "flowerCrown", slot: "head", name: "Flower crown", cost: 50 },
   { id: "beanie", slot: "head", name: "Cozy beanie", cost: 45 },
+  { id: "chefHat", slot: "head", name: "Chef hat", cost: 45 },
+  { id: "flowerCrown", slot: "head", name: "Flower crown", cost: 50 },
+  { id: "santaHat", slot: "head", name: "Santa hat", cost: 50 },
+  { id: "propellerCap", slot: "head", name: "Propeller cap", cost: 55 },
   { id: "witchHat", slot: "head", name: "Witch hat", cost: 60 },
+  { id: "cowboyHat", slot: "head", name: "Cowboy hat", cost: 60 },
   { id: "topHat", slot: "head", name: "Top hat", cost: 70 },
   { id: "crown", slot: "head", name: "Royal crown", cost: 80 },
+  { id: "halo", slot: "head", name: "Halo", cost: 90 },
   { id: "bowTie", slot: "neck", name: "Bow tie", cost: 30 },
   { id: "bandana", slot: "neck", name: "Bandana", cost: 35 },
   { id: "bellCollar", slot: "neck", name: "Bell collar", cost: 40 },
+  { id: "lei", slot: "neck", name: "Flower lei", cost: 40 },
   { id: "scarf", slot: "neck", name: "Cozy scarf", cost: 45 },
+  { id: "heartLocket", slot: "neck", name: "Heart locket", cost: 50 },
+  { id: "pearls", slot: "neck", name: "Pearl necklace", cost: 65 },
+  { id: "backpack", slot: "back", name: "Tiny backpack", cost: 45 },
+  { id: "cape", slot: "back", name: "Hero cape", cost: 70 },
+  { id: "butterflyWings", slot: "back", name: "Butterfly wings", cost: 85 },
+  { id: "fairyWings", slot: "back", name: "Fairy wings", cost: 90 },
   { id: "tailBow", slot: "tail", name: "Tail bow", cost: 30 },
+  { id: "tailFlower", slot: "tail", name: "Tail flower", cost: 35 },
+  { id: "tailBell", slot: "tail", name: "Tail bell", cost: 35 },
+  { id: "streamers", slot: "tail", name: "Ribbon streamers", cost: 40 },
+  { id: "tailStar", slot: "tail", name: "Star charm", cost: 45 },
   { id: "tailRings", slot: "tail", name: "Tail rings", cost: 55 },
 ] as const;
 export type AccessoryId = (typeof ACCESSORIES)[number]["id"];

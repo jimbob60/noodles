@@ -9,6 +9,7 @@ function dressUp(seed: number): Wardrobe["worn"] {
   for (const [slot, chance] of [
     ["head", 0.6],
     ["neck", 0.5],
+    ["back", 0.3],
     ["tail", 0.4],
   ] as const) {
     const options = ACCESSORIES.filter((a) => a.slot === slot);

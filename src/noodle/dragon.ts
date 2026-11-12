@@ -14,7 +14,7 @@ import { legSizes, makeLegs, updateLegs, type Leg, type LegSizes } from "./legs"
 import { hsl, type DragonLook } from "./look";
 import { CLASSIC_GENES, type Genes } from "./genes";
 import { temperOf, type Temper } from "./personality";
-import { drawBodyWear } from "./accessories";
+import { drawBodyWear, drawNeckWear } from "./accessories";
 import type { Wardrobe } from "../care/wardrobe";
 import { Spine, type Point } from "./spine";
 import { Swimmer } from "./swimmer";
@@ -705,6 +705,9 @@ export class Dragon {
       this.outfit.head,
       this.time,
     );
+    // The neck thing goes over the back of the mane, so it always shows.
+    if (this.outfit.neck)
+      drawNeckWear(ctx, this.spine.points, hw, this.outfit.neck, this.time, this.headRadius);
     if (purr > 0.25) this.drawPurr(ctx, purr);
     if (this.asleep) this.drawSnoreBubble(ctx);
     ctx.restore();

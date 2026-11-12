@@ -80,7 +80,7 @@ check(
 const eggAt = { x: W / 2, y: H * 0.62 };
 await drag(
   eggAt,
-  Array.from({ length: 90 }, (_, i) => ({ x: eggAt.x + Math.sin(i / 3) * 40, y: eggAt.y })),
+  Array.from({ length: 130 }, (_, i) => ({ x: eggAt.x + Math.sin(i / 3) * 40, y: eggAt.y })),
 );
 console.log(`  (egg after rubbing: ${await data("egg")})`);
 for (let c = 0; c < 3; c++) {
@@ -179,10 +179,10 @@ const tiles = await p.$$("#closet-panel [data-accessory]");
 await p.click('[data-accessory="crown"]');
 await step(100);
 check(
-  tiles.length === 12 &&
+  tiles.length === 29 &&
     (await num("coins")) === coinsBeforeCloset &&
     (await data("outfit")) === "",
-  `the closet opens with 12 accessories, and won't sell a crown for 80 with ${coinsBeforeCloset} coins`,
+  `the closet opens with 29 accessories, and won't sell a crown for 80 with ${coinsBeforeCloset} coins`,
 );
 await p.click("#closet-panel >> text=✕");
 await step(200);

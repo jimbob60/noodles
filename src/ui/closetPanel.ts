@@ -57,20 +57,42 @@ export function drawClosetButton(
 }
 
 const ICON: Record<AccessoryId, string> = {
+  hairBow: "🎀",
   partyHat: "🎉",
-  flowerCrown: "🌸",
   beanie: "🧶",
+  chefHat: "👨‍🍳",
+  flowerCrown: "🌸",
+  santaHat: "🎅",
+  propellerCap: "🧢",
   witchHat: "🧙",
+  cowboyHat: "🤠",
   topHat: "🎩",
   crown: "👑",
+  halo: "😇",
   bowTie: "🎀",
   bandana: "🔺",
   bellCollar: "🔔",
+  lei: "🌺",
   scarf: "🧣",
+  heartLocket: "💗",
+  pearls: "📿",
+  backpack: "🎒",
+  cape: "🦸",
+  butterflyWings: "🦋",
+  fairyWings: "🧚",
   tailBow: "🎀",
+  tailFlower: "🌼",
+  tailBell: "🔔",
+  streamers: "🎏",
+  tailStar: "⭐",
   tailRings: "💍",
 };
-const SLOT_LABEL: Record<Slot, string> = { head: "🎩 Hats", neck: "🧣 Neck", tail: "🎀 Tail" };
+const SLOT_LABEL: Record<Slot, string> = {
+  head: "🎩 Hats",
+  neck: "🧣 Neck",
+  back: "🦋 Back",
+  tail: "🎀 Tail",
+};
 
 const css = (el: HTMLElement, style: Partial<CSSStyleDeclaration>) =>
   Object.assign(el.style, style);
