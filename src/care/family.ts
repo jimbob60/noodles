@@ -1,3 +1,4 @@
+import { rareBySeed } from "../noodle/rareGenes";
 import { spend, type Wallet } from "./coins";
 import { freshGrowth, growAway, parseGrowth, type Growth } from "./growth";
 import { parseIdentity, type Identity } from "./identity";
@@ -33,10 +34,15 @@ export interface FamilyMember {
 /** A freshly adopted egg (Jinx's special egg brings its own hand-made genes and name). */
 export function newEgg(seed: number, now: number): FamilyMember {
   const jinx = seed === JINX_SEED;
+  const rare = rareBySeed(seed);
   return {
     seed,
     genes: jinx ? JINX_GENES : genesFromSeed(seed),
-    identity: jinx ? { name: "Jinx", birthday: now } : parseIdentity(null, seed, now),
+    identity: jinx
+      ? { name: "Jinx", birthday: now }
+      : rare
+        ? { name: rare.name, birthday: now }
+        : parseIdentity(null, seed, now),
     needs: freshNeeds(now),
     growth: freshGrowth(),
     worn: {},

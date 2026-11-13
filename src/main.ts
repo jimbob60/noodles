@@ -27,6 +27,7 @@ import { Friendship } from "./noodle/friends";
 import { Cat, RUB_LOVE } from "./pets/cat";
 import { drawCat } from "./pets/drawCat";
 import { JINX_SEED } from "./noodle/genes";
+import { rareBySeed, raresInSeason, rareSurprise } from "./noodle/rareGenes";
 import { MAX_FAMILY } from "./care/family";
 import { decodeBackup, encodeBackup, makeSave, type Save } from "./save/saveGame";
 import { drawBackupButton, onBackupButton, openBackupPanel } from "./ui/backupPanel";
@@ -396,7 +397,10 @@ async function main(): Promise<void> {
     // The one stepping aside will be there to meet the baby (unless a friend is already over).
     const stays = !family.some((m) => m.visiting) && !adoptedEgg;
     family = [...family, { ...asMember(), visiting: stays }];
-    bring(newEgg(pick ?? randomSeed(), Date.now()));
+    // In the two weeks around a holiday, a surprise egg may be that holiday's dragon.
+    const owned = [seed, ...family.map((m) => m.seed)];
+    const surprise = rareSurprise(Date.now(), owned, Math.random)?.seed ?? randomSeed();
+    bring(newEgg(pick ?? surprise, Date.now()));
     return true;
   }
   const showFamilyPanel = () => {
@@ -425,6 +429,9 @@ async function main(): Promise<void> {
       cards: [cardOf(asMember(), true), ...family.map((m) => cardOf(catchUp(m, now), false))],
       coins: wallet.coins,
       jinxEgg: !hasJinx(),
+      season: raresInSeason(now)
+        .filter((r) => !taken.has(r.seed))
+        .map((r) => `${r.icon} ${r.name}`),
       favorites: favorites.filter((f) => !taken.has(f)),
       onVisit: (i) => visit(i - 1),
       onInvite: (i, over) => invite(i - 1, over),
@@ -703,6 +710,8 @@ async function main(): Promise<void> {
             // Hatch day! Then a name: a cute one is suggested, and any name will do.
             identity = newIdentity(Date.now());
             if (seed === JINX_SEED) identity = { ...identity, name: "Jinx" };
+            const rareHere = rareBySeed(seed);
+            if (rareHere) identity = { ...identity, name: rareHere.name };
             showName();
             persist();
             openNamePanel({

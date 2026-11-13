@@ -150,6 +150,8 @@ export function openFamily(opts: {
   coins: number;
   /** Jinx's special egg (the dragon that matches Jinxy the cat) hasn't been adopted yet. */
   jinxEgg: boolean;
+  /** Holiday dragons that a surprise egg might be right now (like "🎃 Pumpkin"). */
+  season: string[];
   /** Dragon numbers ♥ed in the gallery (a few are offered as eggs). */
   favorites: number[];
   /** Brings a family member (by its place in `cards`) out into the den. */
@@ -389,6 +391,15 @@ export function openFamily(opts: {
     surprise.id = "adopt-surprise";
     row.appendChild(surprise);
     adoptBox.appendChild(row);
+    if (opts.season.length) {
+      const note = el(
+        "div",
+        { fontSize: "13px", color: "#ffe08a", marginTop: "8px" },
+        `✨ It's a holiday! A surprise egg might hatch a rare ${opts.season.join(" or ")}.`,
+      );
+      note.id = "season-note";
+      adoptBox.appendChild(note);
+    }
     const favs = opts.favorites.slice(-6).reverse();
     if (favs.length) {
       adoptBox.appendChild(

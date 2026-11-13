@@ -2,6 +2,15 @@
 
 Newest first. Each entry says what we decided, why, and what it affects.
 
+## 2026-11-13: Holiday dragons (super rares), batch one of two
+
+- **Decision:** ten hand-made holiday dragons, themed on American holidays (Jacob's pick): Sparkler (New Year's), Sweetheart (Valentine's), Clover (St. Patrick's), Jellybean (Easter), Firecracker (4th of July), Pumpkin and Boo (Halloween), Gobble (Thanksgiving), Tinsel (Christmas) and Snowflake (first day of winter). **Batch one is built: Pumpkin, Boo, Gobble, Tinsel, Snowflake**; the other five follow.
+- **How you get one:** only in the two weeks around its holiday (7 days either side; Thanksgiving is worked out as the fourth Thursday of November). In that window a 🎁 surprise egg has a 35% chance to be the holiday's dragon, never one the family already has, and the family card says so. It hatches already named. Miss it and it's back next year. The gallery's 🎉 button shows them all, any day, for testing and admiring.
+- **Parts no other dragon has** (`src/noodle/rares.ts`; a gene `special` says which): **Pumpkin** has a jack-o'-lantern for a head (carved eyes and a jagged grin lit by a flickering candle, a stem and curly vine) and a vine tail. **Snowflake** has a snowman head (coal eyes and smile, carrot nose, scarf), a spinning snowflake tail and snow drifting off it. **Boo** is see-through, has no legs, a wispy tail that fades away, and now and then fades almost out and pops back. **Gobble** has a turkey's fan of feathers for a tail, a wattle, a pilgrim hat, and autumn leaves falling off it. **Tinsel** has antlers strung with twinkling lights, a glowing red nose, a string of lights down its body that blink in turn, and a jingle-bell tail. Faces still work (blink, sleep, happy, chomp). Babies get small versions. Hats from the closet still go on top.
+- **Saves:** unchanged format (version 13); the genes just carry `special`.
+- **Why:** Jacob asked for super rare themed dragons, each with features others don't have.
+- **Affects:** phase 38 (breeding with a rare), phase 39 (rarity: these are the top tier), phase 40 (Dragondex pages for them).
+
 ## 2026-11-13: Jinxy the cat, and Jinx the matching dragon
 
 - **Decision:** the dragons get a pet: **Jinxy**, drawn from a photo of Jacob's real cat. A long-haired black cat with bright yellow-green eyes, round pupils, tufted ears, a huge plume of a tail, and one extra canine tooth on her right side (it stays on her right whichever way she faces). She lives on the den floor between the food and toy trays: strolls, sits swishing her tail, grooms a paw, naps (all night at bedtime), purrs with hearts when you tap her, and rubs up against a dragon that swims close (Love +2 for the dragon, at most every 25 seconds). She is drawn twice (a soft purple edge, then black fur) so she shows on the dark floor. She is not saved and has no needs: she can't be neglected. She steps out during Noodle Catch. Other pets can follow the same pattern later (`src/pets/`).

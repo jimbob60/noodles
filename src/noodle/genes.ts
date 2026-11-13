@@ -1,3 +1,4 @@
+import { rareBySeed } from "./rareGenes";
 import { favoriteFood, FOOD_IDS, type FoodId } from "../care/food";
 import { tickleSpots } from "../care/petting";
 import {
@@ -8,6 +9,8 @@ import {
   MARKS,
   MOUTH_STYLES,
   SPECIAL_MOUTHS,
+  SPECIALS,
+  type Special,
   PATTERNS,
   RIDGE_STYLES,
   seededRandom,
@@ -41,6 +44,9 @@ export interface Genes extends DragonLook {
 
 /** A wild dragon's genes, all from one seed (the same seed always gives the same genes). */
 export function genesFromSeed(seed: number): Genes {
+  // A holiday dragon's number always gives that holiday dragon.
+  const rare = rareBySeed(seed);
+  if (rare) return rare.genes;
   const r = seededRandom(seed ^ 0x6e0_0d1e);
   const personality = { playful: r(), sleepy: r(), greedy: r(), shy: r() };
   return {
@@ -195,6 +201,7 @@ export function parseGenes(raw: unknown): Genes | null {
     maneColor: pick(MANE_COLORS, g.maneColor, wild.maneColor),
     frills: bool(g.frills, wild.frills),
     mouthStyle: pick([...MOUTH_STYLES, ...SPECIAL_MOUTHS], g.mouthStyle, wild.mouthStyle),
+    ...(SPECIALS.includes(g.special as Special) ? { special: g.special as Special } : {}),
     personality: { playful, sleepy, greedy, shy },
     favorite,
     tickles,

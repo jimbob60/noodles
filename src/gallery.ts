@@ -5,6 +5,7 @@ import { genesFromSeed } from "./noodle/genes";
 import { seededRandom } from "./noodle/look";
 import { mainTrait, TRAIT_LABEL } from "./noodle/personality";
 import { palette } from "./palette";
+import { RARES } from "./noodle/rareGenes";
 
 /** How many dragons one roll makes, and how many show at once. */
 export const GALLERY_COUNT = 50;
@@ -65,7 +66,7 @@ interface Cell {
 }
 
 interface Button {
-  id: "prev" | "next" | "favorites" | "roll" | "outfits" | "age";
+  id: "prev" | "next" | "favorites" | "roll" | "outfits" | "age" | "rares";
   label: string;
   x: number;
   w: number;
@@ -83,6 +84,8 @@ export class Gallery {
   private favorites: number[];
   private page = 0;
   private showFavorites = false;
+  /** Showing the holiday dragons (so they can be seen any day of the year). */
+  private showRares = false;
   private outfits = true;
   private babies = false;
   private cells: Cell[] = [];
@@ -121,6 +124,7 @@ export class Gallery {
 
   /** The dragons being browsed: this roll's fifty, or the favorites. */
   private get list(): number[] {
+    if (this.showRares) return RARES.map((r) => r.seed);
     return this.showFavorites ? this.favorites : this.seeds;
   }
 
@@ -178,6 +182,7 @@ export class Gallery {
       { id: "roll", label: narrow ? "🎲" : "🎲 New 50", w: narrow ? 44 : 104 },
       { id: "outfits", label: "👗", w: 44, on: this.outfits },
       { id: "age", label: "🐣", w: 44, on: this.babies },
+      { id: "rares", label: "🎉", w: 44, on: this.showRares },
     ];
     const gap = narrow ? 6 : 10;
     const total = defs.reduce((s, b) => s + b.w, 0) + gap * (defs.length - 1);
@@ -201,7 +206,11 @@ export class Gallery {
         this.page = 0;
       } else if (b.id === "roll") return this.roll();
       else if (b.id === "outfits") this.outfits = !this.outfits;
-      else this.babies = !this.babies;
+      else if (b.id === "rares") {
+        this.showRares = !this.showRares;
+        this.showFavorites = false;
+        this.page = 0;
+      } else this.babies = !this.babies;
       this.layout();
       return;
     }

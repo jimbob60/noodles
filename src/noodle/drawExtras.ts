@@ -1,3 +1,4 @@
+import { drawRareTail } from "./rares";
 import { bodyProfile } from "./body";
 import { rimOf } from "./drawBody";
 import { forwardAt, liftOf, type Leg, type LegSizes } from "./legs";
@@ -88,6 +89,7 @@ export function drawTailTuft(
   const before = spine[n - 3];
   const back = Math.atan2(tip.y - before.y, tip.x - before.x);
   const sway = Math.sin(time * 3.1) * 0.22;
+  if (look.special && drawRareTail(ctx, look, tip, back, hw, time)) return;
   if (look.tailStyle === "fan") return drawFan(ctx, tip, back, sway, hw, look);
   if (look.tailStyle === "pompom") return drawPompom(ctx, tip, back, sway, hw, look);
   const tongues = [

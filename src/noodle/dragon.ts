@@ -13,6 +13,7 @@ import { IdleBrain, type World } from "./idleBrain";
 import { legSizes, makeLegs, updateLegs, type Leg, type LegSizes } from "./legs";
 import { hsl, type DragonLook } from "./look";
 import { CLASSIC_GENES, type Genes } from "./genes";
+import { drawRareBody } from "./rares";
 import { temperOf, type Temper } from "./personality";
 import { drawBodyWear, drawNeckWear, drawWings } from "./accessories";
 import type { Wardrobe } from "../care/wardrobe";
@@ -732,8 +733,15 @@ export class Dragon {
         ctx.stroke();
       }
     }
+    const ghost = this.look.special === "boo";
+    if (ghost) {
+      // Boo is see-through, and now and then fades almost away before popping back.
+      const v = Math.max(0, (Math.sin(this.time * 0.45 - 1.6) - 0.85) / 0.15);
+      ctx.globalAlpha = 0.82 - 0.6 * v * v * (3 - 2 * v);
+    }
     drawHalo(ctx, this.spine, this.look, puff);
-    drawLegs(ctx, this.legs, this.spine.points, this.sizes, this.look);
+    // (A ghost has no legs: it floats.)
+    if (!ghost) drawLegs(ctx, this.legs, this.spine.points, this.sizes, this.look);
     // The far wing peeks up from behind the body.
     if (this.outfit.back)
       drawWings(ctx, this.spine.points, hw, this.outfit.back, this.time, this.headRadius, true);
@@ -741,6 +749,7 @@ export class Dragon {
     drawBody(ctx, this.spine, this.look, puff);
     if (this.grime > 0) this.drawGrime(ctx, hw);
     drawTailTuft(ctx, this.spine.points, hw, this.asleep ? this.time * 0.3 : this.time, this.look);
+    if (this.look.special) drawRareBody(ctx, this.look, this.spine.points, hw, this.time);
     // Whiskers before the head, so they hang out from under the snout instead of over the eyes.
     drawBodyWear(ctx, this.spine.points, hw, this.outfit, this.time, this.headRadius);
     drawWhiskers(ctx, this.whiskers, hw, this.look);

@@ -2,6 +2,7 @@ import { isDark, rimOf } from "./drawBody";
 import type { Face } from "./face";
 import { CLASSIC_LOOK, colorGap, hsl, MIN_GAP, shade, type DragonLook, type Hsl } from "./look";
 import type { Point } from "./spine";
+import { drawRareFace, drawRareHead } from "./rares";
 import { drawHeadWear } from "./accessories";
 import type { Worn } from "../care/wardrobe";
 
@@ -97,6 +98,11 @@ export function drawHead(
   const rimWidth = Math.max(1.5, r * 0.09);
   // The snout gene stretches or shortens only the muzzle (in front of the eye).
   const X = (x: number) => r * muzzleX(x, c.look.snoutLength);
+  // Pumpkin and Snowflake have a whole head of their own (a jack-o'-lantern, a snowman).
+  if (c.look.special && drawRareHead(ctx, c.look, r, face, time)) {
+    ctx.restore();
+    return;
+  }
   ctx.lineWidth = rimWidth;
   ctx.lineJoin = "round";
   ctx.lineCap = "round";
@@ -402,6 +408,7 @@ export function drawHead(
     face.droop,
     face.pleading,
   );
+  if (c.look.special) drawRareFace(ctx, c.look, r, X(1.42), time);
   if (hat) drawHeadWear(ctx, r, hat, time);
 
   ctx.restore();

@@ -1,3 +1,4 @@
+import { rareOf } from "../noodle/rareGenes";
 import {
   ageText,
   birthdayText,
@@ -154,6 +155,12 @@ const STAGE_LABEL = { baby: "🐣 Baby", kid: "🌱 Kid", teen: "⭐ Teen", adul
 /** The special things about how it looks, as short labels. */
 export function lookTraits(g: Genes): string[] {
   const out: string[] = [];
+  const rare = rareOf(g.special);
+  if (rare) {
+    // A holiday dragon: its badge says it all.
+    out.push(`${rare.icon} ${rare.holiday[0].toUpperCase()}${rare.holiday.slice(1)} rare`);
+    return out;
+  }
   out.push({ antler: "Antler horns", curl: "Curly horns", spike: "Spike horns" }[g.hornStyle]);
   out.push({ spikes: "Spiky back", scallops: "Scalloped back", sail: "Sail fin" }[g.ridgeStyle]);
   out.push({ flame: "Flame tail", fan: "Fan tail", pompom: "Pompom tail" }[g.tailStyle]);

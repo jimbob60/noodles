@@ -22,6 +22,21 @@ export type TailStyle = (typeof TAIL_STYLES)[number];
 export type Mark = (typeof MARKS)[number];
 export type WhiskerColor = (typeof WHISKER_COLORS)[number];
 export type ManeColor = (typeof MANE_COLORS)[number];
+/** The holiday dragons (see rareGenes.ts). */
+export const SPECIALS = [
+  "sparkler",
+  "sweetheart",
+  "clover",
+  "jellybean",
+  "firecracker",
+  "pumpkin",
+  "boo",
+  "gobble",
+  "tinsel",
+  "snowflake",
+] as const;
+export type Special = (typeof SPECIALS)[number];
+
 /** Mouths only special dragons have (never rolled at random). */
 export const SPECIAL_MOUTHS = ["extraFang"] as const;
 export type MouthStyle = (typeof MOUTH_STYLES)[number] | (typeof SPECIAL_MOUTHS)[number];
@@ -83,6 +98,8 @@ export interface DragonLook {
   frills: boolean;
   /** Teeth: none showing, two little fangs, a grin full of sharp teeth, or one snaggle-tooth. */
   mouthStyle: MouthStyle;
+  /** A holiday dragon: which one (it has parts no other dragon has). */
+  special?: Special;
 }
 
 export const hsl = (c: Hsl, alpha = 1): string =>
