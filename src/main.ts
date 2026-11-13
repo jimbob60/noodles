@@ -27,6 +27,8 @@ import { Friendship } from "./noodle/friends";
 import { Cat, RUB_LOVE } from "./pets/cat";
 import { drawCat } from "./pets/drawCat";
 import { JINX_SEED } from "./noodle/genes";
+import { drawHelpButton, onHelpButton, openFeedback, openHowTo } from "./ui/helpPanel";
+import { logEvent, logText, watchErrors } from "./ui/log";
 import { rareBySeed, raresInSeason, rareSurprise } from "./noodle/rareGenes";
 import { MAX_FAMILY } from "./care/family";
 import { decodeBackup, encodeBackup, makeSave, type Save } from "./save/saveGame";
@@ -79,6 +81,7 @@ async function main(): Promise<void> {
   // Wait for the fancy font so the title isn't drawn in a plain one.
   await document.fonts.load(`80px "${TITLE_FONT}"`).catch(() => undefined);
 
+  watchErrors();
   const screen = new Screen(document.getElementById("game") as HTMLCanvasElement);
   const input = new Input(screen.canvas);
   const den = new Den();
@@ -183,6 +186,39 @@ async function main(): Promise<void> {
    * A friend: one of the family out in the den too, doing its own thing and playing with the
    * dragon you're caring for (nuzzles, chases, the odd tangle).
    */
+  /** Things kept on this device apart from the save (the how-to card, the tester gift). */
+  const flag = (key: string) => {
+    try {
+      return localStorage.getItem(`noodle-dragons.${key}`) !== null;
+    } catch {
+      return true; // no storage: don't keep popping up
+    }
+  };
+  const setFlag = (key: string) => {
+    try {
+      localStorage.setItem(`noodle-dragons.${key}`, String(Date.now()));
+    } catch {
+      // no storage here
+    }
+  };
+  /** The tester gift: coins once per device, for friends trying the game out. */
+  const TESTER_GIFT = 300;
+  const bugLog = () =>
+    logText({
+      mode,
+      dragon: identity.name,
+      stage: document.body.dataset.stage,
+      mood: document.body.dataset.mood,
+      family: family.length + 1,
+      coins: wallet.coins,
+      fps: Math.round(loop.fps()),
+    });
+  const showHelp = (gift = 0) =>
+    openHowTo({
+      gift,
+      onFeedback: () => openFeedback("feedback", bugLog),
+      onBug: () => openFeedback("bug", bugLog),
+    });
   /** Jinxy, the dragons' pet cat. */
   const cat = new Cat();
   let friend: Dragon | null = null;
@@ -494,6 +530,26 @@ async function main(): Promise<void> {
       if (!input.down) swallowing = false;
       // Really playing: the real game, with a hatched dragon out in the den.
       const playing = mode === "play" && !egg;
+      if (pressAt) logEvent(`tap ${Math.round(pressAt.x)},${Math.round(pressAt.y)} (${mode})`);
+      // The first time (once named), the how-to card, with a coin gift for testers.
+      if (playing && !flag("howto") && !document.getElementById("name-panel")) {
+        setFlag("howto");
+        let gift = 0;
+        if (!flag("testerGift")) {
+          setFlag("testerGift");
+          gift = TESTER_GIFT;
+          wallet = { ...wallet, coins: wallet.coins + gift };
+          coinCounter.earned(gift, { x: screen.width / 2, y: screen.height / 2 });
+          persist();
+          logEvent(`tester gift ${gift}`);
+        }
+        showHelp(gift);
+      }
+      // ❓: how to play, feedback and bug reports.
+      if (pressAt && !swallowing && playing && onHelpButton(pressAt, screen.width, screen.height)) {
+        swallowing = true;
+        showHelp();
+      }
       // Jinxy the cat: a tap on her is a pet (purr!), and nothing else.
       if (
         pressAt &&
@@ -515,6 +571,7 @@ async function main(): Promise<void> {
         onBackupButton(pressAt, screen.width, screen.height)
       ) {
         swallowing = true;
+        logEvent("open showBackup");
         showBackup();
       }
       // The decorate button (top right, under the backup button): decorating mode on or off.
@@ -548,6 +605,7 @@ async function main(): Promise<void> {
       // The shop button: spend noodle coins.
       if (pressAt && !swallowing && playing && onShopButton(pressAt, screen.width, screen.height)) {
         swallowing = true;
+        logEvent("open openShop");
         openShop(wallet, stash, (item) => {
           const r = buy(item, wallet, stash);
           if (!r.ok) return null;
@@ -567,6 +625,7 @@ async function main(): Promise<void> {
         onClosetButton(pressAt, screen.width, screen.height)
       ) {
         swallowing = true;
+        logEvent("open openCloset");
         openCloset({
           wardrobe,
           wallet,
@@ -607,11 +666,13 @@ async function main(): Promise<void> {
         onFamilyButton(pressAt, screen.width, screen.height)
       ) {
         swallowing = true;
+        logEvent("open showFamilyPanel");
         showFamilyPanel();
       }
       // The name badge under the coins opens the dragon's profile card.
       if (pressAt && !swallowing && playing && !catchGame && onGrowthBadge(pressAt)) {
         swallowing = true;
+        logEvent("open openProfile");
         openProfile({
           identity,
           genes,
@@ -1040,6 +1101,7 @@ async function main(): Promise<void> {
             if (!decorator.active && !catchGame) drawCameraButton(ctx, screen.width, screen.height);
             if (!decorator.active && !catchGame)
               drawFamilyButton(ctx, screen.width, screen.height, family.length + 1);
+            drawHelpButton(ctx, screen.width, screen.height);
           }
           if (catchGame) {
             drawCatchHud(

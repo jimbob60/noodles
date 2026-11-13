@@ -21,6 +21,8 @@ const url = server.resolvedUrls.local[0];
 const browser = await chromium.launch();
 const ctx = await browser.newContext({ viewport: { width: W, height: H }, hasTouch: true });
 await ctx.clock.install({ time: new Date(2026, 10, 9, 10, 0).getTime() });
+// The robot plays without the friends' tester gift, so its coin checks add up.
+await ctx.addInitScript(() => localStorage.setItem("noodle-dragons.testerGift", "1"));
 const errors = [];
 let p;
 
@@ -96,6 +98,14 @@ await p.fill("#name-panel input", "Biscuit");
 await p.click("#name-panel >> text=That's the one");
 await step(200);
 check((await data("name")) === "Biscuit", "the new dragon is named Biscuit");
+// The first time, a how-to-play card (with feedback and bug buttons) pops up once.
+await p.waitForSelector("#howto-panel");
+check(
+  (await p.$$("#howto-panel button")).length === 3 && (await p.$("#tester-gift")) === null,
+  "a how-to card pops up once, with feedback and bug-report buttons",
+);
+await p.click("#howto-ok");
+await step(200);
 const fresh = await save();
 check(fresh.version >= 10, `a new dragon starts and saves (save version ${fresh.version})`);
 check(

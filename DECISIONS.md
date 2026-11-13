@@ -2,6 +2,14 @@
 
 Newest first. Each entry says what we decided, why, and what it affects.
 
+## 2026-11-13: Ready for friends to test: how-to card, tester gift, feedback and bug reports
+
+- **Decision:** before friends test, a **how to play** card pops up once per device (after the first dragon is named) and is always reachable from a new ❓ button (eighth in the corner stack): ten one-line tips, then **💬 Send feedback** and **🐛 Report a bug**. A one-time **tester gift of 300 coins** per device comes with the first card, so friends can try a second dragon and the closet.
+- **Feedback** is a form inside the game: a 1–5 star rating and Jacob's five questions (did you know what to do, what did you try first or never find, anything annoying or slow, what made you smile, would you come back), plus an optional name. **Bug reports** ask what happened and attach a **log**: the build, screen size, device type, game state (mode, stage, mood, family size, coins, fps), the last 60 taps and panels opened, and any errors the page hit. Nothing personal and no saved data. There is a 📋 Copy log button too.
+- **Where answers go:** Jacob's Google Form (`FORM` in `src/ui/helpPanel.ts`: its id and each question's entry number). The game posts the answers quietly; if that's blocked, it opens the form in a new tab with everything filled in; if the form isn't set up yet, or nothing else works, it copies the answers to paste in a message. Inside the Claude preview the quiet post may be blocked, so the new-tab fallback is the likely path there.
+- **Why:** Jacob wants friends to test, with a way to collect what they think and report bugs with logs.
+- **Affects:** phase 45 (the real tutorial replaces the how-to card), phase 48 (bug bash), phase 59 (closed test feedback).
+
 ## 2026-11-13: Holiday dragons (super rares)
 
 - **Decision:** ten hand-made holiday dragons, themed on American holidays (Jacob's pick): Sparkler (New Year's), Sweetheart (Valentine's), Clover (St. Patrick's), Jellybean (Easter), Firecracker (4th of July), Pumpkin and Boo (Halloween), Gobble (Thanksgiving), Tinsel (Christmas) and Snowflake (first day of winter). All ten are built (in two batches).
