@@ -144,10 +144,13 @@ export function drawHead(
 
   // Horns, from the genes: branching antlers, curly ram horns or straight spikes; the far one
   // paler.
-  for (const [x, scale, far] of [
-    [-0.5, 0.8, true],
-    [-0.08, 1, false],
-  ] as const) {
+  // (Jellybean has bunny ears instead of horns.)
+  for (const [x, scale, far] of c.look.special === "jellybean"
+    ? []
+    : ([
+        [-0.5, 0.8, true],
+        [-0.08, 1, false],
+      ] as const)) {
     ctx.save();
     ctx.translate(x * r, -0.6 * r);
     ctx.scale(scale * hornSize, scale * hornSize);
@@ -408,7 +411,7 @@ export function drawHead(
     face.droop,
     face.pleading,
   );
-  if (c.look.special) drawRareFace(ctx, c.look, r, X(1.42), time);
+  if (c.look.special) drawRareFace(ctx, c.look, r, X(1.42), time, face);
   if (hat) drawHeadWear(ctx, r, hat, time);
 
   ctx.restore();

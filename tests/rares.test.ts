@@ -40,8 +40,15 @@ describe("holiday dragons", () => {
     expect(names(at(2027, 11, 25))).toEqual(["Gobble"]);
     // Christmas and the first day of winter overlap; the window runs on into the new year.
     expect(names(at(2026, 12, 20))).toEqual(["Tinsel", "Snowflake"]);
-    expect(names(at(2027, 1, 1))).toEqual(["Tinsel"]);
-    expect(names(at(2026, 7, 4))).toEqual([]);
+    expect(names(at(2027, 1, 1))).toEqual(["Tinsel", "Sparkler"]);
+    expect(names(at(2026, 7, 4))).toEqual(["Firecracker"]);
+    expect(names(at(2026, 2, 14))).toEqual(["Sweetheart"]);
+    expect(names(at(2026, 3, 17))).toEqual(["Clover"]);
+    // Easter moves: April 5 in 2026, March 28 in 2027.
+    expect(names(at(2026, 4, 5))).toEqual(["Jellybean"]);
+    expect(names(at(2027, 3, 28))).toEqual(["Jellybean"]);
+    expect(names(at(2026, 5, 20))).toEqual([]);
+    expect(RARES).toHaveLength(10);
   });
 
   it("a surprise egg is sometimes the holiday's dragon, never one you already have", () => {
