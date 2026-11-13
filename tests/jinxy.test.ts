@@ -113,6 +113,8 @@ describe("Jinx, the matching dragon", () => {
     expect(back[0].genes).toEqual(JINX_GENES);
     // The extra fang never turns up on ordinary dragons.
     expect(newEgg(12345, 1).genes.mouthStyle).not.toBe("extraFang");
+    // Even rebuilt from its number alone (an old or broken save), Jinx is still Jinx.
+    expect(parseFamily([{ seed: JINX_SEED }], [], 2_000_000)[0].genes).toEqual(JINX_GENES);
   });
 
   it("draws cleanly at every age", () => {

@@ -47,6 +47,8 @@ export function genesFromSeed(seed: number): Genes {
   // A holiday dragon's number always gives that holiday dragon.
   const rare = rareBySeed(seed);
   if (rare) return rare.genes;
+  // And Jinx's number always gives Jinx.
+  if (seed === JINX_SEED) return JINX_GENES;
   const r = seededRandom(seed ^ 0x6e0_0d1e);
   const personality = { playful: r(), sleepy: r(), greedy: r(), shy: r() };
   return {

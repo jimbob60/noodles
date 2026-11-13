@@ -288,7 +288,11 @@ export class Gallery {
     ctx.font = "600 14px system-ui, sans-serif";
     ctx.textAlign = "left";
     ctx.fillStyle = "rgba(255,255,255,0.75)";
-    const what = this.showFavorites ? "♥ Favorites" : "50 dragons";
+    const what = this.showRares
+      ? "🎉 Holiday dragons"
+      : this.showFavorites
+        ? "♥ Favorites"
+        : "50 dragons";
     ctx.fillText(`${what} · page ${this.page + 1} of ${this.pages}`, 14, TOP / 2 + 2);
   }
 }
