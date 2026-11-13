@@ -4,7 +4,7 @@ import { NEED_NAMES, type Needs } from "../care/needs";
 import type { Worn } from "../care/wardrobe";
 import { drawHead, headColors } from "../noodle/drawHead";
 import { Face } from "../noodle/face";
-import { genesFromSeed, type Genes } from "../noodle/genes";
+import { genesFromSeed, JINX_SEED, type Genes } from "../noodle/genes";
 import type { Point } from "../noodle/spine";
 import { cornerButton } from "./layout";
 
@@ -148,6 +148,8 @@ function button(label: string, bg: string, color = "#1a1040"): HTMLButtonElement
 export function openFamily(opts: {
   cards: FamilyCard[];
   coins: number;
+  /** Jinx's special egg (the dragon that matches Jinxy the cat) hasn't been adopted yet. */
+  jinxEgg: boolean;
   /** Dragon numbers ♥ed in the gallery (a few are offered as eggs). */
   favorites: number[];
   /** Brings a family member (by its place in `cards`) out into the den. */
@@ -321,6 +323,27 @@ export function openFamily(opts: {
     card.appendChild(row);
   });
 
+  // The family pet.
+  const pet = el("div", {
+    display: "flex",
+    alignItems: "center",
+    gap: "12px",
+    marginTop: "10px",
+    padding: "10px",
+    borderRadius: "16px",
+    background: "rgba(77,255,106,0.08)",
+    border: "1px solid rgba(77,255,106,0.35)",
+  });
+  pet.append(
+    el("div", { fontSize: "34px", width: "72px", textAlign: "center", flex: "none" }, "🐈‍⬛"),
+    el(
+      "div",
+      { fontSize: "14px", lineHeight: "1.35" },
+      "Jinxy, the dragons' cat, lives in the den. Tap her for a purr; she rubs up against a dragon that swims close.",
+    ),
+  );
+  card.appendChild(pet);
+
   // Adopting.
   const full = opts.cards.length >= MAX_FAMILY;
   const afford = opts.coins >= ADOPT_COST;
@@ -353,6 +376,15 @@ export function openFamily(opts: {
       });
       return b;
     };
+    if (opts.jinxEgg) {
+      // A gift: the black dragon that matches Jinxy.
+      const jinx = button("🐈‍⬛ Jinx's egg · a gift", "#4dff6a");
+      jinx.id = "adopt-jinx";
+      jinx.addEventListener("click", () => {
+        if (opts.onAdopt(JINX_SEED)) shade.remove();
+      });
+      row.appendChild(jinx);
+    }
     const surprise = adoptButton(`🎁 Surprise egg · 🪙 ${ADOPT_COST}`, null);
     surprise.id = "adopt-surprise";
     row.appendChild(surprise);

@@ -163,6 +163,7 @@ export function lookTraits(g: Genes): string[] {
       fangs: "Little fangs",
       toothy: "Toothy grin",
       snaggle: "Snaggle-tooth",
+      extraFang: "An extra fang",
     }[g.mouthStyle],
   );
   const pattern = {

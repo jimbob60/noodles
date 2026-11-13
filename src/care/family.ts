@@ -3,7 +3,7 @@ import { freshGrowth, growAway, parseGrowth, type Growth } from "./growth";
 import { parseIdentity, type Identity } from "./identity";
 import { advance, freshNeeds, parseNeeds, type NeedsState } from "./needs";
 import { ACCESSORIES, ACCESSORY_COLORS, SLOTS, type Wardrobe } from "./wardrobe";
-import { genesFromSeed, parseGenes, type Genes } from "../noodle/genes";
+import { genesFromSeed, JINX_GENES, JINX_SEED, parseGenes, type Genes } from "../noodle/genes";
 
 /** The most dragons a family can have. */
 export const MAX_FAMILY = 4;
@@ -30,12 +30,13 @@ export interface FamilyMember {
   visiting: boolean;
 }
 
-/** A freshly adopted egg. */
+/** A freshly adopted egg (Jinx's special egg brings its own hand-made genes and name). */
 export function newEgg(seed: number, now: number): FamilyMember {
+  const jinx = seed === JINX_SEED;
   return {
     seed,
-    genes: genesFromSeed(seed),
-    identity: parseIdentity(null, seed, now),
+    genes: jinx ? JINX_GENES : genesFromSeed(seed),
+    identity: jinx ? { name: "Jinx", birthday: now } : parseIdentity(null, seed, now),
     needs: freshNeeds(now),
     growth: freshGrowth(),
     worn: {},

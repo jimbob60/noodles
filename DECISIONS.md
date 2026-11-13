@@ -2,6 +2,14 @@
 
 Newest first. Each entry says what we decided, why, and what it affects.
 
+## 2026-11-13: Jinxy the cat, and Jinx the matching dragon
+
+- **Decision:** the dragons get a pet: **Jinxy**, drawn from a photo of Jacob's real cat. A long-haired black cat with bright yellow-green eyes, round pupils, tufted ears, a huge plume of a tail, and one extra canine tooth on her right side (it stays on her right whichever way she faces). She lives on the den floor between the food and toy trays: strolls, sits swishing her tail, grooms a paw, naps (all night at bedtime), purrs with hearts when you tap her, and rubs up against a dragon that swims close (Love +2 for the dragon, at most every 25 seconds). She is drawn twice (a soft purple edge, then black fur) so she shows on the dark floor. She is not saved and has no needs: she can't be neglected. She steps out during Noodle Catch. Other pets can follow the same pattern later (`src/pets/`).
+- **Jinx the dragon:** a hand-made set of genes (dragon number 0x4A494E58, "JINX"): black with a fluffy charcoal mane, scalloped back and pompom tail, bright green eyes that glow, ear-like spike horns, long white whiskers, a moon on its forehead, and a new mouth, `extraFang` (two fangs plus one extra, never rolled on ordinary dragons). Playful and a little shy; loves fish. Its egg is a **free gift** in the family card (one only, if there is room), and it hatches already called Jinx.
+- **Dark dragons:** the drawing now handles a dark body: outlines go lighter instead of darker, the glow takes the eye color, mouth lines and shut eyes use a light line, eyes are brighter, and the shine is softer. The glow is now drawn before the legs so it never tints them.
+- **Why:** Jacob asked for his cat Jinxy in the game, with a matching dragon.
+- **Affects:** phase 38 (breeding with Jinx passes on dark genes), phase 39 (rarity), phase 40 (Dragondex), more pets later.
+
 ## 2026-11-12: Dragon friends — nuzzles, chases and the odd tangle; save version 13
 
 - **Decision:** one family member can be in the den as a **friend** while you care for another. In the family card each dragon at home has **🤝 Invite over** / **🏠 Send home** (one friend at a time), and **Care for** swaps which one you look after; the one stepping aside stays as the friend by default, and when a new egg hatches the older dragon is there to meet the baby. The friend is a full dragon: its own looks, outfit, personality and moods (its thought bubbles hint when it wants care), wandering and napping by itself. It can't be fed or petted directly: tap **Care for** to swap.

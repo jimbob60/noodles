@@ -22,7 +22,9 @@ export type TailStyle = (typeof TAIL_STYLES)[number];
 export type Mark = (typeof MARKS)[number];
 export type WhiskerColor = (typeof WHISKER_COLORS)[number];
 export type ManeColor = (typeof MANE_COLORS)[number];
-export type MouthStyle = (typeof MOUTH_STYLES)[number];
+/** Mouths only special dragons have (never rolled at random). */
+export const SPECIAL_MOUTHS = ["extraFang"] as const;
+export type MouthStyle = (typeof MOUTH_STYLES)[number] | (typeof SPECIAL_MOUTHS)[number];
 
 /** Everything about how one dragon is colored. Made from a seed by `makeLook`. */
 export interface DragonLook {

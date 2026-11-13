@@ -5,7 +5,7 @@ import type { PointerState } from "../engine/input";
 import { FOOD_COLOR } from "../ui/foodArt";
 import { Follower } from "../follower";
 import { bodyOutline, bodyProfile, traceSmoothLoop } from "./body";
-import { bodyHalfWidth, drawBody, drawRidge } from "./drawBody";
+import { bodyHalfWidth, drawBody, drawHalo, drawRidge } from "./drawBody";
 import { drawLegs, drawTailTuft, drawWhiskers } from "./drawExtras";
 import { drawHead, headColors, MOUTH, muzzleX, type HeadColors } from "./drawHead";
 import { CHEW_TIME, Face, SHAKE_TIME, YAWN_TIME } from "./face";
@@ -732,6 +732,7 @@ export class Dragon {
         ctx.stroke();
       }
     }
+    drawHalo(ctx, this.spine, this.look, puff);
     drawLegs(ctx, this.legs, this.spine.points, this.sizes, this.look);
     // The far wing peeks up from behind the body.
     if (this.outfit.back)

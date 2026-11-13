@@ -9,9 +9,35 @@ export function bodyHalfWidth(spine: Spine, chubby = 1): number {
 }
 
 /** Darker rim color for a clear, cute outline. */
-export const rimOf = (c: Hsl): Hsl => shade(c, -30, -15);
+export const rimOf = (c: Hsl): Hsl => (isDark(c) ? shade(c, 26, 12) : shade(c, -30, -15));
 
-/** A chubby tapered body with a soft glowing edge, its pattern, a rim and a shine. */
+/** A dark body (like Jinx the black dragon): outlines go lighter instead of darker. */
+export const isDark = (c: Hsl): boolean => c.l < 35;
+
+/**
+ * The soft glowing edge behind everything: see-through strokes stacked so the glow fades outward
+ * (much cheaper than a blur on every frame). Drawn before the legs, so it never tints them.
+ */
+export function drawHalo(
+  ctx: CanvasRenderingContext2D,
+  spine: Spine,
+  look: DragonLook = CLASSIC_LOOK,
+  puff = 1,
+): void {
+  const hw = bodyHalfWidth(spine, look.chubby) * puff;
+  ctx.lineJoin = "round";
+  ctx.lineCap = "round";
+  traceSmoothLoop(ctx, bodyOutline(spine.points, hw));
+  // (A dark dragon can't glow black: its halo is the bright color of its eyes instead.)
+  const halo = isDark(look.body) ? { h: look.eyeHue, s: 95, l: 60 } : look.body;
+  ctx.strokeStyle = hsl(halo, Math.min(0.3, 0.13 * look.glow));
+  for (const width of [1.6, 1.0, 0.5]) {
+    ctx.lineWidth = hw * width;
+    ctx.stroke();
+  }
+}
+
+/** A chubby tapered body with its pattern, scales, a rim and a shine. */
 export function drawBody(
   ctx: CanvasRenderingContext2D,
   spine: Spine,
@@ -24,13 +50,7 @@ export function drawBody(
   ctx.lineJoin = "round";
   ctx.lineCap = "round";
   traceSmoothLoop(ctx, outline);
-  // Soft glowing edge: see-through strokes behind the body, stacked so the glow fades outward
-  // (much cheaper than a blur on every frame).
-  ctx.strokeStyle = hsl(look.body, Math.min(0.3, 0.13 * look.glow));
-  for (const width of [1.6, 1.0, 0.5]) {
-    ctx.lineWidth = hw * width;
-    ctx.stroke();
-  }
+  const dark = isDark(look.body);
   ctx.fillStyle = hsl(look.body);
   ctx.fill();
 
@@ -62,7 +82,7 @@ export function drawBody(
     const my = (shine[i].y + shine[i + 1].y) / 2;
     ctx.quadraticCurveTo(shine[i].x, shine[i].y, mx, my);
   }
-  ctx.strokeStyle = "rgba(255,255,255,0.5)";
+  ctx.strokeStyle = dark ? "rgba(255,255,255,0.22)" : "rgba(255,255,255,0.5)";
   ctx.lineWidth = hw * 0.28;
   ctx.stroke();
 }

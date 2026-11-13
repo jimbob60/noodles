@@ -1,4 +1,4 @@
-import { rimOf } from "./drawBody";
+import { isDark, rimOf } from "./drawBody";
 import type { Face } from "./face";
 import { CLASSIC_LOOK, colorGap, hsl, MIN_GAP, shade, type DragonLook, type Hsl } from "./look";
 import type { Point } from "./spine";
@@ -12,6 +12,8 @@ export interface HeadColors {
   horn: string;
   hornShade: string;
   eye: string;
+  /** Mouth lines and shut eyes: dark ink, or a light line on a dark head. */
+  line: string;
   iris: string;
   cheek: string;
   /** Faint fish-scale lines, the same as on the body. */
@@ -47,8 +49,9 @@ export function headColors(look: DragonLook): HeadColors {
     horn: hsl(look.horn),
     hornShade: hsl(shade(look.horn, -14, -6)),
     eye: "#1a1040",
-    // Jewel eyes: a deep color from the eye gene.
-    iris: hsl({ h: look.eyeHue, s: 80, l: 42 }),
+    line: isDark(look.body) ? hsl(shade(look.body, 45, 10)) : "#1a1040",
+    // Jewel eyes: a deep color from the eye gene (brighter on a dark dragon, so they shine).
+    iris: hsl({ h: look.eyeHue, s: isDark(look.body) ? 95 : 80, l: isDark(look.body) ? 55 : 42 }),
     cheek: hsl(look.accent, 0.6),
     scale: hsl(rimOf(look.body), look.scaleStrength),
     mane: hsl(maneOf(look)),
@@ -334,7 +337,7 @@ export function drawHead(
     ctx.beginPath();
     ctx.moveTo(X(1.28), r * 0.28);
     ctx.quadraticCurveTo(X(0.95), r * 0.34, X(0.66), r * 0.5);
-    ctx.strokeStyle = c.eye;
+    ctx.strokeStyle = c.line;
     ctx.stroke();
   } else {
     // A gentle smiling mouth line along the muzzle, curling up at the cheek.
@@ -342,7 +345,7 @@ export function drawHead(
     ctx.moveTo(X(1.28), r * 0.28);
     ctx.quadraticCurveTo(X(0.9), r * 0.42, X(0.68), r * 0.34);
     ctx.quadraticCurveTo(X(0.6), r * 0.31, X(0.6), r * 0.25);
-    ctx.strokeStyle = c.eye;
+    ctx.strokeStyle = c.line;
     ctx.stroke();
   }
 
@@ -441,7 +444,7 @@ function drawEye(
       ctx.moveTo(size * 0.9, size * 0.15);
       ctx.quadraticCurveTo(0, -size * 0.6, -size * 1.0, size * 0.05);
     }
-    ctx.strokeStyle = c.eye;
+    ctx.strokeStyle = c.line;
     ctx.lineWidth = Math.max(1.5, size * 0.26);
     ctx.stroke();
     ctx.restore();
@@ -610,6 +613,11 @@ function drawTeeth(
   } else if (style === "fangs") {
     tooth(upper, 0.22, r * 0.17, 1);
     tooth(upper, 0.62, r * 0.15, 1);
+  } else if (style === "extraFang") {
+    // Like Jinxy the cat: one extra canine, right beside the front fang.
+    tooth(upper, 0.16, r * 0.19, 1);
+    tooth(upper, 0.36, r * 0.14, 1);
+    tooth(upper, 0.7, r * 0.15, 1);
   } else {
     // Snaggle-tooth: one bottom tooth poking up over the lip.
     const line =

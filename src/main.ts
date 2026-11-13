@@ -24,6 +24,10 @@ import { adopt, catchUp, newEgg, type FamilyMember } from "./care/family";
 import { drawFamilyButton, onFamilyButton, openFamily, type FamilyCard } from "./ui/familyPanel";
 import { parseFavorites } from "./gallery";
 import { Friendship } from "./noodle/friends";
+import { Cat, RUB_LOVE } from "./pets/cat";
+import { drawCat } from "./pets/drawCat";
+import { JINX_SEED } from "./noodle/genes";
+import { MAX_FAMILY } from "./care/family";
 import { decodeBackup, encodeBackup, makeSave, type Save } from "./save/saveGame";
 import { drawBackupButton, onBackupButton, openBackupPanel } from "./ui/backupPanel";
 import { Input } from "./engine/input";
@@ -178,6 +182,8 @@ async function main(): Promise<void> {
    * A friend: one of the family out in the den too, doing its own thing and playing with the
    * dragon you're caring for (nuzzles, chases, the odd tangle).
    */
+  /** Jinxy, the dragons' pet cat. */
+  const cat = new Cat();
   let friend: Dragon | null = null;
   let friendship = new Friendship();
   /** The lure the friendship gave your dragon last frame (so it can be told from food). */
@@ -376,11 +382,17 @@ async function main(): Promise<void> {
     family = family.map((m, k) => (k === index ? leaving : m));
     bring({ ...arriving, visiting: false });
   }
+  const hasJinx = () => seed === JINX_SEED || family.some((m) => m.seed === JINX_SEED);
   /** Adopts an egg (a favorite's number, or a surprise). The one in the den steps aside. */
   function adoptEgg(pick: number | null): boolean {
-    const r = adopt(wallet, family.length + 1);
-    if (!r.ok) return false;
-    wallet = r.wallet;
+    if (pick === JINX_SEED) {
+      // Jinx's egg is a gift (one only), as long as there's room.
+      if (family.length + 1 >= MAX_FAMILY || hasJinx()) return false;
+    } else {
+      const r = adopt(wallet, family.length + 1);
+      if (!r.ok) return false;
+      wallet = r.wallet;
+    }
     // The one stepping aside will be there to meet the baby (unless a friend is already over).
     const stays = !family.some((m) => m.visiting) && !adoptedEgg;
     family = [...family, { ...asMember(), visiting: stays }];
@@ -412,6 +424,7 @@ async function main(): Promise<void> {
       // What the others look like right now (they only really catch up when they come out).
       cards: [cardOf(asMember(), true), ...family.map((m) => cardOf(catchUp(m, now), false))],
       coins: wallet.coins,
+      jinxEgg: !hasJinx(),
       favorites: favorites.filter((f) => !taken.has(f)),
       onVisit: (i) => visit(i - 1),
       onInvite: (i, over) => invite(i - 1, over),
@@ -474,6 +487,19 @@ async function main(): Promise<void> {
       if (!input.down) swallowing = false;
       // Really playing: the real game, with a hatched dragon out in the den.
       const playing = mode === "play" && !egg;
+      // Jinxy the cat: a tap on her is a pet (purr!), and nothing else.
+      if (
+        pressAt &&
+        !swallowing &&
+        playing &&
+        !catchGame &&
+        !decorator.active &&
+        cat.hit(pressAt, screen)
+      ) {
+        swallowing = true;
+        cat.pet(screen);
+        document.body.dataset.catPets = String(Number(document.body.dataset.catPets ?? 0) + 1);
+      }
       // The backup button (top right, under the mode tag).
       if (
         pressAt &&
@@ -676,6 +702,7 @@ async function main(): Promise<void> {
             needs = freshNeeds(Date.now());
             // Hatch day! Then a name: a cute one is suggested, and any name will do.
             identity = newIdentity(Date.now());
+            if (seed === JINX_SEED) identity = { ...identity, name: "Jinx" };
             showName();
             persist();
             openNamePanel({
@@ -834,6 +861,15 @@ async function main(): Promise<void> {
           document.body.dataset.together = friendship.mode;
       }
       if (photo && friend) pose(friend.face, photo.expression);
+      // Jinxy lives her own life on the den floor, and loves a dragon that swims close.
+      if (mode === "play" && !catchGame && !photo?.frozen) {
+        const close = dragon.canPlay && !inBed && !finger.down ? dragon.spine.head : null;
+        if (cat.update(dt, screen, inBed, close).rubbed) {
+          needs = change(needs, { happiness: RUB_LOVE });
+          dragon.hearts(2);
+        }
+        if (document.body.dataset.cat !== cat.mood) document.body.dataset.cat = cat.mood;
+      }
       // Holding still for a photo: the pose stays exactly put.
       if (!photo?.frozen) dragon.update(dt, finger, world());
       if (photo) pose(dragon.face, photo.expression);
@@ -946,6 +982,7 @@ async function main(): Promise<void> {
           drawBed(ctx, bedAt, dragon.halfWidth * 4.2, night);
           if (friend && mode === "play") friend.draw(ctx);
           dragon.draw(ctx);
+          if (mode === "play" && !catchGame) drawCat(ctx, cat, screen);
           if (catchGame) drawFallers(ctx, catchGame, dragon.halfWidth * 1.1);
         }
         if (photo && !egg) {

@@ -7,6 +7,7 @@ import {
   MANE_COLORS,
   MARKS,
   MOUTH_STYLES,
+  SPECIAL_MOUTHS,
   PATTERNS,
   RIDGE_STYLES,
   seededRandom,
@@ -56,6 +57,50 @@ export const CLASSIC_GENES: Genes = {
   personality: { playful: 0.5, sleepy: 0.5, greedy: 0.5, shy: 0.5 },
   favorite: "noodles",
   tickles: [0.4],
+};
+
+/** Jinx's dragon number (the letters J-I-N-X). Its genes are hand-made, not rolled. */
+export const JINX_SEED = 0x4a494e58;
+
+/**
+ * Jinx: the dragon that matches Jinxy the cat. Black as night with a long fluffy mane and a
+ * pompom tail, bright green eyes, pointy ear-like horns, long white whiskers, a moon on its
+ * forehead and one extra fang. Playful, a little shy, and (of course) loves fish.
+ */
+export const JINX_GENES: Genes = {
+  seed: JINX_SEED,
+  body: { h: 265, s: 22, l: 13 },
+  pattern: { h: 265, s: 25, l: 30 },
+  patternKind: "plain",
+  // Fluffy charcoal mane, back and tail: black fur, a shade lighter so it shows on the body.
+  accent: { h: 265, s: 28, l: 32 },
+  horn: { h: 265, s: 22, l: 24 },
+  hornLength: 0.85,
+  hornBranches: 0,
+  maneLength: 1.3,
+  whiskerLength: 1.35,
+  size: 1,
+  eyeHue: 125,
+  eyeSize: 1.2,
+  snoutLength: 0.88,
+  mark: "moon",
+  freckles: false,
+  hornStyle: "spike",
+  ridgeStyle: "scallops",
+  ridgeSize: 0.7,
+  tailStyle: "pompom",
+  tailSize: 1.3,
+  chubby: 1.05,
+  legLength: 0.9,
+  glow: 1.3,
+  scaleStrength: 0.14,
+  whiskerColor: "white",
+  maneColor: "accent",
+  frills: false,
+  mouthStyle: "extraFang",
+  personality: { playful: 0.9, sleepy: 0.5, greedy: 0.4, shy: 0.6 },
+  favorite: "fish",
+  tickles: [0.18, 0.55],
 };
 
 const num = (v: unknown, lo: number, hi: number): number | null =>
@@ -149,7 +194,7 @@ export function parseGenes(raw: unknown): Genes | null {
     whiskerColor: pick(WHISKER_COLORS, g.whiskerColor, wild.whiskerColor),
     maneColor: pick(MANE_COLORS, g.maneColor, wild.maneColor),
     frills: bool(g.frills, wild.frills),
-    mouthStyle: pick(MOUTH_STYLES, g.mouthStyle, wild.mouthStyle),
+    mouthStyle: pick([...MOUTH_STYLES, ...SPECIAL_MOUTHS], g.mouthStyle, wild.mouthStyle),
     personality: { playful, sleepy, greedy, shy },
     favorite,
     tickles,
