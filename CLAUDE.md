@@ -50,13 +50,15 @@ Jacob. Read this, then only the files a task needs. Keep token use low (see the 
 
 ## Status (2026-11-14)
 
-- Phases 1–36 done and ticked. Phase 37 (dragon friends) is built, waiting for Jacob's OK.
+- Phases 1–36 done and ticked. Phases 37 (dragon friends) and 38 (breeding,
+  `src/care/breeding.ts`) are built, waiting for Jacob's OK.
+- Unsolved: Jacob once couldn't steer in Noodle Catch with a friend visiting; not reproducible.
 - Extras Jacob asked for, all built: Jinxy the black cat (from a photo of his real cat; extra
   fang on her right) and Jinx the matching dragon; ten holiday dragons that hatch only near
   their holiday; a how-to card with a 300-coin tester gift; feedback and bug-report forms.
 - Waiting on Jacob: a test send of the feedback form (do answers reach his form?), and the
   itch.io page (cover upload failed once; a JPG was sent).
-- Next in the plan: phase 38, breeding.
+- Next in the plan: phase 39.
 
 ## Gotchas
 

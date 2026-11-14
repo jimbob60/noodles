@@ -24,6 +24,7 @@ import { adopt, catchUp, newEgg, type FamilyMember } from "./care/family";
 import { drawFamilyButton, onFamilyButton, openFamily, type FamilyCard } from "./ui/familyPanel";
 import { parseFavorites } from "./gallery";
 import { Friendship } from "./noodle/friends";
+import { breedCheck, mixGenes } from "./care/breeding";
 import { Cat, RUB_LOVE } from "./pets/cat";
 import { drawCat } from "./pets/drawCat";
 import { JINX_SEED } from "./noodle/genes";
@@ -439,6 +440,20 @@ async function main(): Promise<void> {
     bring(newEgg(pick ?? surprise, Date.now()));
     return true;
   }
+  /** The dragon in the den and its visiting friend make an egg: a baby that blends them both. */
+  function breed(index: number): void {
+    const mate = family[index];
+    if (!mate?.visiting || egg) return;
+    if (breedCheck(growth, mate.growth, family.length + 1) !== "ok") return;
+    const taken = [seed, ...family.map((m) => m.seed)];
+    let s = randomSeed();
+    while (rareBySeed(s) || s === JINX_SEED || taken.includes(s)) s = randomSeed();
+    const baby = { ...newEgg(s, Date.now()), genes: mixGenes(genes, mate.genes, s) };
+    // Both parents are there to meet the baby: one keeps visiting, the other steps aside.
+    family = [...family, asMember()];
+    logEvent(`egg from ${identity.name} and ${mate.identity.name}`);
+    bring(baby);
+  }
   const showFamilyPanel = () => {
     const now = Date.now();
     const cardOf = (m: FamilyMember, here: boolean): FamilyCard => ({
@@ -471,6 +486,11 @@ async function main(): Promise<void> {
       favorites: favorites.filter((f) => !taken.has(f)),
       onVisit: (i) => visit(i - 1),
       onInvite: (i, over) => invite(i - 1, over),
+      breed: (() => {
+        const mate = family.find((m) => m.visiting);
+        return mate && !egg ? breedCheck(growth, mate.growth, family.length + 1) : "grow";
+      })(),
+      onBreed: (i) => breed(i - 1),
       onAdopt: adoptEgg,
     });
   };

@@ -158,6 +158,10 @@ export function openFamily(opts: {
   onVisit: (index: number) => void;
   /** Invites a family member over to play in the den as a friend, or sends it home. */
   onInvite: (index: number, over: boolean) => void;
+  /** Can the dragon here and its visiting friend make an egg ("grow": not both grown-ups yet)? */
+  breed: "ok" | "grow" | "full";
+  /** The dragon here and the visiting friend (by its place in `cards`) make an egg together. */
+  onBreed: (index: number) => void;
   /** Adopts an egg: a favorite's number, or null for a surprise. False if it couldn't. */
   onAdopt: (seed: number | null) => boolean;
 }): void {
@@ -313,6 +317,26 @@ export function openFamily(opts: {
           opts.onInvite(i, !m.visiting);
         });
         side.appendChild(invite);
+      }
+      if (m.visiting && !m.egg) {
+        // Two grown-ups together in the den can make an egg: a baby that blends them both.
+        if (opts.breed === "ok") {
+          const breed = button("🥚 Make an egg", "#ffe9a8");
+          breed.dataset.breed = String(i);
+          breed.addEventListener("click", () => {
+            shade.remove();
+            opts.onBreed(i);
+          });
+          side.appendChild(breed);
+        } else {
+          side.appendChild(
+            el(
+              "div",
+              { fontSize: "11px", opacity: "0.75", maxWidth: "120px", textAlign: "center" },
+              opts.breed === "grow" ? "🥚 Two grown-ups can make an egg" : "🥚 No room for an egg",
+            ),
+          );
+        }
       }
       const visit = button(m.egg ? "Hatch" : "Care for", "#7af3ff");
       visit.addEventListener("click", () => {

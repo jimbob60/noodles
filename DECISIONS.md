@@ -2,6 +2,15 @@
 
 Newest first. Each entry says what we decided, why, and what it affects.
 
+## 2026-11-14: Phase 38, breeding: two grown-ups make an egg
+
+- **Decision:** when the dragon in the den and its visiting friend are **both grown-ups**, the friend's row in the 💕 family card gets a **🥚 Make an egg** button (otherwise a small hint says why not: both must be grown-ups, or the family is full at four). The egg arrives in the den like an adopted one; the parent that was out steps aside and the friend stays to meet the baby.
+- **Genes mix** (`src/care/breeding.ts`): sizes and colors land somewhere between the parents' (hues go the short way round the color wheel), styles (pattern, horns, tail, mark, mouth and so on) come from one parent or the other, and each gene has an **8% chance of a small surprise** (borrowed from the wild dragon the baby's own number would make). Personality blends too; the favorite food and tickle spots come from one parent.
+- **Holiday dragons** pass on their colors but not their holiday magic (the `special` look), so they stay rare. Jinx's extra fang can be passed on.
+- **Free for now:** making an egg costs no coins and has no wait; the family limit is the only brake. Balance it in phase 42.
+- **Not found:** Jacob's report that the main dragon couldn't be steered in Noodle Catch with a friend over. A robot replayed it (mouse, friend meeting, chasing and tangling) and it steered fine; neither of us could make it happen again. Watch for it.
+- **Affects:** phase 39 (family tree: eggs don't record their parents yet), phase 40 (Dragondex), phase 42 (balance).
+
 ## 2026-11-13: Ready for friends to test: how-to card, tester gift, feedback and bug reports
 
 - **Decision:** before friends test, a **how to play** card pops up once per device (after the first dragon is named) and is always reachable from a new ❓ button (eighth in the corner stack): ten one-line tips, then **💬 Send feedback** and **🐛 Report a bug**. A one-time **tester gift of 300 coins** per device comes with the first card, so friends can try a second dragon and the closet.
