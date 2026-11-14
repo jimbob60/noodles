@@ -18,9 +18,9 @@ Jacob. Read this, then only the files a task needs. Keep token use low (see the 
    publishing, in the background if needed).
 3. Add a dated entry at the top of `DECISIONS.md` (newest first). When Jacob approves a phase,
    add a line to `CHANGELOG.md` and tick the phase in the plan doc.
-4. Commit and push to the branch `claude/hopeful-planck-61yapb` (end commit messages with the
-   attribution lines the session gives). `main` only has the first commit; no pull request
-   unless Jacob asks.
+4. Commit and push to `main` (Jacob's home branch since phase 40; end commit messages with the
+   attribution lines the session gives). If the session only allows its own branch, push there
+   too, then fast-forward `main` when Jacob says so. No pull request unless Jacob asks.
 5. Publish the build (below), tell Jacob, and wait for his OK before the next phase.
 
 ## Links and ids
