@@ -2,6 +2,8 @@
 
 Newest first. One line per finished phase.
 
+- **Phase 38 — Breeding (b0a128d, 2026-11-14):** two grown-ups together in the den can make an egg; the baby blends its parents' colors, sizes and styles, with a small surprise now and then.
+- **Phase 37 — Dragon friends (2026-11-14):** invite a family member over to play in the den; the two nuzzle, play chase and get in giggly tangles, for Love and a few coins.
 - **Phase 36 — Several dragons (4b72dd3, 2026-11-12):** a family of up to four; adopt an egg (a surprise or a gallery favorite), switch who is in the den; each keeps its own needs, age and outfit.
 - **Phase 35 — Gate: the 50-dragon test (91fda13, 2026-11-12):** a 50-dragon gallery with favorites; robot checks on 3,000 dragons fixed manes and horns that blended into the body. Stage E done.
 - **Phase 34 — Photo mode (d27e4df, 0ca4ed0, 2026-11-12):** a camera button; hold still, pick a face and a frame (polaroid with name and date, or stars), snap, then save or share the picture.
