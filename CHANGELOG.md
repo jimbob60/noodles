@@ -2,6 +2,7 @@
 
 Newest first. One line per finished phase.
 
+- **Phase 39 — Rarity (9def0e8, 2026-11-14):** rare colors (golden, pearl, midnight) and rare patterns (stars, rainbow, koi) that shimmer; about 1 egg in 5 is rare, 1 in 100 super rare, and rares pass on by breeding.
 - **Phase 38 — Breeding (b0a128d, 2026-11-14):** two grown-ups together in the den can make an egg; the baby blends its parents' colors, sizes and styles, with a small surprise now and then.
 - **Phase 37 — Dragon friends (2026-11-14):** invite a family member over to play in the den; the two nuzzle, play chase and get in giggly tangles, for Love and a few coins.
 - **Phase 36 — Several dragons (4b72dd3, 2026-11-12):** a family of up to four; adopt an egg (a surprise or a gallery favorite), switch who is in the den; each keeps its own needs, age and outfit.
