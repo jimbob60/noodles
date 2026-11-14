@@ -44,7 +44,8 @@ describe("the 50-dragon test", () => {
         expect(Math.abs(g.pattern.l - g.body.l), `pattern of #${seed}`).toBeGreaterThanOrEqual(
           MIN_CONTRAST,
         );
-      // Glowy, never muddy or too dark for the night sky.
+      // Glowy, never muddy or too dark for the night sky (rare colors have their own rules).
+      if (g.finish) continue;
       expect(g.body.l).toBeGreaterThanOrEqual(70);
       expect(g.body.s).toBeGreaterThanOrEqual(80);
     }

@@ -1,4 +1,6 @@
 import { hsl, seededRandom, shade, type DragonLook } from "../noodle/look";
+import { hasShimmer } from "../noodle/rarity";
+import { sparkle } from "../noodle/shimmer";
 import type { Point } from "../noodle/spine";
 import { HATCH_TIME, type Egg } from "./egg";
 
@@ -171,6 +173,20 @@ export function drawEgg(
     ctx.globalAlpha = 1;
   }
   ctx.restore();
+  // A rare one inside: the egg twinkles (a hint that this one is special).
+  if (hasShimmer(look) && !hatching) {
+    for (let k = 0; k < 4; k++) {
+      const a = k * 1.7 + 0.4;
+      const size = s * 0.2 * Math.max(0, Math.sin(t * 2.1 + k * 1.9));
+      sparkle(
+        ctx,
+        at.x + Math.cos(a) * s * 1.05,
+        at.y + Math.sin(a) * s * 1.1,
+        size,
+        "rgba(255,246,200,0.95)",
+      );
+    }
+  }
 }
 
 /**

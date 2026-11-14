@@ -746,7 +746,7 @@ export class Dragon {
     if (this.outfit.back)
       drawWings(ctx, this.spine.points, hw, this.outfit.back, this.time, this.headRadius, true);
     drawRidge(ctx, this.spine, this.look, puff, 0.5 + 0.5 * this.growth);
-    drawBody(ctx, this.spine, this.look, puff);
+    drawBody(ctx, this.spine, this.look, puff, this.time);
     if (this.grime > 0) this.drawGrime(ctx, hw);
     drawTailTuft(ctx, this.spine.points, hw, this.asleep ? this.time * 0.3 : this.time, this.look);
     if (this.look.special) drawRareBody(ctx, this.look, this.spine.points, hw, this.time);

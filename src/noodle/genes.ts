@@ -2,7 +2,10 @@ import { rareBySeed } from "./rareGenes";
 import { favoriteFood, FOOD_IDS, type FoodId } from "../care/food";
 import { tickleSpots } from "../care/petting";
 import {
+  ALL_PATTERNS,
   CLASSIC_LOOK,
+  FINISHES,
+  type Finish,
   HORN_STYLES,
   makeLook,
   MANE_COLORS,
@@ -11,7 +14,6 @@ import {
   SPECIAL_MOUTHS,
   SPECIALS,
   type Special,
-  PATTERNS,
   RIDGE_STYLES,
   seededRandom,
   TAIL_STYLES,
@@ -135,7 +137,7 @@ export function parseGenes(raw: unknown): Genes | null {
   const pattern = color(g.pattern);
   const accent = color(g.accent);
   const horn = color(g.horn);
-  const patternKind = PATTERNS.find((p) => p === g.patternKind);
+  const patternKind = ALL_PATTERNS.find((p) => p === g.patternKind);
   const hornLength = num(g.hornLength, 0.75, 1.3);
   const hornBranches = num(g.hornBranches, 0, 2);
   const maneLength = num(g.maneLength, 0.75, 1.3);
@@ -204,6 +206,8 @@ export function parseGenes(raw: unknown): Genes | null {
     frills: bool(g.frills, wild.frills),
     mouthStyle: pick([...MOUTH_STYLES, ...SPECIAL_MOUTHS], g.mouthStyle, wild.mouthStyle),
     ...(SPECIALS.includes(g.special as Special) ? { special: g.special as Special } : {}),
+    // (A rare color is never filled in from the seed: dragons saved before rarity stay as they were.)
+    ...(FINISHES.includes(g.finish as Finish) ? { finish: g.finish as Finish } : {}),
     personality: { playful, sleepy, greedy, shy },
     favorite,
     tickles,

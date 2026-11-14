@@ -1,10 +1,20 @@
 import { MAX_FAMILY } from "./family";
 import { stageOf, type Growth } from "./growth";
 import { genesFromSeed, parseGenes, TRAITS, type Genes } from "../noodle/genes";
-import type { Hsl } from "../noodle/look";
+import {
+  applyFinish,
+  FINISHES,
+  RARE_PATTERNS,
+  type Finish,
+  type Hsl,
+  type RarePattern,
+} from "../noodle/look";
 
 /** How often one gene takes a surprise turn instead of following the parents. */
 export const MUTATION = 0.08;
+
+/** How often a baby of plain parents sparks a rare color (and, separately, a rare pattern). */
+export const RARE_SPARK = 0.05;
 
 /** Why two dragons can (or can't yet) make an egg. */
 export type BreedCheck = "ok" | "grow" | "full";
@@ -87,6 +97,14 @@ export function mixGenes(
     favorite: pick(a.favorite, b.favorite, wild.favorite),
     tickles: [...(random() < 0.5 ? a : b).tickles],
   };
+  // Rare colors and patterns run in the family: a rare pattern passes on like any other style
+  // (above), a rare color comes from one parent or the other, and now and then plain parents
+  // spark a rare of their own.
+  const one = <T>(list: readonly T[]): T => list[Math.floor(random() * list.length)];
+  let finish: Finish | undefined = random() < 0.5 ? a.finish : b.finish;
+  if (!finish && random() < RARE_SPARK) finish = one(FINISHES);
+  const plain = !RARE_PATTERNS.includes(mixed.patternKind as RarePattern);
+  if (plain && random() < RARE_SPARK) mixed.patternKind = one(RARE_PATTERNS);
   // Reading them back the careful way keeps every gene inside its allowed range.
-  return parseGenes(mixed) ?? wild;
+  return parseGenes(finish ? applyFinish(mixed, finish) : mixed) ?? wild;
 }

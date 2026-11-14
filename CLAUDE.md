@@ -43,7 +43,7 @@ Jacob. Read this, then only the files a task needs. Keep token use low (see the 
 - `VISION.md` (look and feel), `DECISIONS.md` (every choice, newest first), `CHANGELOG.md`.
 - `src/main.ts` wires everything. Dragon: `src/noodle/` (`dragon.ts`, `drawHead.ts`,
   `drawBody.ts`, `genes.ts`, `look.ts`, `accessories.ts`, `rares.ts` + `rareGenes.ts` for the
-  ten holiday dragons, `friends.ts`, `personality.ts`). Care and saving: `src/care/`,
+  ten holiday dragons, `rarity.ts` + `shimmer.ts` for rare colors and patterns, `friends.ts`, `personality.ts`). Care and saving: `src/care/`,
   `src/save/` (save version 13). UI panels: `src/ui/`. Jinxy the cat: `src/pets/`.
 - `scripts/day-in-the-life.mjs` is the robot; `tests/` has the unit tests.
 
@@ -56,7 +56,9 @@ Jacob. Read this, then only the files a task needs. Keep token use low (see the 
   their holiday; a how-to card with a 300-coin tester gift; feedback and bug-report forms.
 - Waiting on Jacob: a test send of the feedback form (do answers reach his form?), and the
   itch.io page (cover upload failed once; a JPG was sent).
-- Next in the plan: phase 39.
+- Phase 39 (rarity) is built and waiting for Jacob's OK: rare colors (`finish` gene: golden,
+  pearl, midnight), rare patterns (stars, rainbow, koi), shimmer in `src/noodle/shimmer.ts`,
+  tiers in `src/noodle/rarity.ts`. When he approves: changelog line, tick it, then phase 40.
 
 ## Gotchas
 

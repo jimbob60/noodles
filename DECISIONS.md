@@ -2,6 +2,18 @@
 
 Newest first. Each entry says what we decided, why, and what it affects.
 
+## 2026-11-14: Phase 39, rarity: rare colors and patterns that shimmer
+
+- **Decision:** three **rare colors** (a new gene, `finish`): **golden**, **pearl** (almost white, with a soft rainbow sheen that drifts along the body) and **midnight** (deep night blue with glowing eyes). And three **rare patterns** (new kinds of `patternKind`): **stars** (twinkling), **rainbow** (neck to tail, all the way round the color wheel) and **koi** (big two-color patches, laid out differently on each dragon).
+- **Shimmer** (`src/noodle/shimmer.ts`): every rare dragon has a bright glint that sweeps from nose to tail every four seconds, and little twinkles popping up beside its body. A rare egg twinkles too, as a hint.
+- **Tiers** (`src/noodle/rarity.ts`): ✨ **Rare** (one rare thing), 🌟 **Super rare** (a rare color and a rare pattern together), 🎉 **Holiday rare** (the ten holiday dragons, still the top; they keep their own magic and don't shimmer). The badge shows on the profile card, after the name in the family card, in the gallery, and the naming card cheers when a rare one hatches.
+- **How you get one:** a wild egg has a **1 in 10** chance of a rare color and, separately, 1 in 10 of a rare pattern (so about 1 egg in 5 is rare, 1 in 100 super rare). **Breeding** is the sure road: a rare color comes from one parent or the other (about half the babies; all of them if both parents share it), a rare pattern passes on like any other style, and plain parents have a **5%** spark of each. A baby with a rare color takes that color's own shades; without it, the colors blend as before.
+- **Dragon numbers:** rarity is rolled from its own stream of the dragon's number, so no other gene changed. Dragons already in a save stay exactly as they were (a save with no `finish` means none). But about 1 in 5 dragon **numbers** now make a rare dragon, so a few ♥ favorites from the gallery may look different (rarer!) than when they were picked.
+- **Gallery:** a new ✨ button shows fifty rare dragons, to judge every rare color and pattern side by side.
+- **Saves:** unchanged format (version 13); the genes just carry `finish` and the new pattern names.
+- **Why:** phase 39 ("rares feel exciting but still reachable").
+- **Affects:** phase 40 (Dragondex pages for rare colors and patterns), phase 42 (the 1-in-10 and 5% chances).
+
 ## 2026-11-14: Phase 38, breeding: two grown-ups make an egg
 
 - **Decision:** when the dragon in the den and its visiting friend are **both grown-ups**, the friend's row in the 💕 family card gets a **🥚 Make an egg** button (otherwise a small hint says why not: both must be grown-ups, or the family is full at four). The egg arrives in the den like an adopted one; the parent that was out steps aside and the friend stays to meet the baby.

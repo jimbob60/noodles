@@ -5,8 +5,18 @@ export interface Hsl {
   l: number;
 }
 
-export type Pattern = "plain" | "stripes" | "spots" | "gradient" | "backstripe";
+/** Rare patterns: twinkling stars, a rainbow from neck to tail, and big koi-fish patches. */
+export const RARE_PATTERNS = ["stars", "rainbow", "koi"] as const;
+export type RarePattern = (typeof RARE_PATTERNS)[number];
+export type Pattern = "plain" | "stripes" | "spots" | "gradient" | "backstripe" | RarePattern;
+/** The everyday patterns (a wild dragon's first roll picks among these). */
 export const PATTERNS: Pattern[] = ["plain", "stripes", "spots", "gradient", "backstripe"];
+export const ALL_PATTERNS: Pattern[] = [...PATTERNS, ...RARE_PATTERNS];
+/** Rare colors: shining gold, pale pearl with a rainbow sheen, and deep midnight blue. */
+export const FINISHES = ["golden", "pearl", "midnight"] as const;
+export type Finish = (typeof FINISHES)[number];
+/** How often a wild dragon has a rare color, and (separately) a rare pattern. */
+export const RARE_CHANCE = 0.1;
 
 /** The gene choices that are one of a few kinds. */
 export const HORN_STYLES = ["antler", "curl", "spike"] as const;
@@ -100,6 +110,8 @@ export interface DragonLook {
   mouthStyle: MouthStyle;
   /** A holiday dragon: which one (it has parts no other dragon has). */
   special?: Special;
+  /** A rare color (it shimmers). Most dragons have none. */
+  finish?: Finish;
 }
 
 export const hsl = (c: Hsl, alpha = 1): string =>
@@ -186,7 +198,7 @@ export function makeLook(seed: number): DragonLook {
   // Body shape comes from its own stream, so adding it kept every dragon's colors the same.
   const b = seededRandom(seed ^ 0x9e37_79b9);
   const between = (a: number, z: number) => a + b() * (z - a);
-  return {
+  const look: DragonLook = {
     seed,
     body,
     pattern,
@@ -200,6 +212,37 @@ export function makeLook(seed: number): DragonLook {
     size: between(0.9, 1.1),
     ...moreGenes(seed, accent),
   };
+  // Rarity comes from a fourth stream, so adding it changed no other gene.
+  const q = seededRandom(seed ^ 0x51ed_270b);
+  const finish = q() < RARE_CHANCE ? FINISHES[Math.floor(q() * FINISHES.length)] : undefined;
+  if (q() < RARE_CHANCE) look.patternKind = RARE_PATTERNS[Math.floor(q() * RARE_PATTERNS.length)];
+  return finish ? applyFinish(look, finish) : look;
+}
+
+/**
+ * Gives a look a rare color: the body (and whatever must stand out from it) takes the rare
+ * color's own shades. The eyes, mane and everything else stay the dragon's own.
+ */
+export function applyFinish<T extends DragonLook>(look: T, finish: Finish): T {
+  const out = { ...look, finish };
+  if (finish === "golden") {
+    out.body = { h: 44, s: 92, l: 62 };
+    out.pattern = { h: 30, s: 90, l: 43 };
+    out.horn = { h: 45, s: 100, l: 89 };
+  } else if (finish === "pearl") {
+    out.body = { h: look.body.h, s: 40, l: 91 };
+    out.pattern = { h: (look.body.h + 40) % 360, s: 65, l: 72 };
+    out.horn = { h: 42, s: 85, l: 68 };
+    out.accent = { ...look.accent, l: Math.min(look.accent.l, 70) };
+  } else {
+    out.body = { h: 235, s: 45, l: 15 };
+    out.pattern = { h: 262, s: 60, l: 35 };
+    out.horn = { h: 45, s: 100, l: 89 };
+    out.accent = { ...look.accent, l: Math.max(look.accent.l, 68) };
+  }
+  if (colorGap(out.accent, out.body) < MIN_GAP)
+    out.accent = { ...out.accent, h: (out.body.h + 165) % 360 };
+  return out;
 }
 
 /**

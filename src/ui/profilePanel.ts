@@ -1,5 +1,12 @@
 import { rareOf } from "../noodle/rareGenes";
 import {
+  FINISH_LABEL,
+  isRarePattern,
+  RARE_PATTERN_LABEL,
+  RARITY_BADGE,
+  rarityOf,
+} from "../noodle/rarity";
+import {
   ageText,
   birthdayText,
   cleanName,
@@ -161,6 +168,8 @@ export function lookTraits(g: Genes): string[] {
     out.push(`${rare.icon} ${rare.holiday[0].toUpperCase()}${rare.holiday.slice(1)} rare`);
     return out;
   }
+  if (g.finish) out.push(FINISH_LABEL[g.finish]);
+  if (isRarePattern(g.patternKind)) out.push(RARE_PATTERN_LABEL[g.patternKind]);
   out.push({ antler: "Antler horns", curl: "Curly horns", spike: "Spike horns" }[g.hornStyle]);
   out.push({ spikes: "Spiky back", scallops: "Scalloped back", sail: "Sail fin" }[g.ridgeStyle]);
   out.push({ flame: "Flame tail", fan: "Fan tail", pompom: "Pompom tail" }[g.tailStyle]);
@@ -179,6 +188,9 @@ export function lookTraits(g: Genes): string[] {
     spots: "Spots",
     gradient: "Ombré",
     backstripe: "Back stripe",
+    stars: "",
+    rainbow: "",
+    koi: "",
   }[g.patternKind];
   if (pattern) out.push(pattern);
   if (g.mark !== "none")
@@ -319,7 +331,27 @@ export function openProfile(info: {
     { marginTop: "12px", fontSize: "12px", color: "rgba(243,236,255,0.45)", textAlign: "right" },
     `Dragon #${g.seed}`,
   );
-  card.append(head, portrait, born, grow, pers, meters, food, chips, tag);
+  card.append(head, portrait);
+  // A rare dragon wears its badge under its portrait.
+  const badge = RARITY_BADGE[rarityOf(g)];
+  if (badge) {
+    const b = el(
+      "div",
+      {
+        width: "fit-content",
+        margin: "2px auto 8px",
+        padding: "4px 14px",
+        borderRadius: "999px",
+        font: "700 14px system-ui, sans-serif",
+        color: "#3a2400",
+        background: "linear-gradient(100deg, #ffe08a, #fff6c9 45%, #ffc6f0)",
+      },
+      badge,
+    );
+    b.id = "profile-rarity";
+    card.append(b);
+  }
+  card.append(born, grow, pers, meters, food, chips, tag);
 }
 
 function bar(share: number, color: string): HTMLDivElement {

@@ -40,6 +40,15 @@ import { Screen } from "./engine/screen";
 import { Gallery } from "./gallery";
 import { Dragon } from "./noodle/dragon";
 import { genesFromSeed, type Genes } from "./noodle/genes";
+import { rarityOf, type Rarity } from "./noodle/rarity";
+
+/** What the naming card says when an egg hatches: a rare one gets a fanfare. */
+const HATCH_TITLE: Record<Rarity, string> = {
+  common: "Name your baby dragon!",
+  rare: "✨ A rare dragon! Name it!",
+  superRare: "🌟 A super rare dragon! Name it!",
+  holiday: "🎉 A holiday dragon! Name it!",
+};
 import { NeedsBar } from "./ui/needsBar";
 import { Feeding } from "./ui/feeding";
 import { Toys } from "./ui/toys";
@@ -796,7 +805,7 @@ async function main(): Promise<void> {
             showName();
             persist();
             openNamePanel({
-              title: "Name your baby dragon!",
+              title: HATCH_TITLE[rarityOf(genes)],
               initial: identity.name,
               canCancel: false,
               onDone: rename,

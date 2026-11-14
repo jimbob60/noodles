@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { makeLook, MIN_CONTRAST, PATTERNS, seededRandom } from "../src/noodle/look";
+import { makeLook, MIN_CONTRAST, ALL_PATTERNS, seededRandom } from "../src/noodle/look";
 
 describe("dragon looks", () => {
   it("are the same every time for the same seed", () => {
@@ -15,6 +15,8 @@ describe("dragon looks", () => {
   it("follow the palette rules: bright glowy bodies, patterns that show, no muddy hues", () => {
     for (let seed = 1; seed <= 2000; seed++) {
       const look = makeLook(seed);
+      // (Rare colors have rules of their own: see rarity.test.ts.)
+      if (look.finish) continue;
       expect(look.body.l).toBeGreaterThanOrEqual(70);
       expect(look.body.s).toBeGreaterThanOrEqual(80);
       expect(Math.abs(look.pattern.l - look.body.l)).toBeGreaterThanOrEqual(MIN_CONTRAST);
@@ -26,7 +28,7 @@ describe("dragon looks", () => {
   });
 
   it("use every pattern kind across many dragons", () => {
-    const kinds = new Set(Array.from({ length: 200 }, (_, i) => makeLook(i + 1).patternKind));
-    expect([...kinds].sort()).toEqual([...PATTERNS].sort());
+    const kinds = new Set(Array.from({ length: 600 }, (_, i) => makeLook(i + 1).patternKind));
+    expect([...kinds].sort()).toEqual([...ALL_PATTERNS].sort());
   });
 });

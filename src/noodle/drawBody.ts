@@ -1,6 +1,8 @@
 import { bodyOutline, bodyProfile, shineLine, traceSmoothLoop } from "./body";
 import { forwardAt } from "./legs";
 import { CLASSIC_LOOK, hsl, shade, type DragonLook, type Hsl } from "./look";
+import { hasShimmer, isRarePattern } from "./rarity";
+import { drawGlint, drawRarePattern, drawSparkles } from "./shimmer";
 import type { Point, Spine } from "./spine";
 
 /** Half-width of the chubbiest part, from the spine spacing. */
@@ -37,12 +39,13 @@ export function drawHalo(
   }
 }
 
-/** A chubby tapered body with its pattern, scales, a rim and a shine. */
+/** A chubby tapered body with its pattern, scales, a rim and a shine (and a rare one's shimmer). */
 export function drawBody(
   ctx: CanvasRenderingContext2D,
   spine: Spine,
   look: DragonLook = CLASSIC_LOOK,
   puff = 1,
+  time = 0,
 ): void {
   const hw = bodyHalfWidth(spine, look.chubby) * puff;
   const outline = bodyOutline(spine.points, hw);
@@ -57,7 +60,8 @@ export function drawBody(
   if (look.patternKind !== "plain") {
     ctx.save();
     ctx.clip();
-    drawPattern(ctx, spine.points, hw, look);
+    if (isRarePattern(look.patternKind)) drawRarePattern(ctx, spine.points, hw, look, time);
+    else drawPattern(ctx, spine.points, hw, look);
     ctx.restore();
     traceSmoothLoop(ctx, outline);
   }
@@ -66,6 +70,8 @@ export function drawBody(
   ctx.save();
   ctx.clip();
   drawScales(ctx, spine.points, hw, look);
+  const shimmer = hasShimmer(look);
+  if (shimmer) drawGlint(ctx, spine.points, hw, look, time);
   ctx.restore();
   traceSmoothLoop(ctx, outline);
 
@@ -85,6 +91,7 @@ export function drawBody(
   ctx.strokeStyle = dark ? "rgba(255,255,255,0.22)" : "rgba(255,255,255,0.5)";
   ctx.lineWidth = hw * 0.28;
   ctx.stroke();
+  if (shimmer) drawSparkles(ctx, spine.points, hw, look, time);
 }
 
 /**

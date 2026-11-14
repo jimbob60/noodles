@@ -5,6 +5,10 @@ import type { Worn } from "../care/wardrobe";
 import { drawHead, headColors } from "../noodle/drawHead";
 import { Face } from "../noodle/face";
 import { genesFromSeed, JINX_SEED, type Genes } from "../noodle/genes";
+import { rarityOf } from "../noodle/rarity";
+
+/** A little mark after a rare dragon's name. */
+const RARITY_MARK = { common: "", rare: " ✨", superRare: " 🌟", holiday: " 🎉" } as const;
 import type { Point } from "../noodle/spine";
 import { cornerButton } from "./layout";
 
@@ -254,7 +258,7 @@ export function openFamily(opts: {
           textOverflow: "ellipsis",
           whiteSpace: "nowrap",
         },
-        m.egg ? "An egg" : m.name,
+        m.egg ? "An egg" : m.name + RARITY_MARK[rarityOf(m.genes)],
       ),
     );
     info.appendChild(

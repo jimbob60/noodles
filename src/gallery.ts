@@ -2,6 +2,7 @@ import { ACCESSORIES, ACCESSORY_COLORS, type Wardrobe } from "./care/wardrobe";
 import type { Screen } from "./engine/screen";
 import { Dragon } from "./noodle/dragon";
 import { genesFromSeed } from "./noodle/genes";
+import { hasShimmer, RARITY_BADGE, rarityOf } from "./noodle/rarity";
 import { seededRandom } from "./noodle/look";
 import { mainTrait, TRAIT_LABEL } from "./noodle/personality";
 import { palette } from "./palette";
@@ -66,7 +67,7 @@ interface Cell {
 }
 
 interface Button {
-  id: "prev" | "next" | "favorites" | "roll" | "outfits" | "age" | "rares";
+  id: "prev" | "next" | "favorites" | "roll" | "outfits" | "age" | "rares" | "shiny";
   label: string;
   x: number;
   w: number;
@@ -86,6 +87,9 @@ export class Gallery {
   private showFavorites = false;
   /** Showing the holiday dragons (so they can be seen any day of the year). */
   private showRares = false;
+  /** Showing only rare dragons (the ones that shimmer), to judge them side by side. */
+  private showShiny = false;
+  private shiny: number[] = [];
   private outfits = true;
   private babies = false;
   private cells: Cell[] = [];
@@ -118,13 +122,14 @@ export class Gallery {
     this.seeds =
       seeds ?? Array.from({ length: GALLERY_COUNT }, () => Math.floor(Math.random() * 1e9));
     this.page = 0;
-    this.showFavorites = false;
+    this.showFavorites = this.showShiny = false;
     this.layout();
   }
 
   /** The dragons being browsed: this roll's fifty, or the favorites. */
   private get list(): number[] {
     if (this.showRares) return RARES.map((r) => r.seed);
+    if (this.showShiny) return this.shiny;
     return this.showFavorites ? this.favorites : this.seeds;
   }
 
@@ -170,21 +175,23 @@ export class Gallery {
   private buttons(): Button[] {
     const w = this.screen.width;
     const narrow = w < 560;
+    const bw = narrow ? 38 : 44;
     const defs: Omit<Button, "x">[] = [
-      { id: "prev", label: "◀", w: 44 },
-      { id: "next", label: "▶", w: 44 },
+      { id: "prev", label: "◀", w: bw },
+      { id: "next", label: "▶", w: bw },
       {
         id: "favorites",
         label: narrow ? `♥ ${this.favorites.length}` : `♥ Favorites (${this.favorites.length})`,
         w: narrow ? 58 : 150,
         on: this.showFavorites,
       },
-      { id: "roll", label: narrow ? "🎲" : "🎲 New 50", w: narrow ? 44 : 104 },
-      { id: "outfits", label: "👗", w: 44, on: this.outfits },
-      { id: "age", label: "🐣", w: 44, on: this.babies },
-      { id: "rares", label: "🎉", w: 44, on: this.showRares },
+      { id: "roll", label: narrow ? "🎲" : "🎲 New 50", w: narrow ? bw : 104 },
+      { id: "outfits", label: "👗", w: bw, on: this.outfits },
+      { id: "age", label: "🐣", w: bw, on: this.babies },
+      { id: "shiny", label: "✨", w: bw, on: this.showShiny },
+      { id: "rares", label: "🎉", w: bw, on: this.showRares },
     ];
-    const gap = narrow ? 6 : 10;
+    const gap = narrow ? 4 : 10;
     const total = defs.reduce((s, b) => s + b.w, 0) + gap * (defs.length - 1);
     let x = (w - total) / 2;
     return defs.map((b) => {
@@ -203,13 +210,24 @@ export class Gallery {
       else if (b.id === "next") this.page = (this.page + 1) % this.pages;
       else if (b.id === "favorites") {
         this.showFavorites = !this.showFavorites;
+        this.showShiny = false;
         this.page = 0;
       } else if (b.id === "roll") return this.roll();
       else if (b.id === "outfits") this.outfits = !this.outfits;
       else if (b.id === "rares") {
         this.showRares = !this.showRares;
-        this.showFavorites = false;
+        this.showFavorites = this.showShiny = false;
         this.page = 0;
+      } else if (b.id === "shiny") {
+        // Fifty rare dragons (rolled until fifty turn up), to see every rare color and pattern.
+        this.showShiny = !this.showShiny;
+        this.showFavorites = this.showRares = false;
+        this.page = 0;
+        this.shiny = [];
+        while (this.showShiny && this.shiny.length < GALLERY_COUNT) {
+          const s = Math.floor(Math.random() * 1e9);
+          if (hasShimmer(genesFromSeed(s))) this.shiny.push(s);
+        }
       } else this.babies = !this.babies;
       this.layout();
       return;
@@ -260,7 +278,9 @@ export class Gallery {
       ctx.font = "12px system-ui, sans-serif";
       ctx.textBaseline = "bottom";
       ctx.fillStyle = fav ? "#ffd6f5" : "rgba(255,255,255,0.5)";
-      ctx.fillText(`#${c.dragon.look.seed} · ${trait}`, c.cx, c.cy + c.ch / 2 - 4);
+      const badge = RARITY_BADGE[rarityOf(c.dragon.look)];
+      const tag = badge ? `${badge} · ${trait}` : `#${c.dragon.look.seed} · ${trait}`;
+      ctx.fillText(tag, c.cx, c.cy + c.ch / 2 - 4);
       ctx.font = "22px system-ui, sans-serif";
       ctx.textBaseline = "top";
       ctx.fillStyle = fav ? "#ff8ad8" : "rgba(255,255,255,0.18)";
@@ -290,9 +310,11 @@ export class Gallery {
     ctx.fillStyle = "rgba(255,255,255,0.75)";
     const what = this.showRares
       ? "🎉 Holiday dragons"
-      : this.showFavorites
-        ? "♥ Favorites"
-        : "50 dragons";
+      : this.showShiny
+        ? "✨ Rare dragons"
+        : this.showFavorites
+          ? "♥ Favorites"
+          : "50 dragons";
     ctx.fillText(`${what} · page ${this.page + 1} of ${this.pages}`, 14, TOP / 2 + 2);
   }
 }
