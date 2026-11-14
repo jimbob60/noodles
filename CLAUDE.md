@@ -43,8 +43,8 @@ Jacob. Read this, then only the files a task needs. Keep token use low (see the 
 - `VISION.md` (look and feel), `DECISIONS.md` (every choice, newest first), `CHANGELOG.md`.
 - `src/main.ts` wires everything. Dragon: `src/noodle/` (`dragon.ts`, `drawHead.ts`,
   `drawBody.ts`, `genes.ts`, `look.ts`, `accessories.ts`, `rares.ts` + `rareGenes.ts` for the
-  ten holiday dragons, `rarity.ts` + `shimmer.ts` for rare colors and patterns, `friends.ts`, `personality.ts`). Care and saving: `src/care/`,
-  `src/save/` (save version 13). UI panels: `src/ui/`. Jinxy the cat: `src/pets/`.
+  ten holiday dragons, `rarity.ts` + `shimmer.ts` for rare colors and patterns, `friends.ts`, `personality.ts`). Dragondex: `src/care/dex.ts` + `src/ui/dexPanel.ts`. Care and saving: `src/care/`,
+  `src/save/` (save version 14). UI panels: `src/ui/`. Jinxy the cat: `src/pets/`.
 - `scripts/day-in-the-life.mjs` is the robot; `tests/` has the unit tests.
 
 ## Status (2026-11-14)
@@ -58,7 +58,8 @@ Jacob. Read this, then only the files a task needs. Keep token use low (see the 
   itch.io page (cover upload failed once; a JPG was sent).
 - Phase 39 rarity: rare colors (`finish` gene: golden, pearl, midnight), rare patterns (stars,
   rainbow, koi), shimmer in `src/noodle/shimmer.ts`, tiers in `src/noodle/rarity.ts`.
-- Next in the plan: phase 40 (Dragondex; should list rare colors and patterns too).
+- Phase 40 Dragondex built (30 pages: colors, patterns, specials); waiting on Jacob's OK.
+- Next in the plan: phase 41 (daily goals).
 
 ## Gotchas
 

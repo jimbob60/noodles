@@ -75,7 +75,7 @@ describe("the family", () => {
       false,
     );
     const back = parseSave(JSON.parse(JSON.stringify(save)), T0 + HOUR)!;
-    expect(back.version).toBe(13);
+    expect(back.version).toBe(14);
     expect(back.family.map((m) => m.seed)).toEqual([11, 22]);
     expect(back.family[0].worn).toEqual({ head: { id: "crown", color: 2 } });
     expect(back.family[1].egg).toBe(true);

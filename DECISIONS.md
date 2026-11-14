@@ -2,6 +2,17 @@
 
 Newest first. Each entry says what we decided, why, and what it affects.
 
+## 2026-11-14: Phase 40, the Dragondex; save version 14
+
+- **Decision:** a collection book, the **📖 Dragondex**, opened from a new book button (eighth in the corner stack, just above ❓, which moves down one). It has **30 pages** on three tabs: **🎨 Colors** (the eight everyday body colors: Aqua, Mint, Sky blue, Lavender, Bubblegum, Rose, Honey, Peach; plus the rare Golden, Pearl and Midnight), **🌀 Patterns** (Plain, Stripes, Spots, Ombré, Back stripe; plus the rare Starry, Rainbow and Koi patches) and **🎉 Specials** (the ten holiday dragons and Jinx).
+- **How it fills in:** when an egg hatches and gets its name, its color and pattern pages are found (a holiday dragon or Jinx finds its own page instead, since their colors are hand-picked). A bred dragon's in-between color counts as the nearest color. Each page remembers **who found it first and when** ("Found by Mochi · Nov 14"). Dragons you already had fill in their pages the first time the game loads, so nobody starts with an empty book.
+- **Looks:** a found color shows a little dragon head in that color; a pattern shows a strip of dragon skin wearing it; a special shows its real head (Pumpkin's jack-o'-lantern and all). A page not found yet is a shadow with a **?** and a hint (rare ones say "about 1 egg in 30, or breed a parent that has it"; holiday ones say which holiday). Rare pages have a gold edge. A bar shows how full the book is, and each tab counts its pages.
+- **New pages:** the book button twinkles a ✦ until you open it, the book opens on the tab with something new, and new pages wear a **NEW** tag.
+- **Corner stack:** nine buttons now. On a very short screen (a phone on its side) it wraps into two or three columns so every button stays big enough to tap.
+- **Save version 14:** adds `dex` (each page found, by whom, when). Older saves upgrade by filling in from the family.
+- **Why:** phase 40 ("it fills in as Jacob plays"); the phase 39 note asked for rare colors and patterns in it too.
+- **Affects:** phase 41 (daily goals could ask for a new page), phase 42 (how fast the book fills).
+
 ## 2026-11-14: Phase 39, rarity: rare colors and patterns that shimmer
 
 - **Decision:** three **rare colors** (a new gene, `finish`): **golden**, **pearl** (almost white, with a soft rainbow sheen that drifts along the body) and **midnight** (deep night blue with glowing eyes). And three **rare patterns** (new kinds of `patternKind`): **stars** (twinkling), **rainbow** (neck to tail, all the way round the color wheel) and **koi** (big two-color patches, laid out differently on each dragon).

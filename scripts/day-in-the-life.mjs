@@ -66,7 +66,7 @@ const line = (a, b, n = 10) =>
     x: a.x + ((b.x - a.x) * (i + 1)) / n,
     y: a.y + ((b.y - a.y) * (i + 1)) / n,
   }));
-const topButton = (i) => ({ x: W - 32, y: 44 + i * 46 + 18 }); // 0 backup, 1 decorate, 2 shop, 3 game, 4 closet, 5 camera, 6 family
+const topButton = (i) => ({ x: W - 32, y: 44 + i * 46 + 18 }); // 0 backup, 1 decorate, 2 shop, 3 game, 4 closet, 5 camera, 6 family, 7 Dragondex, 8 help
 const foodSlot = (i) => ({ x: 14 + R + i * (2 * R + GAP), y: H - 14 - R });
 const ball = { x: W - 14 - R, y: H - 14 - R };
 const sponge = { x: W - 14 - R - (2 * R + GAP), y: H - 14 - R - (2 * R + GAP) };
@@ -231,6 +231,26 @@ check(
 );
 await p.click("#family-panel >> text=✕");
 await step(200);
+
+// The Dragondex (the eighth corner button): Biscuit's color and pattern are found, by Biscuit.
+await tap(topButton(7).x, topButton(7).y);
+await p.waitForSelector("#dex-panel");
+const dexText = await p.textContent("#dex-panel");
+check(
+  (await p.$$('#dex-panel [data-found="yes"]')).length === 1 &&
+    dexText.includes("Found by Biscuit") &&
+    dexText.includes("2 of 30"),
+  "the Dragondex has Biscuit's color and pattern, found by Biscuit",
+);
+await p.click('#dex-panel button[data-page="patterns"]');
+check(
+  (await p.$$('#dex-panel [data-found="yes"]')).length === 1 &&
+    (await p.$$("#dex-panel [data-dex]")).length === 8,
+  "its pattern page has eight patterns, one found",
+);
+await p.click("#dex-panel >> text=✕");
+await step(200);
+check((await save()).dex.length === 2, "the Dragondex is saved");
 
 // Decorating: place it in the den.
 await tap(topButton(1).x, topButton(1).y);

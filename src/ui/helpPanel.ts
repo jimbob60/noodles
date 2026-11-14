@@ -25,7 +25,7 @@ export const FORM = {
 
 /** The help button (❓): last in the top-right stack. */
 export function helpButton(width: number, height: number): Point & { r: number } {
-  return cornerButton(7, width, height);
+  return cornerButton(8, width, height);
 }
 
 export function onHelpButton(p: Point, width: number, height: number): boolean {

@@ -29,6 +29,8 @@ import { Cat, RUB_LOVE } from "./pets/cat";
 import { drawCat } from "./pets/drawCat";
 import { JINX_SEED } from "./noodle/genes";
 import { drawHelpButton, onHelpButton, openFeedback, openHowTo } from "./ui/helpPanel";
+import { drawDexButton, onDexButton, openDex } from "./ui/dexPanel";
+import { discover, newFinds, type Dex } from "./care/dex";
 import { logEvent, logText, watchErrors } from "./ui/log";
 import { rareBySeed, raresInSeason, rareSurprise } from "./noodle/rareGenes";
 import { MAX_FAMILY } from "./care/family";
@@ -188,6 +190,14 @@ async function main(): Promise<void> {
   let family: FamilyMember[] = loaded.save?.family ?? [];
   /** The dragon in the den is a newly adopted egg that hasn't hatched yet. */
   let adoptedEgg = loaded.save?.egg ?? false;
+  /** The Dragondex: colors, patterns and special dragons found so far. */
+  let dex: Dex = loaded.save?.dex ?? [];
+  /** Pages found since the book was last opened (they get a NEW tag, and the button twinkles). */
+  let dexFresh: string[] = [];
+  const showDex = () => {
+    document.body.dataset.dex = String(dex.length);
+  };
+  showDex();
   const showFamily = () => {
     document.body.dataset.family = String(family.length + 1);
   };
@@ -284,6 +294,7 @@ async function main(): Promise<void> {
       wardrobe,
       family,
       adoptedEgg,
+      dex,
     );
   const persist = () => {
     // Nothing is saved until a new player's egg has hatched.
@@ -366,6 +377,9 @@ async function main(): Promise<void> {
     dragon.setGrowth(growthShare(growth));
     family = save.family;
     adoptedEgg = save.egg;
+    dex = save.dex;
+    dexFresh = [];
+    showDex();
     egg = adoptedEgg ? new Egg() : null;
     showFamily();
     syncFriend();
@@ -698,6 +712,19 @@ async function main(): Promise<void> {
         logEvent("open showFamilyPanel");
         showFamilyPanel();
       }
+      // The Dragondex (📖): every color, pattern and special dragon found so far.
+      if (
+        pressAt &&
+        !swallowing &&
+        playing &&
+        !catchGame &&
+        !decorator.active &&
+        onDexButton(pressAt, screen.width, screen.height)
+      ) {
+        swallowing = true;
+        openDex(dex, dexFresh);
+        dexFresh = [];
+      }
       // The name badge under the coins opens the dragon's profile card.
       if (pressAt && !swallowing && playing && !catchGame && onGrowthBadge(pressAt)) {
         swallowing = true;
@@ -808,7 +835,16 @@ async function main(): Promise<void> {
               title: HATCH_TITLE[rarityOf(genes)],
               initial: identity.name,
               canCancel: false,
-              onDone: rename,
+              onDone: (name) => {
+                // A new page in the Dragondex? Its finder is this baby, by the name it was given.
+                const before = dex;
+                dex = discover(dex, genes, name, Date.now());
+                const found = newFinds(before, dex).map((f) => f.id);
+                dexFresh = [...dexFresh, ...found];
+                showDex();
+                if (found.length) logEvent(`dragondex new ${found.join(" ")}`);
+                rename(name);
+              },
             });
           }
         }
@@ -1130,6 +1166,8 @@ async function main(): Promise<void> {
             if (!decorator.active && !catchGame) drawCameraButton(ctx, screen.width, screen.height);
             if (!decorator.active && !catchGame)
               drawFamilyButton(ctx, screen.width, screen.height, family.length + 1);
+            if (!decorator.active && !catchGame)
+              drawDexButton(ctx, screen.width, screen.height, dexFresh.length > 0, modeSeconds);
             drawHelpButton(ctx, screen.width, screen.height);
           }
           if (catchGame) {
