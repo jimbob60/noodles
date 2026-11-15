@@ -6,7 +6,9 @@ import {
   dexIdsOf,
   discover,
   newFinds,
+  newPrizes,
   parseDex,
+  parsePrizes,
 } from "../src/care/dex";
 import { CLASSIC_GENES, genesFromSeed, JINX_GENES } from "../src/noodle/genes";
 import { applyFinish } from "../src/noodle/look";
@@ -15,10 +17,13 @@ import { makeSave, parseSave } from "../src/save/saveGame";
 import { freshNeeds } from "../src/care/needs";
 
 describe("Dragondex", () => {
-  it("has 11 colors, 8 patterns and 11 special dragons, each once", () => {
+  it("has 11 colors, 8 patterns, 20 parts, 11 special dragons and 88 combos, each once", () => {
     expect(dexCount([], "colors").total).toBe(11);
     expect(dexCount([], "patterns").total).toBe(8);
+    expect(dexCount([], "parts").total).toBe(20);
     expect(dexCount([], "specials").total).toBe(11);
+    expect(dexCount([], "combos").total).toBe(88);
+    expect(dexCount([]).total).toBe(138);
     expect(new Set(DEX.map((e) => e.id)).size).toBe(DEX.length);
   });
 
@@ -31,11 +36,43 @@ describe("Dragondex", () => {
     }
   });
 
-  it("can find every color and pattern among wild eggs", () => {
+  it("can find every color, pattern, part and everyday combo among wild eggs", () => {
     const found = new Set<string>();
     for (let seed = 1; seed < 3000; seed++)
       for (const id of dexIdsOf(genesFromSeed(seed * 104729))) found.add(id);
-    for (const e of DEX.filter((d) => d.page !== "specials")) expect(found.has(e.id)).toBe(true);
+    const wild = DEX.filter(
+      (d) =>
+        (d.page !== "specials" && d.page !== "combos" && d.id !== "part:mouth:extraFang") ||
+        (d.page === "combos" && !d.rare),
+    );
+    expect(wild.length).toBe(78);
+    for (const e of wild) expect(found.has(e.id)).toBe(true);
+  });
+
+  it("files a dragon under its parts and combo, and Jinx under its parts too", () => {
+    const g = {
+      ...CLASSIC_GENES,
+      mark: "heart" as const,
+      frills: true,
+      patternKind: "koi" as const,
+    };
+    const ids = dexIdsOf(g);
+    expect(ids).toContain("part:horn:antler");
+    expect(ids).toContain("part:mark:heart");
+    expect(ids).toContain("part:extra:frills");
+    expect(ids).toContain("combo:aqua:koi");
+    expect(ids).not.toContain("part:extra:freckles");
+    expect(dexIdsOf(JINX_GENES)).toContain("part:mouth:extraFang");
+    expect(dexIdsOf(JINX_GENES).some((id) => id.startsWith("color:"))).toBe(false);
+  });
+
+  it("wins a sticker (once) for each finished tab", () => {
+    const colors = DEX.filter((e) => e.page === "colors").map((e) => ({ id: e.id, by: "", at: 0 }));
+    expect(newPrizes(colors, [])).toEqual(["colors"]);
+    expect(newPrizes(colors, ["colors"])).toEqual([]);
+    expect(newPrizes(colors.slice(1), [])).toEqual([]);
+    expect(parsePrizes(["colors", "bogus", "combos"])).toEqual(["colors", "combos"]);
+    expect(parsePrizes(undefined)).toEqual([]);
   });
 
   it("sorts in-between hues to the nearest color", () => {
@@ -48,14 +85,17 @@ describe("Dragondex", () => {
   it("gives rare colors, holiday dragons and Jinx their own pages", () => {
     expect(dexIdsOf(applyFinish(CLASSIC_GENES, "pearl"))[0]).toBe("color:pearl");
     expect(dexIdsOf(RARES[0].genes)).toEqual([`special:${RARES[0].id}`]);
-    expect(dexIdsOf(JINX_GENES)).toEqual(["special:jinx"]);
+    expect(dexIdsOf(JINX_GENES)[0]).toBe("special:jinx");
   });
 
   it("keeps the first finder and reports only new pages", () => {
     const a = discover([], CLASSIC_GENES, "Mochi", 1);
-    expect(a.map((f) => f.id)).toEqual(["color:aqua", "pattern:plain"]);
+    expect(a.map((f) => f.id).slice(0, 2)).toEqual(["color:aqua", "pattern:plain"]);
     const b = discover(a, { ...CLASSIC_GENES, patternKind: "koi" }, "Bao", 2);
-    expect(newFinds(a, b)).toEqual([{ id: "pattern:koi", by: "Bao", at: 2 }]);
+    expect(newFinds(a, b)).toEqual([
+      { id: "pattern:koi", by: "Bao", at: 2 },
+      { id: "combo:aqua:koi", by: "Bao", at: 2 },
+    ]);
     expect(b.find((f) => f.id === "color:aqua")?.by).toBe("Mochi");
     expect(discover(b, CLASSIC_GENES, "Pip", 3)).toBe(b);
   });

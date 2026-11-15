@@ -30,7 +30,7 @@ import { drawCat } from "./pets/drawCat";
 import { JINX_SEED } from "./noodle/genes";
 import { drawHelpButton, onHelpButton, openFeedback, openHowTo } from "./ui/helpPanel";
 import { drawDexButton, onDexButton, openDex } from "./ui/dexPanel";
-import { discover, newFinds, type Dex } from "./care/dex";
+import { discover, newFinds, newPrizes, STICKERS, type Dex, type DexPage } from "./care/dex";
 import { logEvent, logText, watchErrors } from "./ui/log";
 import { rareBySeed, raresInSeason, rareSurprise } from "./noodle/rareGenes";
 import { MAX_FAMILY } from "./care/family";
@@ -198,6 +198,22 @@ async function main(): Promise<void> {
     document.body.dataset.dex = String(dex.length);
   };
   showDex();
+  /** Dragondex tabs finished (each won a sticker and coins), and ones won since it was opened. */
+  let dexPrizes: DexPage[] = loaded.save?.dexPrizes ?? [];
+  let prizeFresh: DexPage[] = [];
+  /** A tab just got finished? Its sticker and coins. */
+  const checkPrizes = () => {
+    const won = newPrizes(dex, dexPrizes);
+    if (!won.length) return;
+    dexPrizes = [...dexPrizes, ...won];
+    prizeFresh = [...prizeFresh, ...won];
+    const coins = won.reduce((n, p) => n + STICKERS[p].coins, 0);
+    wallet = { ...wallet, coins: wallet.coins + coins };
+    coinCounter.earned(coins, { x: window.innerWidth / 2, y: window.innerHeight / 2 });
+    logEvent(`dragondex sticker ${won.join(" ")} +${coins}`);
+  };
+  // Dragons already in the family can finish a tab the first time the game loads.
+  if (loaded.save) checkPrizes();
   const showFamily = () => {
     document.body.dataset.family = String(family.length + 1);
   };
@@ -295,6 +311,7 @@ async function main(): Promise<void> {
       family,
       adoptedEgg,
       dex,
+      dexPrizes,
     );
   const persist = () => {
     // Nothing is saved until a new player's egg has hatched.
@@ -379,6 +396,9 @@ async function main(): Promise<void> {
     adoptedEgg = save.egg;
     dex = save.dex;
     dexFresh = [];
+    dexPrizes = save.dexPrizes;
+    prizeFresh = [];
+    checkPrizes();
     showDex();
     egg = adoptedEgg ? new Egg() : null;
     showFamily();
@@ -722,8 +742,9 @@ async function main(): Promise<void> {
         onDexButton(pressAt, screen.width, screen.height)
       ) {
         swallowing = true;
-        openDex(dex, dexFresh);
+        openDex(dex, dexFresh, dexPrizes, prizeFresh);
         dexFresh = [];
+        prizeFresh = [];
       }
       // The name badge under the coins opens the dragon's profile card.
       if (pressAt && !swallowing && playing && !catchGame && onGrowthBadge(pressAt)) {
@@ -843,6 +864,7 @@ async function main(): Promise<void> {
                 dexFresh = [...dexFresh, ...found];
                 showDex();
                 if (found.length) logEvent(`dragondex new ${found.join(" ")}`);
+                checkPrizes();
                 rename(name);
               },
             });
@@ -1167,7 +1189,13 @@ async function main(): Promise<void> {
             if (!decorator.active && !catchGame)
               drawFamilyButton(ctx, screen.width, screen.height, family.length + 1);
             if (!decorator.active && !catchGame)
-              drawDexButton(ctx, screen.width, screen.height, dexFresh.length > 0, modeSeconds);
+              drawDexButton(
+                ctx,
+                screen.width,
+                screen.height,
+                dexFresh.length + prizeFresh.length > 0,
+                modeSeconds,
+              );
             drawHelpButton(ctx, screen.width, screen.height);
           }
           if (catchGame) {

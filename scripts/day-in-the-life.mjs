@@ -232,14 +232,16 @@ check(
 await p.click("#family-panel >> text=✕");
 await step(200);
 
-// The Dragondex (the eighth corner button): Biscuit's color and pattern are found, by Biscuit.
+// The Dragondex (the eighth corner button): Biscuit's color, pattern, parts and combo are found,
+// by Biscuit, and the sticker shelf shows all five stickers.
 await tap(topButton(7).x, topButton(7).y);
 await p.waitForSelector("#dex-panel");
 const dexText = await p.textContent("#dex-panel");
 check(
   (await p.$$('#dex-panel [data-found="yes"]')).length === 1 &&
     dexText.includes("Found by Biscuit") &&
-    dexText.includes("2 of 30"),
+    / of 138 found/.test(dexText) &&
+    (await p.$$("#dex-panel [data-sticker]")).length === 5,
   "the Dragondex has Biscuit's color and pattern, found by Biscuit",
 );
 await p.click('#dex-panel button[data-page="patterns"]');
@@ -250,7 +252,10 @@ check(
 );
 await p.click("#dex-panel >> text=✕");
 await step(200);
-check((await save()).dex.length === 2, "the Dragondex is saved");
+check(
+  (await save()).dex.some((f) => f.id.startsWith("combo:")),
+  "the Dragondex is saved, combo and all",
+);
 
 // Decorating: place it in the den.
 await tap(topButton(1).x, topButton(1).y);

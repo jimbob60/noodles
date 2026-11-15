@@ -58,7 +58,8 @@ Jacob. Read this, then only the files a task needs. Keep token use low (see the 
   itch.io page (cover upload failed once; a JPG was sent).
 - Phase 39 rarity: rare colors (`finish` gene: golden, pearl, midnight), rare patterns (stars,
   rainbow, koi), shimmer in `src/noodle/shimmer.ts`, tiers in `src/noodle/rarity.ts`.
-- Phase 40 Dragondex built (30 pages: colors, patterns, specials); waiting on Jacob's OK.
+- Phase 40 Dragondex built: 138 pages on five tabs (colors, patterns, parts, specials, combos)
+  and a sticker with coins for each finished tab; waiting on Jacob's OK.
 - Next in the plan: phase 41 (daily goals).
 
 ## Gotchas

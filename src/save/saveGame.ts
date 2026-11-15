@@ -7,7 +7,7 @@ import { genesFromSeed, parseGenes, type Genes } from "../noodle/genes";
 import { parseIdentity, type Identity } from "../care/identity";
 import { emptyWardrobe, parseWardrobe, type Wardrobe } from "../care/wardrobe";
 import { parseFamily, type FamilyMember } from "../care/family";
-import { discover, parseDex, type Dex } from "../care/dex";
+import { discover, parseDex, parsePrizes, type Dex, type DexPage } from "../care/dex";
 
 /** The save format version. Bump it (and add a migration below) whenever the format changes. */
 export const SAVE_VERSION = 14;
@@ -28,7 +28,7 @@ export const SAVE_VERSION = 14;
  * - Version 12 (phase 36): plus the rest of the family. The fields above are the dragon that is
  *   out in the den; `family` holds the others, each with its own needs, growth and outfit.
  * - Version 13 (phase 37): a family member can be `visiting` the den as a friend.
- * - Version 14 (phase 40): plus the Dragondex (colors, patterns and special dragons found).
+ * - Version 14 (phase 40): plus the Dragondex (pages found) and the stickers it has won.
  */
 export interface SaveV14 {
   version: 14;
@@ -53,6 +53,8 @@ export interface SaveV14 {
   egg: boolean;
   /** The Dragondex: every page found, who found it and when. */
   dex: Dex;
+  /** Dragondex tabs finished (each won a sticker and coins). */
+  dexPrizes: DexPage[];
 }
 export type Save = SaveV14;
 
@@ -63,6 +65,7 @@ export function newSave(seed: number, now: number): Save {
     family: [],
     egg: false,
     dex: [],
+    dexPrizes: [],
     seed,
     genes: genesFromSeed(seed),
     identity: parseIdentity(null, seed, now),
@@ -89,6 +92,7 @@ export function makeSave(
   family: FamilyMember[] = [],
   egg = false,
   dex: Dex = fillDex([], { genes, identity, egg }, family),
+  dexPrizes: DexPage[] = [],
 ): Save {
   return {
     version: 14,
@@ -96,6 +100,7 @@ export function makeSave(
     family,
     egg,
     dex,
+    dexPrizes,
     seed,
     genes,
     identity,
@@ -132,6 +137,7 @@ export function parseSave(raw: unknown, now: number): Save | null {
     family?: unknown;
     egg?: unknown;
     dex?: unknown;
+    dexPrizes?: unknown;
   };
   if (typeof r.version !== "number" || r.version < 1 || !validSeed(r.seed)) return null;
   const savedAt = typeof r.savedAt === "number" && r.savedAt <= now ? r.savedAt : now;
@@ -169,6 +175,7 @@ export function parseSave(raw: unknown, now: number): Save | null {
     egg,
     // Versions 1–13 had no Dragondex; and any dragon already hatched fills in its pages.
     dex: fillDex(r.version >= 14 ? parseDex(r.dex) : [], { genes, identity, egg }, family),
+    dexPrizes: parsePrizes(r.dexPrizes),
     savedAt,
     seed: r.seed,
     genes,

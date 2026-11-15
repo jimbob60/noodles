@@ -1,8 +1,18 @@
-import { DEX, DEX_COLORS, dexCount, type Dex, type DexEntry } from "../care/dex";
+import {
+  DEX,
+  DEX_COLORS,
+  DEX_PAGES,
+  dexCount,
+  STICKERS,
+  type Dex,
+  type DexEntry,
+  type DexPage,
+} from "../care/dex";
+import { Dragon } from "../noodle/dragon";
 import { drawHead, headColors } from "../noodle/drawHead";
 import { Face } from "../noodle/face";
 import { CLASSIC_GENES, JINX_GENES, type Genes } from "../noodle/genes";
-import { applyFinish, FINISHES, type Finish, type Hsl, type Pattern } from "../noodle/look";
+import { applyFinish, FINISHES, type Hsl, type Pattern } from "../noodle/look";
 import { rareOf } from "../noodle/rareGenes";
 import type { Point } from "../noodle/spine";
 import { cornerButton } from "./layout";
@@ -72,11 +82,11 @@ export function drawDexButton(
 
 // ---- The little pictures on each page ----
 
-/** A sample dragon wearing an everyday color, or a rare one. */
-function colorGenes(id: string): Genes {
-  const finish = FINISHES.find((f) => id === `color:${f}`);
-  if (finish) return applyFinish(CLASSIC_GENES, finish as Finish);
-  const c = DEX_COLORS.find((x) => id === `color:${x.id}`) ?? DEX_COLORS[0];
+/** A sample dragon wearing an everyday color, or a rare one (by its id after "color:"). */
+function colorGenes(color: string): Genes {
+  const finish = FINISHES.find((f) => f === color);
+  if (finish) return applyFinish(CLASSIC_GENES, finish);
+  const c = DEX_COLORS.find((x) => x.id === color) ?? DEX_COLORS[0];
   const body: Hsl = { h: c.hue, s: 90, l: 74 };
   // A pink mane, unless the dragon is pink: then a minty one.
   const pinkish = c.hue > 290 || c.hue < 10;
@@ -92,6 +102,25 @@ function colorGenes(id: string): Genes {
 function specialGenes(id: string): Genes {
   if (id === "special:jinx") return JINX_GENES;
   return rareOf(id.slice("special:".length) as Genes["special"])?.genes ?? CLASSIC_GENES;
+}
+
+/** A lavender sample dragon showing off one body part (by its id, like "part:tail:fan"). */
+function partGenes(id: string): Genes {
+  const [, gene, kind] = id.split(":");
+  const g: Genes = {
+    ...colorGenes("lavender"),
+    hornBranches: 1,
+    ridgeSize: 1.3,
+    tailSize: 1.3,
+    frills: false,
+    freckles: false,
+  };
+  if (gene === "horn") return { ...g, hornStyle: kind as Genes["hornStyle"], hornLength: 1.2 };
+  if (gene === "ridge") return { ...g, ridgeStyle: kind as Genes["ridgeStyle"] };
+  if (gene === "tail") return { ...g, tailStyle: kind as Genes["tailStyle"] };
+  if (gene === "mark") return { ...g, mark: kind as Genes["mark"] };
+  if (gene === "mouth") return { ...g, mouthStyle: kind as Genes["mouthStyle"] };
+  return kind === "frills" ? { ...g, frills: true } : { ...g, freckles: true };
 }
 
 function canvas(size: number): [HTMLCanvasElement, CanvasRenderingContext2D | null] {
@@ -116,6 +145,29 @@ function headArt(genes: Genes, size: number, found: boolean): HTMLCanvasElement 
   return c;
 }
 
+/**
+ * A whole little dragon curled in a loop, for parts the head doesn't show (back ridges and tail
+ * tips). It swims a moment first, so it has settled into its curl.
+ */
+function dragonArt(genes: Genes, size: number, found: boolean): HTMLCanvasElement {
+  const [c, ctx] = canvas(size);
+  if (!ctx) return c;
+  const segment = size / 17;
+  const world = { width: size, height: size, unit: segment };
+  const dragon = new Dragon(size * 0.5, size * 0.5, segment, world, genes);
+  dragon.setGrowth(1);
+  const lead = { x: size / 2, y: size / 2, down: true };
+  for (let k = 0; k < 160; k++) {
+    const t = k / 30;
+    lead.x = size * (0.5 + 0.22 * Math.cos(t * 1.6));
+    lead.y = size * (0.5 + 0.2 * Math.sin(t * 1.6));
+    dragon.update(1 / 30, lead, world);
+  }
+  dragon.draw(ctx);
+  if (!found) silhouette(ctx, size);
+  return c;
+}
+
 function silhouette(ctx: CanvasRenderingContext2D, size: number): void {
   ctx.save();
   ctx.globalCompositeOperation = "source-atop";
@@ -129,8 +181,19 @@ function silhouette(ctx: CanvasRenderingContext2D, size: number): void {
   ctx.fillText("?", size * 0.5, size * 0.52);
 }
 
-/** A strip of dragon skin wearing a pattern (the same lavender dragon for every one). */
-function patternArt(kind: Pattern, size: number, found: boolean): HTMLCanvasElement {
+const css2 = (c: Hsl, dl = 0) => `hsl(${c.h} ${c.s}% ${Math.max(0, Math.min(100, c.l + dl))}%)`;
+
+/**
+ * A strip of dragon skin wearing a pattern, in a color (the lavender dragon unless one is
+ * given, as on the combo pages).
+ */
+function patternArt(
+  kind: Pattern,
+  size: number,
+  found: boolean,
+  skin: Hsl = { h: 270, s: 85, l: 76 },
+  ink: Hsl = { h: 255, s: 80, l: 52 },
+): HTMLCanvasElement {
   const [c, ctx] = canvas(size);
   if (!ctx) return c;
   const w = size * 0.86;
@@ -141,11 +204,10 @@ function patternArt(kind: Pattern, size: number, found: boolean): HTMLCanvasElem
   ctx.beginPath();
   ctx.roundRect(x0, y0, w, h, h / 2);
   ctx.clip();
-  const body = "hsl(270 85% 76%)";
-  const ink = "hsl(255 80% 52%)";
+  const body = css2(skin);
   ctx.fillStyle = body;
   ctx.fillRect(x0, y0, w, h);
-  ctx.fillStyle = ink;
+  ctx.fillStyle = css2(ink);
   if (kind === "stripes") {
     for (let i = 0; i < 5; i++) ctx.fillRect(x0 + w * (0.1 + i * 0.19), y0, w * 0.07, h);
   } else if (kind === "spots") {
@@ -164,14 +226,14 @@ function patternArt(kind: Pattern, size: number, found: boolean): HTMLCanvasElem
   } else if (kind === "gradient") {
     const g = ctx.createLinearGradient(x0, 0, x0 + w, 0);
     g.addColorStop(0, body);
-    g.addColorStop(1, ink);
+    g.addColorStop(1, css2(ink));
     ctx.fillStyle = g;
     ctx.fillRect(x0, y0, w, h);
   } else if (kind === "backstripe") {
     ctx.fillRect(x0, y0, w, h * 0.32);
   } else if (kind === "rainbow") {
     const g = ctx.createLinearGradient(x0, 0, x0 + w, 0);
-    for (let i = 0; i <= 6; i++) g.addColorStop(i / 6, `hsl(${i * 60} 90% 72%)`);
+    for (let i = 0; i <= 6; i++) g.addColorStop(i / 6, `hsl(${skin.h + i * 60} 90% 72%)`);
     ctx.fillStyle = g;
     ctx.fillRect(x0, y0, w, h);
   } else if (kind === "koi") {
@@ -181,13 +243,11 @@ function patternArt(kind: Pattern, size: number, found: boolean): HTMLCanvasElem
       ctx.ellipse(x0 + w * px, y0 + h * py, w * rx, h * ry, 0.3, 0, Math.PI * 2);
       ctx.fill();
     };
-    ctx.fillStyle = "hsl(30 30% 96%)";
-    ctx.fillRect(x0, y0, w, h);
     blob(0.2, 0.3, 0.16, 0.42, "hsl(12 90% 58%)");
-    blob(0.62, 0.75, 0.2, 0.4, "hsl(12 90% 58%)");
-    blob(0.85, 0.2, 0.1, 0.3, "hsl(230 30% 22%)");
+    blob(0.62, 0.75, 0.2, 0.4, "hsl(30 30% 96%)");
+    blob(0.85, 0.2, 0.1, 0.3, css2(ink, -15));
   } else if (kind === "stars") {
-    ctx.fillStyle = "hsl(240 55% 30%)";
+    ctx.fillStyle = css2(ink, -12);
     ctx.fillRect(x0, y0, w, h);
     ctx.fillStyle = "#fff3b0";
     ctx.font = `${Math.round(h * 0.38)}px system-ui, sans-serif`;
@@ -218,13 +278,22 @@ function patternArt(kind: Pattern, size: number, found: boolean): HTMLCanvasElem
 }
 
 function art(entry: DexEntry, size: number, found: boolean): HTMLCanvasElement {
-  if (entry.page === "patterns")
-    return patternArt(entry.id.slice("pattern:".length) as Pattern, size, found);
-  return headArt(
-    entry.page === "colors" ? colorGenes(entry.id) : specialGenes(entry.id),
-    size,
-    found,
-  );
+  const [kind, a, b] = entry.id.split(":");
+  if (kind === "pattern") return patternArt(a as Pattern, size, found);
+  if (kind === "combo") {
+    // Combos always show (dimmed until found), so you know what to hunt for.
+    const g = colorGenes(a);
+    const pic = patternArt(b as Pattern, size, true, g.body, g.pattern);
+    if (!found) Object.assign(pic.style, { filter: "saturate(0.6)", opacity: "0.45" });
+    return pic;
+  }
+  if (kind === "part") {
+    const genes = partGenes(entry.id);
+    if (a === "ridge" || a === "tail") return dragonArt(genes, size, found);
+    return headArt(genes, size, found);
+  }
+  if (kind === "color") return headArt(colorGenes(a), size, found);
+  return headArt(specialGenes(entry.id), size, found);
 }
 
 // ---- The book ----
@@ -241,20 +310,66 @@ function el<K extends keyof HTMLElementTagNameMap>(
   return e;
 }
 
-const PAGES = [
-  { page: "colors", label: "🎨 Colors" },
-  { page: "patterns", label: "🌀 Patterns" },
-  { page: "specials", label: "🎉 Specials" },
-] as const;
+const TAB_LABEL: Record<DexPage, string> = {
+  colors: "🎨 Colors",
+  patterns: "🌀 Patterns",
+  parts: "🦴 Parts",
+  specials: "🎉 Specials",
+  combos: "🧩 Combos",
+};
 
 const day = (at: number) =>
   at > 0 ? new Date(at).toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "";
 
+/** The sticker shelf: one sticker per tab, won by finishing it. */
+function stickerShelf(prizes: DexPage[]): HTMLElement {
+  const shelf = el("div", {
+    display: "flex",
+    gap: "6px",
+    justifyContent: "space-between",
+    margin: "10px 0 2px",
+  });
+  for (const page of DEX_PAGES) {
+    const s = STICKERS[page];
+    const won = prizes.includes(page);
+    const tile = el("div", {
+      flex: "1",
+      textAlign: "center",
+      borderRadius: "12px",
+      padding: "4px 2px",
+      background: won ? "rgba(255,224,138,0.18)" : "rgba(255,255,255,0.04)",
+      border: `2px ${won ? "solid rgba(255,224,138,0.8)" : "dashed rgba(255,255,255,0.18)"}`,
+    });
+    tile.dataset.sticker = page;
+    tile.dataset.won = won ? "yes" : "no";
+    tile.append(
+      el(
+        "div",
+        { fontSize: "24px", filter: won ? "none" : "grayscale(1)", opacity: won ? "1" : "0.4" },
+        s.icon,
+      ),
+      el(
+        "div",
+        { fontSize: "11px", lineHeight: "1.2", color: won ? "#ffe08a" : "#a99fd6" },
+        won ? s.name : `🔒 🪙${s.coins}`,
+      ),
+    );
+    shelf.append(tile);
+  }
+  return shelf;
+}
+
 /**
- * The Dragondex: every color, pattern and special dragon, filled in as they hatch. Pages found
- * since the book was last opened (`fresh`) wear a NEW tag.
+ * The Dragondex: every color, pattern, body part, special dragon and combo, filled in as they
+ * hatch. Pages found since the book was last opened (`fresh`) wear a NEW tag; stickers just won
+ * (`freshPrizes`) get a cheer at the top.
  */
-export function openDex(dex: Dex, fresh: string[]): void {
+export function openDex(
+  dex: Dex,
+  fresh: string[],
+  prizes: DexPage[],
+  freshPrizes: DexPage[],
+): void {
   document.getElementById("dex-panel")?.remove();
   logEvent("opened dragondex");
   const shade = el("div", {
@@ -272,7 +387,7 @@ export function openDex(dex: Dex, fresh: string[]): void {
     if (e.target === shade) shade.remove();
   });
   const card = el("div", {
-    width: "min(560px, 100%)",
+    width: "min(600px, 100%)",
     maxHeight: "92vh",
     overflowY: "auto",
     background: "#1c1450",
@@ -305,6 +420,25 @@ export function openDex(dex: Dex, fresh: string[]): void {
     el("div", { font: '24px "Pacifico", cursive', color: "#c9ffe0" }, "📖 Dragondex"),
     close,
   );
+  card.append(head);
+  // Stickers just won: a cheer.
+  for (const page of freshPrizes) {
+    const s = STICKERS[page];
+    const cheer = el(
+      "div",
+      {
+        margin: "8px 0 0",
+        padding: "8px 12px",
+        borderRadius: "12px",
+        background: "linear-gradient(90deg, rgba(255,224,138,0.3), rgba(157,255,200,0.2))",
+        font: "600 15px system-ui, sans-serif",
+        color: "#fff3c4",
+      },
+      `${s.icon} You finished ${TAB_LABEL[page].split(" ")[1]}! "${s.name}" sticker and 🪙 ${s.coins} coins!`,
+    );
+    cheer.dataset.cheer = page;
+    card.append(cheer);
+  }
   // How full the book is.
   const meter = el("div", { margin: "10px 0 4px" });
   const bar = el("div", {
@@ -327,23 +461,23 @@ export function openDex(dex: Dex, fresh: string[]): void {
       { font: "600 14px system-ui, sans-serif", color: "#c9ffe0", marginBottom: "4px" },
       all.found === all.total
         ? `🏆 All ${all.total} found! What a collection!`
-        : `${all.found} of ${all.total} found. Hatch eggs to fill the book!`,
+        : `${all.found} of ${all.total} found. Hatch and breed dragons to fill the book!`,
     ),
     bar,
   );
   const tabs = el("div", { display: "flex", gap: "6px", margin: "10px 0", flexWrap: "wrap" });
-  const grid = el("div", {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fill, minmax(118px, 1fr))",
-    gap: "8px",
-  });
-  const show = (page: DexEntry["page"]) => {
+  const grid = el("div", { display: "grid", gap: "8px" });
+  const show = (page: DexPage) => {
     tabs.querySelectorAll("button").forEach((b) => {
       const on = b.dataset.page === page;
       css(b, {
         background: on ? "#9dffc8" : "rgba(255,255,255,0.1)",
         color: on ? "#1a1040" : "#f3ecff",
       });
+    });
+    const small = page === "combos";
+    css(grid, {
+      gridTemplateColumns: `repeat(auto-fill, minmax(${small ? 92 : 118}px, 1fr))`,
     });
     grid.replaceChildren();
     for (const entry of DEX.filter((e) => e.page === page)) {
@@ -361,16 +495,27 @@ export function openDex(dex: Dex, fresh: string[]): void {
       });
       tile.dataset.dex = entry.id;
       tile.dataset.found = find ? "yes" : "no";
-      tile.append(art(entry, 76, !!find));
+      tile.append(art(entry, small ? 60 : 76, !!find));
+      // Combo names always show (they're a checklist to hunt with); others stay a mystery.
+      const name = find || small ? `${entry.rare ? "✨ " : ""}${entry.name}` : "???";
       tile.append(
         el(
           "div",
-          { font: "600 14px system-ui, sans-serif", marginTop: "2px" },
-          find ? `${entry.rare ? "✨ " : ""}${entry.name}` : "???",
+          {
+            font: `600 ${small ? 12 : 14}px system-ui, sans-serif`,
+            marginTop: "2px",
+            opacity: find ? "1" : small ? "0.6" : "1",
+          },
+          name,
         ),
         el(
           "div",
-          { fontSize: "12px", color: "#c8bdf0", lineHeight: "1.25", marginTop: "2px" },
+          {
+            fontSize: small ? "11px" : "12px",
+            color: "#c8bdf0",
+            lineHeight: "1.25",
+            marginTop: "2px",
+          },
           find ? `Found by ${find.by || "you"}${find.at ? ` · ${day(find.at)}` : ""}` : entry.hint,
         ),
       );
@@ -394,8 +539,8 @@ export function openDex(dex: Dex, fresh: string[]): void {
       grid.append(tile);
     }
   };
-  for (const p of PAGES) {
-    const n = dexCount(dex, p.page);
+  for (const page of DEX_PAGES) {
+    const n = dexCount(dex, page);
     const b = el(
       "button",
       {
@@ -406,16 +551,16 @@ export function openDex(dex: Dex, fresh: string[]): void {
         minHeight: "44px",
         cursor: "pointer",
       },
-      `${p.label} ${n.found}/${n.total}`,
+      `${TAB_LABEL[page]} ${n.found}/${n.total}${prizes.includes(page) ? " 🏆" : ""}`,
     );
-    b.dataset.page = p.page;
-    b.addEventListener("click", () => show(p.page));
+    b.dataset.page = page;
+    b.addEventListener("click", () => show(page));
     tabs.append(b);
   }
-  card.append(head, meter, tabs, grid);
+  card.append(meter, stickerShelf(prizes), tabs, grid);
   shade.append(card);
   document.body.append(shade);
-  // Open on the page with something new, if anything is.
+  // Open on the tab with something new, if anything is.
   const newPage = DEX.find((e) => fresh.includes(e.id))?.page;
   show(newPage ?? "colors");
 }

@@ -2,6 +2,16 @@
 
 Newest first. Each entry says what we decided, why, and what it affects.
 
+## 2026-11-15: The Dragondex grows: parts, combos and stickers (138 pages)
+
+- **Decision:** Jacob asked for a bigger Dragondex ("there are way more dragons"). With about 4 billion dragon numbers, a page per dragon can't work, so the book collects what dragons are made of, now on **five tabs, 138 pages**:
+  - **🦴 Parts (20):** horns (antler, curly, spike), backs (spiky, scalloped, sail fin), tails (flame, fan, pompom), marks (gem, star, moon, heart), mouths (sweet smile, little fangs, toothy grin, snaggle-tooth, and the rare **extra fang** that only Jinx and Jinx's babies have), cheek frills and freckles. Horns, marks, mouths, frills and freckles show on a little head; backs and tails on a whole little dragon curled up.
+  - **🧩 Combos (88):** every color with every pattern ("Mint Stripes", "Golden Koi patches"). Combo names and pictures always show (faded until found), so it's a checklist to hunt with; rare combos say "try breeding for it".
+  - **Jinx** now fills in its parts too (that's where the extra fang comes from), but not its hand-picked color. Holiday dragons still fill in only their own page.
+- **Stickers:** finishing a whole tab wins a sticker and coins, once: 🎨 Rainbow painter (100), 🌀 Pattern spotter (100), 🦴 Dragon doctor (150), 🎉 Holiday hero (300, a year-long hunt), 🧩 Combo master (500). A sticker shelf sits under the progress bar; a finished tab shows 🏆; a just-won sticker gets a cheer at the top of the book and the book button twinkles. Dragons you already have can finish a tab on load and pay out then.
+- **Saves:** still version 14, plus `dexPrizes` (stickers won); an older v14 save simply has none yet.
+- **Affects:** phase 41 (a daily goal could be "find a new page"), phase 42 (sticker coin amounts).
+
 ## 2026-11-14: Phase 40, the Dragondex; save version 14
 
 - **Decision:** a collection book, the **📖 Dragondex**, opened from a new book button (eighth in the corner stack, just above ❓, which moves down one). It has **30 pages** on three tabs: **🎨 Colors** (the eight everyday body colors: Aqua, Mint, Sky blue, Lavender, Bubblegum, Rose, Honey, Peach; plus the rare Golden, Pearl and Midnight), **🌀 Patterns** (Plain, Stripes, Spots, Ombré, Back stripe; plus the rare Starry, Rainbow and Koi patches) and **🎉 Specials** (the ten holiday dragons and Jinx).
