@@ -43,8 +43,8 @@ Jacob. Read this, then only the files a task needs. Keep token use low (see the 
 - `VISION.md` (look and feel), `DECISIONS.md` (every choice, newest first), `CHANGELOG.md`.
 - `src/main.ts` wires everything. Dragon: `src/noodle/` (`dragon.ts`, `drawHead.ts`,
   `drawBody.ts`, `genes.ts`, `look.ts`, `accessories.ts`, `rares.ts` + `rareGenes.ts` for the
-  ten holiday dragons, `rarity.ts` + `shimmer.ts` for rare colors and patterns, `friends.ts`, `personality.ts`). Dragondex: `src/care/dex.ts` + `src/ui/dexPanel.ts`. Care and saving: `src/care/`,
-  `src/save/` (save version 14). UI panels: `src/ui/`. Jinxy the cat: `src/pets/`.
+  ten holiday dragons, `rarity.ts` + `shimmer.ts` for rare colors and patterns, `friends.ts`, `personality.ts`). Dragondex: `src/care/dex.ts` + `src/ui/dexPanel.ts`. Daily goals: `src/care/goals.ts` + `src/ui/goalsPanel.ts`. Care and saving: `src/care/`,
+  `src/save/` (save version 15). UI panels: `src/ui/`. Jinxy the cat: `src/pets/`.
 - `scripts/day-in-the-life.mjs` is the robot; `tests/` has the unit tests.
 
 ## Status (2026-11-14)
@@ -61,7 +61,9 @@ Jacob. Read this, then only the files a task needs. Keep token use low (see the 
   rainbow, koi), shimmer in `src/noodle/shimmer.ts`, tiers in `src/noodle/rarity.ts`.
 - Phase 40 Dragondex: 138 pages on five tabs (colors, patterns, parts, specials, combos) and a
   sticker with coins for each finished tab.
-- Next in the plan: phase 41 (daily goals).
+- Phase 41 daily goals built (three a day, 15 coins each, 25 bonus, no streaks); waiting on
+  Jacob's OK.
+- Next in the plan: phase 42 (gate: balance).
 
 ## Gotchas
 

@@ -252,6 +252,24 @@ check(
 );
 await p.click("#dex-panel >> text=✕");
 await step(200);
+
+// Daily goals (the chip under the name badge): three goals for today, each counting up, and
+// the goals are saved.
+await tap(68, 206);
+await p.waitForSelector("#goals-panel");
+const goalRows = await p.$$("#goals-panel [data-goal]");
+const goalsShown = await data("goals");
+check(
+  goalRows.length === 3 && /^[0-3]\/3$/.test(goalsShown),
+  `today's goals card shows three goals (${goalsShown} done so far)`,
+);
+await p.click("#goals-panel >> text=✕");
+await step(200);
+const goalSave = (await save()).goals;
+check(
+  goalSave && goalSave.goals.length === 3 && goalSave.day === "2026-11-09",
+  "today's goals are saved",
+);
 check(
   (await save()).dex.some((f) => f.id.startsWith("combo:")),
   "the Dragondex is saved, combo and all",

@@ -116,7 +116,7 @@ describe("Dragondex", () => {
     const now = 1_700_000_000_000;
     const save = makeSave(42, freshNeeds(now), now);
     const back = parseSave(JSON.parse(JSON.stringify(save)), now)!;
-    expect(back.version).toBe(14);
+    expect(back.version).toBe(15);
     expect(back.dex.map((f) => f.id)).toEqual(dexIdsOf(genesFromSeed(42)));
     // An older save (no Dragondex) with an egg waiting fills in nothing for the egg.
     const old = { ...JSON.parse(JSON.stringify(save)), version: 13, egg: true, dex: undefined };

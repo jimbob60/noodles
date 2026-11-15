@@ -2,6 +2,17 @@
 
 Newest first. Each entry says what we decided, why, and what it affects.
 
+## 2026-11-15: Phase 41, daily goals; save version 15
+
+- **Decision:** every day brings **three small goals**, shown on a **🎯 Goals 1/3** chip under the name badge (tap it for the goals card). Each goal pays **🪙15** the moment it's done, and doing all three pays a **🪙25 bonus** (70 a day in all). Goal coins are a gift: they skip the daily soft cap and don't count toward it.
+- **The goals** (`src/care/goals.ts`): feed 3–5 snacks, give its favorite food, pet it until it purrs 2–3 times, boop a ball 4–8 times, ribbon chase 2–3 times, a bubble bath, a round of Noodle Catch, tuck it in for a good rest, pet Jinxy 2–4 times, snap a photo, earn 30–50 coins, and (only with a second hatched dragon) 2–3 playdates with a friend. Three different ones are picked from the day and the dragon's number, so they stay the same all day (closing and reopening doesn't reroll them) and change at midnight.
+- **Never punishing:** there are no streaks. Yesterday's unfinished goals just go away and today's start fresh; nothing is lost for skipping a day. The card says so: "No rush: skipping a day is totally fine 🌙".
+- **Feel:** the chip glows gold for a moment when a goal is done (coins fly from it), and turns gold with "🎯 All done!" when all three are. It hides during Noodle Catch and photo mode.
+- **Counting:** goals listen to the same moments that pay care coins (snacks, purrs, boops, ribbon, bath, a good rest, Noodle Catch, playdates), plus petting Jinxy and snapping a photo.
+- **Save version 15:** adds `goals` (today's day, the three goals and their counts, and whether the bonus was paid). Older saves get today's goals fresh.
+- **Why:** phase 41 ("goals refresh each day"; "missing a day never punishes").
+- **Affects:** phase 42 (balance: 70 coins a day from goals on top of care coins), phase 45 (the tutorial can point at the chip).
+
 ## 2026-11-15: The Dragondex grows: parts, combos and stickers (138 pages)
 
 - **Decision:** Jacob asked for a bigger Dragondex ("there are way more dragons"). With about 4 billion dragon numbers, a page per dragon can't work, so the book collects what dragons are made of, now on **five tabs, 138 pages**:

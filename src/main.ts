@@ -30,6 +30,8 @@ import { drawCat } from "./pets/drawCat";
 import { JINX_SEED } from "./noodle/genes";
 import { drawHelpButton, onHelpButton, openFeedback, openHowTo } from "./ui/helpPanel";
 import { drawDexButton, onDexButton, openDex } from "./ui/dexPanel";
+import { countGoal, freshGoals, isDone, type GoalEvent } from "./care/goals";
+import { drawGoalsChip, onGoalsChip, openGoals } from "./ui/goalsPanel";
 import { discover, newFinds, newPrizes, STICKERS, type Dex, type DexPage } from "./care/dex";
 import { logEvent, logText, watchErrors } from "./ui/log";
 import { rareBySeed, raresInSeason, rareSurprise } from "./noodle/rareGenes";
@@ -56,7 +58,7 @@ import { Feeding } from "./ui/feeding";
 import { Toys } from "./ui/toys";
 import { Bath } from "./ui/bath";
 import { feedEffect } from "./care/food";
-import { earn, emptyWallet, type CoinReason, type Wallet } from "./care/coins";
+import { dayOf, earn, emptyWallet, type CoinReason, type Wallet } from "./care/coins";
 import { CoinCounter } from "./ui/coinCounter";
 import { buy, CATALOG, emptyStash, store as moveStorage, useTreat, type Stash } from "./care/shop";
 import { drawShopButton, onShopButton, openShop } from "./ui/shopPanel";
@@ -214,6 +216,30 @@ async function main(): Promise<void> {
   };
   // Dragons already in the family can finish a tab the first time the game loads.
   if (loaded.save) checkPrizes();
+  /** Today's three goals (new ones every day; yesterday's unfinished ones just go away). */
+  const hasFriend = () => family.some((m) => !m.egg);
+  let goals = freshGoals(loaded.save?.goals ?? null, Date.now(), seed, hasFriend());
+  /** The goals chip glows for a moment when a goal is finished. */
+  let goalGlow = 0;
+  const showGoals = () => {
+    document.body.dataset.goals = `${goals.goals.filter(isDone).length}/${goals.goals.length}`;
+  };
+  showGoals();
+  /** Something a goal might count just happened (only in the real game). */
+  const goal = (event: GoalEvent, amount = 1) => {
+    if (mode !== "play") return;
+    goals = freshGoals(goals, Date.now(), seed, hasFriend());
+    const r = countGoal(goals, event, amount);
+    goals = r.goals;
+    if (r.coins > 0) {
+      // Goal coins are a gift: they don't count toward the day's care coins.
+      wallet = { ...wallet, coins: wallet.coins + r.coins };
+      coinCounter.earned(r.coins, { x: 68, y: 206 });
+      goalGlow = 1;
+      logEvent(`goal done ${r.finished.map((f) => f.kind).join(" ")} +${r.coins}`);
+    }
+    showGoals();
+  };
   const showFamily = () => {
     document.body.dataset.family = String(family.length + 1);
   };
@@ -312,6 +338,7 @@ async function main(): Promise<void> {
       adoptedEgg,
       dex,
       dexPrizes,
+      goals,
     );
   const persist = () => {
     // Nothing is saved until a new player's egg has hatched.
@@ -372,6 +399,8 @@ async function main(): Promise<void> {
     const r = earn(wallet, reason, Date.now(), amount);
     wallet = r.wallet;
     if (r.earned > 0) coinCounter.earned(r.earned, from);
+    if (reason !== "hello" && reason !== "grewUp") goal(reason);
+    if (r.earned > 0) goal("coins", r.earned);
   }
 
   /** Restores a dragon from a backup code. Returns false if the code doesn't work. */
@@ -397,6 +426,8 @@ async function main(): Promise<void> {
     dex = save.dex;
     dexFresh = [];
     dexPrizes = save.dexPrizes;
+    goals = freshGoals(save.goals, Date.now(), seed, hasFriend());
+    showGoals();
     prizeFresh = [];
     checkPrizes();
     showDex();
@@ -569,6 +600,7 @@ async function main(): Promise<void> {
       if (!blob) return;
       document.body.dataset.photos = String(Number(document.body.dataset.photos ?? 0) + 1);
       showPhoto(blob, photoFileName(identity.name, when));
+      goal("photo");
     }, "image/png");
   };
   const leavePhoto = () => {
@@ -624,6 +656,7 @@ async function main(): Promise<void> {
       ) {
         swallowing = true;
         cat.pet(screen);
+        goal("cat");
         document.body.dataset.catPets = String(Number(document.body.dataset.catPets ?? 0) + 1);
       }
       // The backup button (top right, under the mode tag).
@@ -747,6 +780,12 @@ async function main(): Promise<void> {
         prizeFresh = [];
       }
       // The name badge under the coins opens the dragon's profile card.
+      // The goals chip under the name badge: today's goals.
+      if (pressAt && !swallowing && playing && !catchGame && onGoalsChip(pressAt)) {
+        swallowing = true;
+        goals = freshGoals(goals, Date.now(), seed, hasFriend());
+        openGoals(goals);
+      }
       if (pressAt && !swallowing && playing && !catchGame && onGrowthBadge(pressAt)) {
         swallowing = true;
         logEvent("open openProfile");
@@ -1055,6 +1094,12 @@ async function main(): Promise<void> {
       }
       coinCounter.update(dt, wallet.coins);
       modeSeconds += dt;
+      goalGlow = Math.max(0, goalGlow - dt / 2.5);
+      // Midnight: a new day, new goals.
+      if (mode === "play" && goals.day !== dayOf(Date.now())) {
+        goals = freshGoals(goals, Date.now(), seed, hasFriend());
+        showGoals();
+      }
       needs = advance(needs, needsNow(), dragon.asleep);
       // Growing up: a little longer with every hour of good care.
       if (mode === "play" || mode === "fast") {
@@ -1158,6 +1203,7 @@ async function main(): Promise<void> {
           if (mode === "play") coinCounter.draw(ctx);
           if (mode === "play" || mode === "fast")
             drawGrowthBadge(ctx, shownGrowth(), mode === "play" ? identity.name : "");
+          if (mode === "play" && !catchGame) drawGoalsChip(ctx, goals, goalGlow);
           if (stageNote)
             drawStageBanner(ctx, screen.width, stageNote.text, stageNote.age, STAGE_NOTE_LIFE);
           if (catchGame) {
