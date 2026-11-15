@@ -33,7 +33,7 @@ Jacob. Read this, then only the files a task needs. Keep token use low (see the 
     capability (photo saving); keep it.
 - Plan doc: https://claude.ai/artifact/GkdCoG2KwLT2AGN5Ny5pzF (Claude Docs project
   `7f905f86-df39-47f5-bd96-b4523ae39354`, prose node `4bae6e8e-39fd`). Tick a phase with
-  `update` on the prose node, payload `{ops: [{op: "set", target: {kind: "blocks", ids: ["<listItem id>"]}, attrs: {checked: true}}]}`. Next ones: 40 `mjp0pzg30kk.9651`, 41 `.9763`, 42 `.9878` (prefix `mjp0pzg30kk`).
+  `update` on the prose node, payload `{ops: [{op: "set", target: {kind: "blocks", ids: ["<listItem id>"]}, attrs: {checked: true}}]}`. Next ones: 41 `mjp0pzg30kk.9763`, 42 `.9878` (prefix `mjp0pzg30kk`).
 - Feedback goes to Jacob's Google Form (ids in `src/ui/helpPanel.ts`).
 - itch.io: Jacob uploads a ZIP holding only `dist/index.html` (as `index.html`). Viewport
   1280×720, mobile friendly, fullscreen button on. Cover 630×500 (JPG uploads more reliably).
@@ -49,7 +49,8 @@ Jacob. Read this, then only the files a task needs. Keep token use low (see the 
 
 ## Status (2026-11-14)
 
-- Phases 1–39 done and ticked (37 dragon friends, 38 breeding in `src/care/breeding.ts`, 39 rarity).
+- Phases 1–40 done and ticked (37 dragon friends, 38 breeding in `src/care/breeding.ts`, 39 rarity,
+  40 Dragondex).
 - Unsolved: Jacob once couldn't steer in Noodle Catch with a friend visiting; not reproducible.
 - Extras Jacob asked for, all built: Jinxy the black cat (from a photo of his real cat; extra
   fang on her right) and Jinx the matching dragon; ten holiday dragons that hatch only near
@@ -58,8 +59,8 @@ Jacob. Read this, then only the files a task needs. Keep token use low (see the 
   itch.io page (cover upload failed once; a JPG was sent).
 - Phase 39 rarity: rare colors (`finish` gene: golden, pearl, midnight), rare patterns (stars,
   rainbow, koi), shimmer in `src/noodle/shimmer.ts`, tiers in `src/noodle/rarity.ts`.
-- Phase 40 Dragondex built: 138 pages on five tabs (colors, patterns, parts, specials, combos)
-  and a sticker with coins for each finished tab; waiting on Jacob's OK.
+- Phase 40 Dragondex: 138 pages on five tabs (colors, patterns, parts, specials, combos) and a
+  sticker with coins for each finished tab.
 - Next in the plan: phase 41 (daily goals).
 
 ## Gotchas
