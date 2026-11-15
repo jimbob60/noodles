@@ -92,12 +92,12 @@ describe("the family", () => {
       { seed: -4 },
       null,
       { seed: 2, worn: { head: { id: "crown", color: 1 } }, egg: true },
-      { seed: 3 },
-      { seed: 4 },
+      ...Array.from({ length: 10 }, (_, k) => ({ seed: k + 3 })),
     ];
     const f = parseFamily(raw, [], T0);
-    // Broken ones dropped, at most three others, and nothing worn that isn't owned.
-    expect(f.map((m) => m.seed)).toEqual([1, 2, 3]);
+    // Broken ones dropped, at most nine others (ten in all), and nothing worn that isn't owned.
+    expect(f.map((m) => m.seed)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9]);
+    expect(f.length).toBe(MAX_FAMILY - 1);
     expect(f[1].worn).toEqual({});
     expect(f[1].egg).toBe(true);
     expect(f[0].genes).toEqual(genesFromSeed(1));
@@ -113,5 +113,23 @@ describe("a friend visiting the den", () => {
     ];
     expect(parseFamily(raw, [], T0).map((m) => m.visiting)).toEqual([true, false, false]);
     expect(newEgg(4, T0).visiting).toBe(false);
+  });
+});
+
+describe("setting a grown-up free, and growing at home (phase 42)", () => {
+  it("pays more for rarer dragons", async () => {
+    const { freeReward } = await import("../src/care/family");
+    const { CLASSIC_GENES } = await import("../src/noodle/genes");
+    const { applyFinish } = await import("../src/noodle/look");
+    expect(freeReward(CLASSIC_GENES)).toBe(60);
+    expect(freeReward(applyFinish(CLASSIC_GENES, "golden"))).toBe(120);
+    expect(freeReward({ ...applyFinish(CLASSIC_GENES, "golden"), patternKind: "koi" })).toBe(200);
+  });
+  it("keeps growing at home at half speed even when hungry", async () => {
+    const { growAtHome, HOME_GROWTH } = await import("../src/care/growth");
+    const low = { fullness: 15, happiness: 15, energy: 15, cleanliness: 15 };
+    const high = { fullness: 90, happiness: 90, energy: 90, cleanliness: 90 };
+    expect(growAtHome({ hours: 0 }, 10 * 3_600_000, low).hours).toBe(10 * HOME_GROWTH);
+    expect(growAtHome({ hours: 0 }, 10 * 3_600_000, high).hours).toBe(10);
   });
 });

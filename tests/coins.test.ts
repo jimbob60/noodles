@@ -43,3 +43,15 @@ describe("noodle coins", () => {
     expect(parseWallet({ coins: -5, today: "x", day: "yesterday" })).toEqual(emptyWallet());
   });
 });
+
+describe("the daily limit (phase 42)", () => {
+  it("stops everyday care coins at the hard cap, but not the daily hello", async () => {
+    const { DAILY_HARD_CAP } = await import("../src/care/coins");
+    const DAY = new Date(2026, 10, 9, 10).getTime();
+    let w = emptyWallet();
+    for (let i = 0; i < 200; i++) w = earn(w, "bath", DAY).wallet;
+    expect(w.today).toBe(DAILY_HARD_CAP);
+    expect(earn(w, "snack", DAY).earned).toBe(0);
+    expect(earn(w, "hello", DAY).earned).toBe(REWARD.hello);
+  });
+});

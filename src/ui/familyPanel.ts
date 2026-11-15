@@ -1,4 +1,4 @@
-import { ADOPT_COST, MAX_FAMILY } from "../care/family";
+import { ADOPT_COST, freeReward, MAX_FAMILY } from "../care/family";
 import { stageOf, type Growth } from "../care/growth";
 import { NEED_NAMES, type Needs } from "../care/needs";
 import type { Worn } from "../care/wardrobe";
@@ -168,6 +168,8 @@ export function openFamily(opts: {
   onBreed: (index: number) => void;
   /** Adopts an egg: a favorite's number, or null for a surprise. False if it couldn't. */
   onAdopt: (seed: number | null) => boolean;
+  /** Sets a grown-up (by its place in `cards`) free, for a thank-you gift of coins. */
+  onFree: (index: number) => void;
 }): void {
   document.getElementById("family-panel")?.remove();
   const shade = el("div", {
@@ -342,6 +344,31 @@ export function openFamily(opts: {
           );
         }
       }
+      if (!m.egg && stageOf(m.growth).id === "adult") {
+        // A grown-up can fly off to live in the wild, leaving coins as a thank-you. Two taps,
+        // so it never happens by accident.
+        const gift = freeReward(m.genes);
+        const free = button("🕊️ Set free", "rgba(255,255,255,0.14)", "#f3ecff");
+        free.dataset.free = String(i);
+        let sure = false;
+        free.addEventListener("click", () => {
+          if (!sure) {
+            sure = true;
+            free.textContent = `Sure? +🪙${gift}`;
+            css(free, { background: "#ffd27a", color: "#1a1040" });
+            setTimeout(() => {
+              if (!free.isConnected) return;
+              sure = false;
+              free.textContent = "🕊️ Set free";
+              css(free, { background: "rgba(255,255,255,0.14)", color: "#f3ecff" });
+            }, 4000);
+            return;
+          }
+          shade.remove();
+          opts.onFree(i);
+        });
+        side.appendChild(free);
+      }
       const visit = button(m.egg ? "Hatch" : "Care for", "#7af3ff");
       visit.addEventListener("click", () => {
         shade.remove();
@@ -385,7 +412,7 @@ export function openFamily(opts: {
     "div",
     { fontSize: "13px", color: "#c9bdf0", margin: "4px 0 8px" },
     full
-      ? `Your family is full (${MAX_FAMILY} dragons).`
+      ? `Your family is full (${MAX_FAMILY} dragons). A grown-up can be set free 🕊️ to make room.`
       : afford
         ? `Room for ${MAX_FAMILY - opts.cards.length} more. Each dragon keeps its own needs, age and outfit.`
         : `An egg costs 🪙 ${ADOPT_COST}. Keep caring and playing to earn more coins.`,

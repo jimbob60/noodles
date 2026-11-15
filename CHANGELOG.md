@@ -2,6 +2,7 @@
 
 Newest first. One line per finished phase.
 
+- **Phase 41 — Daily goals (8644957, 2026-11-15):** three small goals a day on a 🎯 chip under the name, 15 coins each and a 25-coin bonus for all three; new goals every day, and no streaks to lose.
 - **Phase 40 — Dragondex (07b1892, 1f2ae91, 2026-11-15):** a 📖 collection book of 138 pages on five tabs (colors, patterns, body parts, holiday dragons and Jinx, color-and-pattern combos) that fills in as dragons hatch, remembers who found each page, and gives a sticker and coins for every finished tab.
 - **Phase 39 — Rarity (9def0e8, 2026-11-14):** rare colors (golden, pearl, midnight) and rare patterns (stars, rainbow, koi) that shimmer; about 1 egg in 5 is rare, 1 in 100 super rare, and rares pass on by breeding.
 - **Phase 38 — Breeding (b0a128d, 2026-11-14):** two grown-ups together in the den can make an egg; the baby blends its parents' colors, sizes and styles, with a small surprise now and then.

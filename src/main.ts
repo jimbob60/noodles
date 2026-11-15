@@ -20,7 +20,7 @@ import {
   type PhotoState,
 } from "./ui/photoMode";
 import { pose } from "./noodle/pose";
-import { adopt, catchUp, newEgg, type FamilyMember } from "./care/family";
+import { adopt, catchUp, freeReward, newEgg, type FamilyMember } from "./care/family";
 import { drawFamilyButton, onFamilyButton, openFamily, type FamilyCard } from "./ui/familyPanel";
 import { parseFavorites } from "./gallery";
 import { Friendship } from "./noodle/friends";
@@ -528,6 +528,20 @@ async function main(): Promise<void> {
     logEvent(`egg from ${identity.name} and ${mate.identity.name}`);
     bring(baby);
   }
+  /** A grown-up flies off to live in the wild, leaving a thank-you gift of coins. */
+  function setFree(index: number): void {
+    const m = family[index];
+    if (!m || m.egg || stageOf(m.growth).id !== "adult") return;
+    const gift = freeReward(m.genes);
+    family = family.filter((_, k) => k !== index);
+    wallet = { ...wallet, coins: wallet.coins + gift };
+    coinCounter.earned(gift, { x: screen.width / 2, y: screen.height * 0.3 });
+    logEvent(`set free ${m.identity.name} +${gift}`);
+    document.body.dataset.freed = String(Number(document.body.dataset.freed ?? 0) + 1);
+    showFamily();
+    syncFriend();
+    persist();
+  }
   const showFamilyPanel = () => {
     const now = Date.now();
     const cardOf = (m: FamilyMember, here: boolean): FamilyCard => ({
@@ -566,6 +580,7 @@ async function main(): Promise<void> {
       })(),
       onBreed: (i) => breed(i - 1),
       onAdopt: adoptEgg,
+      onFree: (i) => setFree(i - 1),
     });
   };
   const showBackup = () => {

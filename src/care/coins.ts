@@ -27,11 +27,16 @@ export const REWARD: Record<CoinReason, number> = {
   /** A birthday-style gift each time it reaches a new life stage. */
   grewUp: 25,
   /** Two dragons had a lovely time together (a nuzzle, a chase, a tangle). */
-  friends: 2,
+  friends: 1,
 };
 
 /** After this many coins in a day, everyday care pays half (rounded up), so there's no grinding. */
-export const DAILY_SOFT_CAP = 150;
+export const DAILY_SOFT_CAP = 100;
+/**
+ * After this many, everyday care pays nothing more today (phase 42). Daily goals, Dragondex
+ * stickers and setting a dragon free still pay: they don't go through here.
+ */
+export const DAILY_HARD_CAP = 200;
 
 export interface Wallet {
   coins: number;
@@ -63,6 +68,7 @@ export function earn(
   if (reason === "hello" && w.helloDay === day) return { wallet: w, earned: 0 };
   let earned = amount ?? REWARD[reason];
   if (reason !== "hello" && today >= DAILY_SOFT_CAP) earned = Math.ceil(earned / 2);
+  if (reason !== "hello") earned = Math.max(0, Math.min(earned, DAILY_HARD_CAP - today));
   return {
     wallet: {
       coins: w.coins + earned,

@@ -43,6 +43,21 @@ export function growAway(g: Growth, awayMs: number, values: Needs): Growth {
   return grow(g, Math.min(AWAY_CAP_HOURS, Math.max(0, awayMs) / 3_600_000), values);
 }
 
+/**
+ * At home in the family (not out in the den), a dragon is looked after by the others, so it
+ * keeps growing at least at this share of full speed even when its own needs are low (phase 42:
+ * with ten dragons, only one can be cared for at a time).
+ */
+export const HOME_GROWTH = 0.5;
+
+/** Growing at home: full speed if it was left well cared for, else at HOME_GROWTH. */
+export function growAtHome(g: Growth, awayMs: number, values: Needs): Growth {
+  const full = growAway(g, awayMs, values);
+  if (full.hours > g.hours) return full;
+  const hours = Math.min(AWAY_CAP_HOURS, Math.max(0, awayMs) / 3_600_000) * HOME_GROWTH;
+  return hours > 0 ? { hours: Math.min(GROWN_HOURS, g.hours + hours) } : g;
+}
+
 /** How grown up, 0 (just hatched) to 1 (fully grown). */
 export function growthShare(g: Growth): number {
   return Math.max(0, Math.min(1, g.hours / GROWN_HOURS));

@@ -2,6 +2,19 @@
 
 Newest first. Each entry says what we decided, why, and what it affects.
 
+## 2026-11-15: Phase 42, the balance gate: a family of ten, setting grown-ups free, and steadier coins
+
+- **How we tested:** a 30-day simulation (`tests/balanceSim.ts`, report with `npm run balance`) plays three made-up players (light: 2 short visits a day; regular: 3 visits and a Noodle Catch round; keen: 5 long visits and 3 rounds) using the game's real rules for coins, goals, needs, growing up, eggs, breeding and the Dragondex. Its targets are now unit tests, so a later change can't quietly break the balance.
+- **What it found:** (1) coins came far too fast (about 400 on a regular player's first day, about 1,500 for a keen one), mostly from friend playdates (2 coins every ~11 s, with no limit); (2) the family limit of four with no way to move a dragon on stopped eggs after about four, so the Dragondex got stuck around 25 of 138 pages for good; (3) with a bigger family, only the dragon in the den grew, so a family grew up one dragon at a time.
+- **Changes (Jacob's call on 1 and 2):**
+  - **A family of ten** (was four).
+  - **🕊️ Set free:** a grown-up in the family card (not the one in the den) can fly off to live in the wild, leaving a thank-you gift: 🪙60, 🪙120 rare, 🪙200 super rare, 🪙300 holiday. Two taps ("Sure? +🪙60"), since the preview can't show pop-up questions. Its Dragondex pages stay. When the family is full, the card says a grown-up can be set free to make room.
+  - **Growing at home:** a dragon at home in the family keeps growing at **half speed** even when its own needs are low (the family looks after it); full speed if it was left well cared for, as before.
+  - **Coins:** playdates pay 1 coin (was 2); everyday care pays half after 100 a day (was 150) and stops at **200 a day** (new). The daily hello, goals, Dragondex stickers and setting a dragon free don't count toward the limit.
+- **Results (with setting grown-ups free):** light players earn about 120–190 coins a day, regular and keen about 230–270 (goals included; keen players can't grind past that). A surprise egg (150) is affordable on day 1 or 2; the first grown-up arrives on day 5; the family fills in about a week; by day 30 about 27 dragons have been set free and 45–55 Dragondex pages are found and still rising, with about 1 rare in 4 hatches. Everything in the shop and closet together (about 8,000 coins) takes roughly a month for a regular player.
+- **Not changed:** egg price (150), free breeding, rare chances (1 in 10 for each), the four days of good care to grow up, sticker coins.
+- **Why:** phase 42 ("progress feels steady, not grindy"); Jacob asked for about ten dragons and a way to set them free for a reward.
+
 ## 2026-11-15: Phase 41, daily goals; save version 15
 
 - **Decision:** every day brings **three small goals**, shown on a **🎯 Goals 1/3** chip under the name badge (tap it for the goals card). Each goal pays **🪙15** the moment it's done, and doing all three pays a **🪙25 bonus** (70 a day in all). Goal coins are a gift: they skip the daily soft cap and don't count toward it.

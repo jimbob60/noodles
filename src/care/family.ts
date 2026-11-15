@@ -1,15 +1,28 @@
+import { rarityOf, type Rarity } from "../noodle/rarity";
 import { rareBySeed } from "../noodle/rareGenes";
 import { spend, type Wallet } from "./coins";
-import { freshGrowth, growAway, parseGrowth, type Growth } from "./growth";
+import { freshGrowth, growAtHome, parseGrowth, type Growth } from "./growth";
 import { parseIdentity, type Identity } from "./identity";
 import { advance, freshNeeds, parseNeeds, type NeedsState } from "./needs";
 import { ACCESSORIES, ACCESSORY_COLORS, SLOTS, type Wardrobe } from "./wardrobe";
 import { genesFromSeed, JINX_GENES, JINX_SEED, parseGenes, type Genes } from "../noodle/genes";
 
 /** The most dragons a family can have. */
-export const MAX_FAMILY = 4;
+export const MAX_FAMILY = 10;
 /** What adopting an egg costs (a first guess; balance in phase 42). */
 export const ADOPT_COST = 150;
+
+/**
+ * Setting a grown-up free (it flies off to live in the wild) makes room for new eggs, and it
+ * leaves a thank-you gift of coins: more for a rarer dragon.
+ */
+export const FREE_REWARD: Record<Rarity, number> = {
+  common: 60,
+  rare: 120,
+  superRare: 200,
+  holiday: 300,
+};
+export const freeReward = (genes: Genes): number => FREE_REWARD[rarityOf(genes)];
 
 /**
  * One dragon of the family that isn't out in the den right now. It keeps everything of its own:
@@ -65,13 +78,14 @@ export function adopt(
 /**
  * Brings a dragon up to date after time out of the den: its needs follow the real clock just as
  * if the game had been closed (gently, capped, asleep if it was tucked in), and it keeps growing
- * if it was left well cared for. An egg just waits.
+ * if it was left well cared for (and at half speed anyway: the family looks after it). An egg
+ * just waits.
  */
 export function catchUp(m: FamilyMember, now: number): FamilyMember {
   if (m.egg) return { ...m, seenAt: now };
   return {
     ...m,
-    growth: growAway(m.growth, now - m.seenAt, m.needs.values),
+    growth: growAtHome(m.growth, now - m.seenAt, m.needs.values),
     needs: advance(m.needs, now, m.needs.inBed === true),
     seenAt: now,
   };
