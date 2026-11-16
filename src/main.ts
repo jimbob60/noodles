@@ -33,7 +33,7 @@ import { drawDexButton, onDexButton, openDex } from "./ui/dexPanel";
 import { drawSoundButton, onSoundButton } from "./ui/soundButton";
 import { sound } from "./audio/sound";
 import { Tutorial, type TutorialTarget } from "./ui/tutorial";
-import { cornerButton } from "./ui/layout";
+import { cornerButton, trayRadius } from "./ui/layout";
 import { openCredits, openMenu, openTitle } from "./ui/menuPanel";
 import { loadSettings, saveSettings, type Settings } from "./settings";
 import { countGoal, freshGoals, isDone, type GoalEvent } from "./care/goals";
@@ -324,10 +324,12 @@ async function main(): Promise<void> {
   /** Shelly the talking egg: the tutorial. When it ends, the how-to card comes as before. */
   const tutorial = new Tutorial(() => setFlag("tutorial"));
   let swimLast: { x: number; y: number } | null = null;
+  let tutorPlay = 0;
   /** Where the tutorial's arrow points. */
   const tutorialTarget = (t: TutorialTarget): { x: number; y: number } | null => {
     const w = screen.width;
     const h = screen.height;
+    if (t === "egg") return eggAt();
     if (t === "dragon")
       return { x: dragon.spine.head.x, y: dragon.spine.head.y - dragon.headRadius };
     if (t === "food") {
@@ -695,6 +697,17 @@ async function main(): Promise<void> {
       seenPresses = input.presses;
       // In photo mode the buttons are put away, so a press only ever moves the dragon.
       const pressAt = pressed && !photo ? { x: input.pressX, y: input.pressY } : null;
+      if (tutorial.active) {
+        // Shelly's bubble keeps clear of whatever she's talking about.
+        const target = tutorial.step?.arrow;
+        const R = trayRadius(screen.width, screen.height);
+        tutorial.place(
+          target ? tutorialTarget(target) : null,
+          screen.width,
+          screen.height,
+          screen.height - 14 - 4.55 * R,
+        );
+      }
       if (pressAt && onTag(pressAt.x, pressAt.y)) {
         swallowing = true;
         enterMode(MODES[(MODES.indexOf(mode) + 1) % MODES.length]);
@@ -1057,8 +1070,12 @@ async function main(): Promise<void> {
         if (ribbonTime >= 5) {
           ribbonTime = 0;
           pay("ribbon", dragon.mouth);
-          tutorial.on("play");
         }
+      }
+      // The tutorial's play step: a moment of any ball or ribbon play counts.
+      if (tutorial.active && (play.love > 0 || play.booped)) {
+        tutorPlay += dt + (play.booped ? 1 : 0);
+        if (tutorPlay >= 1.5) tutorial.on("play");
       }
       if (play.love !== 0 || play.energy !== 0 || play.grime !== 0) {
         needs = change(needs, {

@@ -12,7 +12,8 @@
     "screenshot": "node scripts/screenshot.mjs",
     "check": "npm run format:check && npm run build && npm test && npm run screenshot",
     "day": "node scripts/day-in-the-life.mjs",
-    "balance": "vitest run tests/balance.test.ts --silent=false"
+    "balance": "vitest run tests/balance.test.ts --silent=false",
+    "tutorial": "node scripts/tutorial-walk.mjs"
   },
   "repository": {
     "type": "git",

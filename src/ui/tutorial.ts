@@ -11,7 +11,9 @@ import { logEvent } from "./log";
 export type TutorialEvent = "rub" | "crack" | "named" | "swim" | "fed" | "pet" | "play" | "ok";
 
 /** What the arrow can point at (the game says where each is). */
-export type TutorialTarget = "dragon" | "food" | "toys" | "orbs" | "goals" | "moon" | "menu";
+/** ("egg" only moves the bubble out of the way: the egg shows its own finger hint.) */
+export type TutorialTarget =
+  "egg" | "dragon" | "food" | "toys" | "orbs" | "goals" | "moon" | "menu";
 
 export interface TutorialStep {
   id: string;
@@ -30,13 +32,20 @@ export const STEPS: TutorialStep[] = [
     say: "Hi, I'm Shelly! 🥚 There's a baby dragon in this egg. Rub it with your finger to keep it warm!",
     until: "rub",
     amount: 600,
+    arrow: "egg",
   },
   {
     id: "tap",
     say: "It's wiggling! Now tap the egg, again and again, to help it hatch!",
     until: "crack",
+    arrow: "egg",
   },
-  { id: "name", say: "Ooh, here it comes! Give your baby a name.", until: "named" },
+  {
+    id: "name",
+    say: "Ooh, here it comes! Give your baby a name.",
+    until: "named",
+    arrow: "egg",
+  },
   {
     id: "swim",
     say: "Say hi to {name}! Drag your finger around and {name} swims after it.",
@@ -183,6 +192,10 @@ export class Tutorial {
   private okButton: HTMLButtonElement | null = null;
   private shown = -1;
   private name = "";
+  /** Where the bubble sits: up top, or down above the trays (whichever keeps the goal clear). */
+  private side: "top" | "bottom" = "top";
+  private y = -1;
+  private height = 120;
 
   constructor(
     /** Called once when the tutorial ends (finished or skipped). */
@@ -229,28 +242,70 @@ export class Tutorial {
     time: number,
   ): void {
     const target = this.active ? this.step?.arrow : undefined;
-    const at = target ? where(target) : null;
+    const at = target && target !== "egg" ? where(target) : null;
     if (!at) return;
-    // The arrow comes from above the target (or below, near the top of the screen).
-    const fromBelow = at.y < 160;
-    const dir = fromBelow ? -1 : 1;
-    const bob = Math.sin(time * 5) * 6;
-    const tip = at.y - dir * (34 + bob);
+    // The arrow comes from above the target (or from below, near the top of the screen). The
+    // toys sit under the sponge in the corner, so their arrow comes in from the left instead.
+    const angle = target === "toys" ? -Math.PI / 2 : at.y < 160 ? Math.PI : 0;
+    const d = 34 + Math.sin(time * 5) * 6;
     ctx.save();
+    ctx.translate(at.x, at.y);
+    ctx.rotate(angle);
     ctx.shadowColor = "rgba(255,224,138,0.9)";
     ctx.shadowBlur = 12;
     ctx.fillStyle = "#ffe08a";
     ctx.beginPath();
-    ctx.moveTo(at.x, tip);
-    ctx.lineTo(at.x - 14, tip - dir * 18);
-    ctx.lineTo(at.x - 5, tip - dir * 18);
-    ctx.lineTo(at.x - 5, tip - dir * 40);
-    ctx.lineTo(at.x + 5, tip - dir * 40);
-    ctx.lineTo(at.x + 5, tip - dir * 18);
-    ctx.lineTo(at.x + 14, tip - dir * 18);
+    ctx.moveTo(0, -d);
+    ctx.lineTo(-14, -d - 18);
+    ctx.lineTo(-5, -d - 18);
+    ctx.lineTo(-5, -d - 40);
+    ctx.lineTo(5, -d - 40);
+    ctx.lineTo(5, -d - 18);
+    ctx.lineTo(14, -d - 18);
     ctx.closePath();
     ctx.fill();
     ctx.restore();
+  }
+
+  /**
+   * Keeps the bubble from covering what the step is about (and its arrow): if it would, the
+   * bubble moves to the other end of the screen. `focus` is where that thing is; `trayTop` is
+   * the top of the tray buttons along the bottom. Call every frame.
+   */
+  place(focus: { x: number; y: number } | null, w: number, h: number, trayTop: number): void {
+    if (!this.box) return;
+    const bh = this.height;
+    const left = Math.max(12, w / 2 - 220);
+    const right = left + Math.min(440, w - 84);
+    // Up top: under the needs orbs on a wide screen; under the name badge and goals on a phone.
+    const topY = w >= 700 ? 64 : 236;
+    const bottomY = Math.max(8, Math.min(h - bh - 8, trayTop - 12 - bh));
+    // The target, its arrow above it, and a little room all round.
+    const reach = 80;
+    const hits = (y: number) =>
+      !!focus &&
+      focus.x + reach > left &&
+      focus.x - reach < right &&
+      focus.y + reach > y &&
+      focus.y - reach * 1.4 < y + bh;
+    let want = this.side;
+    const yOf = (side: "top" | "bottom") => (side === "top" ? topY : bottomY);
+    if (hits(yOf(want))) {
+      const other = want === "top" ? "bottom" : "top";
+      if (!hits(yOf(other))) want = other;
+      else if (focus) {
+        // Covered either way (a tiny screen): take whichever end is farther away.
+        const away = (side: "top" | "bottom") => Math.abs(focus.y - (yOf(side) + bh / 2));
+        want = away("top") > away("bottom") ? "top" : "bottom";
+      }
+    }
+    const y = Math.round(yOf(want));
+    if (y !== this.y) {
+      this.box.style.top = `${y}px`;
+      this.y = y;
+      this.side = want;
+      document.body.dataset.tutorialSide = want;
+    }
   }
 
   private build(): void {
@@ -268,7 +323,8 @@ export class Tutorial {
       position: "fixed",
       // Centered on a wide screen; on a phone, kept clear of the buttons down the right.
       left: "max(12px, calc(50vw - 220px))",
-      top: "max(236px, 30vh)",
+      top: "236px",
+      transition: "top 0.35s ease",
       width: "min(440px, calc(100vw - 84px))",
       display: "flex",
       alignItems: "flex-start",
@@ -344,6 +400,7 @@ export class Tutorial {
       });
     }
     document.body.dataset.tutorial = step.id;
+    this.height = this.box?.offsetHeight || this.height;
   }
 
   private end(skipped: boolean): void {
