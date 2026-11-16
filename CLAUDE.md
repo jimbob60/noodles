@@ -33,7 +33,7 @@ Jacob. Read this, then only the files a task needs. Keep token use low (see the 
     capability (photo saving); keep it.
 - Plan doc: https://claude.ai/artifact/GkdCoG2KwLT2AGN5Ny5pzF (Claude Docs project
   `7f905f86-df39-47f5-bd96-b4523ae39354`, prose node `4bae6e8e-39fd`). Tick a phase with
-  `update` on the prose node, payload `{ops: [{op: "set", target: {kind: "blocks", ids: ["<listItem id>"]}, attrs: {checked: true}}]}`. Next ones: 44 `mjp0pzg30kk.10167`, 45 `.10294`, 46 `.10411`, 47 `.10537`, 48 `.10682`.
+  `update` on the prose node, payload `{ops: [{op: "set", target: {kind: "blocks", ids: ["<listItem id>"]}, attrs: {checked: true}}]}`. Next ones: 45 `mjp0pzg30kk.10294`, 46 `.10411`, 47 `.10537`, 48 `.10682`.
 - Feedback goes to Jacob's Google Form (ids in `src/ui/helpPanel.ts`).
 - itch.io: Jacob uploads a ZIP holding only `dist/index.html` (as `index.html`). Viewport
   1280×720, mobile friendly, fullscreen button on. Cover 630×500 (JPG uploads more reliably).
@@ -49,8 +49,8 @@ Jacob. Read this, then only the files a task needs. Keep token use low (see the 
 
 ## Status (2026-11-14)
 
-- Phases 1–43 done and ticked (37 dragon friends, 38 breeding in `src/care/breeding.ts`, 39 rarity,
-  40 Dragondex, 41 daily goals, 42 balance, 43 sound). Stage F done.
+- Phases 1–44 done and ticked (37 dragon friends, 38 breeding in `src/care/breeding.ts`, 39 rarity,
+  40 Dragondex, 41 daily goals, 42 balance, 43 sound, 44 menus). Stage F done.
 - Unsolved: Jacob once couldn't steer in Noodle Catch with a friend visiting; not reproducible.
 - Extras Jacob asked for, all built: Jinxy the black cat (from a photo of his real cat; extra
   fang on her right) and Jinx the matching dragon; ten holiday dragons that hatch only near
@@ -69,8 +69,10 @@ Jacob. Read this, then only the files a task needs. Keep token use low (see the 
   button).
 - Phase 44 menus built: title screen, ⚙️ menu (ninth corner button, was ❓) with volume
   sliders (`src/settings.ts`, device-only), credits; all in `src/ui/menuPanel.ts`. Robots tap
-  `#title-play` first. Waiting on Jacob's OK.
-- Next in the plan: phase 45 (tutorial).
+  `#title-play` first.
+- Phase 45 tutorial built: Shelly the talking egg (`src/ui/tutorial.ts`), step-by-step for new
+  players, skippable; waiting on Jacob's OK.
+- Next in the plan: phase 46 (juice).
 
 ## Gotchas
 

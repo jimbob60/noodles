@@ -32,6 +32,8 @@ import { drawHelpButton, onHelpButton, openFeedback, openHowTo } from "./ui/help
 import { drawDexButton, onDexButton, openDex } from "./ui/dexPanel";
 import { drawSoundButton, onSoundButton } from "./ui/soundButton";
 import { sound } from "./audio/sound";
+import { Tutorial, type TutorialTarget } from "./ui/tutorial";
+import { cornerButton } from "./ui/layout";
 import { openCredits, openMenu, openTitle } from "./ui/menuPanel";
 import { loadSettings, saveSettings, type Settings } from "./settings";
 import { countGoal, freshGoals, isDone, type GoalEvent } from "./care/goals";
@@ -82,7 +84,7 @@ import { TREAT_IDS } from "./care/food";
 import { Petting } from "./care/petting";
 import { moodFrom } from "./care/mood";
 import { bedRefill, rested, sleepy } from "./care/bedtime";
-import { bedSpot, drawBed, drawBedButton, drawNight, onBedButton } from "./ui/bedtime";
+import { bedButton, bedSpot, drawBed, drawBedButton, drawNight, onBedButton } from "./ui/bedtime";
 import { TITLE_FONT } from "./title";
 import { Den } from "./den/den";
 import { hourOf, skyAt } from "./den/timeOfDay";
@@ -311,10 +313,34 @@ async function main(): Promise<void> {
   const showTitle = () =>
     openTitle({
       name: newPlayerEgg ? null : identity.name,
-      onPlay: () => sound.unlock(),
+      onPlay: () => {
+        sound.unlock();
+        // A brand-new player meets Shelly the talking egg (once per device).
+        if (newPlayerEgg && !flag("tutorial") && !tutorial.active) tutorial.start();
+      },
       onSettings: () => openMenu({ settings, onSettings: changeSettings }),
       onCredits: () => openCredits(),
     });
+  /** Shelly the talking egg: the tutorial. When it ends, the how-to card comes as before. */
+  const tutorial = new Tutorial(() => setFlag("tutorial"));
+  let swimLast: { x: number; y: number } | null = null;
+  /** Where the tutorial's arrow points. */
+  const tutorialTarget = (t: TutorialTarget): { x: number; y: number } | null => {
+    const w = screen.width;
+    const h = screen.height;
+    if (t === "dragon")
+      return { x: dragon.spine.head.x, y: dragon.spine.head.y - dragon.headRadius };
+    if (t === "food") {
+      const s = feeding.slots();
+      return s[Math.floor(s.length / 2)] ?? null;
+    }
+    if (t === "toys") return toys.slots()[0] ?? null;
+    if (t === "orbs") return { x: Math.min(150, w * 0.3), y: 44 };
+    if (t === "goals") return { x: 68, y: 206 + 16 };
+    if (t === "moon") return bedButton(w, h);
+    if (t === "menu") return cornerButton(2, w, h);
+    return null;
+  };
   /** Jinxy, the dragons' pet cat. */
   const cat = new Cat();
   let friend: Dragon | null = null;
@@ -682,7 +708,8 @@ async function main(): Promise<void> {
         playing &&
         !flag("howto") &&
         !document.getElementById("name-panel") &&
-        !document.getElementById("title-screen")
+        !document.getElementById("title-screen") &&
+        !tutorial.active
       ) {
         setFlag("howto");
         let gift = 0;
@@ -938,6 +965,8 @@ async function main(): Promise<void> {
         const tapped = !!pressAt && !swallowing && onEgg(pressAt);
         const r = egg.update(dt, rubbed, tapped);
         if (r.cracked) sound.crack();
+        if (r.cracked) tutorial.on("crack");
+        if (rubbed > 0) tutorial.on("rub", rubbed);
         if (r.hatched) sound.sparkle();
         if (r.hatched) {
           // Out pops the dragon, right where the egg was, thrilled to meet you.
@@ -964,6 +993,8 @@ async function main(): Promise<void> {
               initial: identity.name,
               canCancel: false,
               onDone: (name) => {
+                tutorial.setName(name);
+                tutorial.on("named");
                 // A new page in the Dragondex? Its finder is this baby, by the name it was given.
                 const before = dex;
                 dex = discover(dex, genes, name, Date.now());
@@ -991,6 +1022,7 @@ async function main(): Promise<void> {
           : feeding.update(dt, input, pressAt, dragon, needs.values, screen.width, screen.height);
       if (tray.event) {
         sound.munch();
+        tutorial.on("fed");
         const favorite = tray.event.ate === dragon.favorite;
         needs = change(needs, feedEffect(tray.event.ate, favorite));
         pay(favorite ? "favorite" : "snack", dragon.mouth);
@@ -1025,6 +1057,7 @@ async function main(): Promise<void> {
         if (ribbonTime >= 5) {
           ribbonTime = 0;
           pay("ribbon", dragon.mouth);
+          tutorial.on("play");
         }
       }
       if (play.love !== 0 || play.energy !== 0 || play.grime !== 0) {
@@ -1142,10 +1175,16 @@ async function main(): Promise<void> {
       }
       // Holding still for a photo: the pose stays exactly put.
       if (!photo?.frozen) dragon.update(dt, finger, world());
+      // The tutorial's "swim" step counts how far the finger leads the dragon.
+      if (tutorial.active && finger.down) {
+        if (swimLast) tutorial.on("swim", Math.hypot(finger.x - swimLast.x, finger.y - swimLast.y));
+        swimLast = { x: finger.x, y: finger.y };
+      } else swimLast = null;
       if (photo) pose(dragon.face, photo.expression);
       if (!wasExcited && dragon.exciteLeft > 0) {
         pay("petting", dragon.spine.head);
         sound.chirp();
+        tutorial.on("pet");
       }
       if (catchGame) {
         const wasDone = catchGame.phase === "done";
@@ -1322,6 +1361,7 @@ async function main(): Promise<void> {
               );
             drawHelpButton(ctx, screen.width, screen.height);
             drawSoundButton(ctx, screen.width, screen.height, sound.setting === "on");
+            tutorial.drawArrow(ctx, tutorialTarget, modeSeconds);
           }
           if (catchGame) {
             drawCatchHud(

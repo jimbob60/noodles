@@ -2,6 +2,20 @@
 
 Newest first. Each entry says what we decided, why, and what it affects.
 
+## 2026-11-16: Phase 45, the tutorial: Shelly the talking egg
+
+- **Decision:** a brand-new player meets **Shelly**, a little talking egg (code-drawn, pastel spots, a happy face, gently bobbing), in a speech bubble after tapping ▶ Play (`src/ui/tutorial.ts`). She guides the first few minutes one step at a time, and **each step waits for the player to actually do it**:
+  1. Rub the egg to warm it (counts how far you rub), 2. tap to hatch, 3. name the baby,
+  2. swim: drag and it follows (counts the distance), 5. feed: drag a snack to its mouth,
+  3. pet until it purrs, 7. play with the ball or ribbon,
+  4. then four short explainers with a **Got it! ✨** button: the need orbs, coins and 🎯 goals, the 🌙 moon and the sponge, and the buttons up the right (with ⚙️ for help), 9. a goodbye.
+- **A bouncing gold arrow** points at what to use (the dragon, the snack tray, the toys, the orbs, the goals chip, the moon, the corner buttons). The egg itself already shows a finger hint, so the egg steps don't need one.
+- **Skip tutorial** is always there. It runs once per device (`noodle-dragons.tutorial`), and only for a new player (anyone with a saved dragon never sees it). Quick hatchers skip ahead (cracking or naming jumps past the egg steps).
+- **Taps go through the bubble** to the game (only its buttons catch taps). It sits centered on a wide screen; on a phone it keeps clear of the buttons down the right.
+- **The how-to card** (and the tester gift) now comes after the tutorial ends or is skipped, instead of right after naming; it is still in the ⚙️ menu any time.
+- **Why:** phase 45 ("a new player knows what to do"; "can be skipped").
+- **Robot:** checks Shelly starts, follows hatching, swimming and moves on to feeding, and can be skipped.
+
 ## 2026-11-16: Phase 44, menus and settings: a title screen, a ⚙️ menu and the credits
 
 - **Title screen** (`src/ui/menuPanel.ts`): the game now opens on the glowing "Noodle Dragons" title (the phase 4 art, every "o" a curled dragon, finally on show) over the dimmed den, with **▶ Play** ("▶ Play with Mochi" when a dragon is waiting), **⚙️ Settings** and **💜 Credits**, and "A Panda Studios game". Play fades it away, and (being a tap) also wakes the music. Only the real game shows it; the test modes (fast, gallery, hatch) don't.

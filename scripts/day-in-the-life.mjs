@@ -80,6 +80,11 @@ const moon = { x: W - 14 - R, y: H - 14 - R - (2 * R + GAP) };
 await open();
 // A brand-new player starts with an egg: warm it by rubbing, then tap three times to hatch it.
 check((await data("egg")).startsWith("warming"), "a new player starts with an egg");
+// Shelly the talking egg (the tutorial) says hello and asks for a rub.
+check(
+  (await data("tutorial")) === "warm" && (await p.isVisible("#tutorial")),
+  "Shelly the talking egg starts the tutorial",
+);
 check(
   (await p.evaluate(() => localStorage.getItem("noodle-dragons.save"))) === null,
   "nothing is saved before it hatches",
@@ -103,6 +108,20 @@ await p.fill("#name-panel input", "Biscuit");
 await p.click("#name-panel >> text=That's the one");
 await step(200);
 check((await data("name")) === "Biscuit", "the new dragon is named Biscuit");
+// Shelly moves on as the player does each thing: after hatching, swimming; after a swim,
+// feeding. Then the robot skips the rest.
+check((await data("tutorial")) === "swim", "the tutorial follows along: now it says to swim");
+await drag(
+  { x: 400, y: 300 },
+  Array.from({ length: 40 }, (_, i) => ({ x: 400 + i * 15, y: 300 + Math.sin(i / 4) * 80 })),
+);
+check((await data("tutorial")) === "feed", "after a swim it moves on to feeding");
+await p.click("#tutorial-skip");
+await step(200);
+check(
+  (await data("tutorial")) === "skipped" && (await p.$("#tutorial")) === null,
+  "the tutorial can be skipped",
+);
 // The first time, a how-to-play card (with feedback and bug buttons) pops up once.
 await p.waitForSelector("#howto-panel");
 check(
