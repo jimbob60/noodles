@@ -65,78 +65,87 @@ for (const [name, W, H] of [
     await shot(id);
   };
 
-  await p.click("#title-play");
-  await step(700);
-  check((await data("tutorial")) === "warm", `${name}: Shelly says hello`);
-  const egg = { x: W / 2, y: H * 0.62 };
-  await clear("egg", egg);
-  await drag(
-    egg,
-    Array.from({ length: 130 }, (_, i) => ({ x: egg.x + Math.sin(i / 3) * 40, y: egg.y })),
-  );
-  for (let c = 0; c < 4; c++) {
-    await p.mouse.click(egg.x, egg.y - 10);
-    await step(450);
-  }
-  await step(4000);
-  await p.waitForSelector("#name-panel input");
-  await p.fill("#name-panel input", "Mochi");
-  await p.click("#name-panel >> text=That's the one");
-  await step(300);
-  check((await data("tutorial")) === "swim", `${name}: after naming, swim`);
-  await drag(
-    { x: W * 0.3, y: H * 0.45 },
-    Array.from({ length: 80 }, (_, i) => ({
-      x: W * 0.3 + Math.abs(((i * 12) % (W * 0.8)) - W * 0.4),
-      y: H * 0.45 + Math.sin(i / 4) * 60,
-    })),
-  );
-  check((await data("tutorial")) === "feed", `${name}: after swimming, feed`);
-  const food = { x: 14 + R + (2 * R + R * 0.55), y: H - 14 - R };
-  await clear("food tray", food);
-  for (let i = 0; i < 3 && (await data("tutorial")) === "feed"; i++) {
-    const [hx, hy] = await head();
-    await drag(food, line(food, { x: hx, y: hy }), 150);
-    await step(800);
-  }
-  check((await data("tutorial")) === "pet", `${name}: after a snack, pet`);
-  for (let i = 0; i < 4 && (await data("tutorial")) === "pet"; i++) {
-    const [bx, by] = (await data("body")).split(",").map(Number);
+  // If anything goes wrong, say which step it was on (rather than just timing out).
+  try {
+    await p.click("#title-play");
+    await step(700);
+    check((await data("tutorial")) === "warm", `${name}: Shelly says hello`);
+    const egg = { x: W / 2, y: H * 0.62 };
+    await clear("egg", egg);
     await drag(
-      { x: bx, y: by },
-      Array.from({ length: 90 }, (_, k) => ({ x: bx + Math.sin(k / 4) * 40, y: by })),
+      egg,
+      Array.from({ length: 130 }, (_, i) => ({ x: egg.x + Math.sin(i / 3) * 40, y: egg.y })),
     );
+    for (let c = 0; c < 4; c++) {
+      await p.mouse.click(egg.x, egg.y - 10);
+      await step(450);
+    }
+    await step(4000);
+    await p.waitForSelector("#name-panel input", { timeout: 8000 });
+    await p.fill("#name-panel input", "Mochi");
+    await p.click("#name-panel >> text=That's the one");
     await step(300);
-  }
-  check((await data("tutorial")) === "play", `${name}: after a purr, play`);
-  const ball = { x: W - 14 - R, y: H - 14 - R };
-  await clear("toys", ball);
-  // Throw the ball toward the dragon and let them play.
-  const [hx, hy] = await head();
-  await drag(ball, line(ball, { x: hx, y: hy }, 4));
-  for (let i = 0; i < 300 && (await data("tutorial")) === "play"; i++) await step();
-  check((await data("tutorial")) === "orbs", `${name}: after playing, it moves on (not stuck!)`);
-  const targets = {
-    orbs: { x: Math.min(150, W * 0.3), y: 44 },
-    goals: { x: 68, y: 222 },
-    moon: { x: W - 14 - R, y: H - 14 - R - (2 * R + R * 0.55) },
-    menu: { x: W - 32, y: 44 + 2 * 46 + 18 },
-  };
-  for (const [id, pt] of Object.entries(targets)) {
-    check((await data("tutorial")) === id, `${name}: Shelly explains the ${id}`);
-    await clear(id, pt);
+    check((await data("tutorial")) === "swim", `${name}: after naming, swim`);
+    await drag(
+      { x: W * 0.3, y: H * 0.45 },
+      Array.from({ length: 80 }, (_, i) => ({
+        x: W * 0.3 + Math.abs(((i * 12) % (W * 0.8)) - W * 0.4),
+        y: H * 0.45 + Math.sin(i / 4) * 60,
+      })),
+    );
+    check((await data("tutorial")) === "feed", `${name}: after swimming, feed`);
+    const food = { x: 14 + R + (2 * R + R * 0.55), y: H - 14 - R };
+    await clear("food tray", food);
+    for (let i = 0; i < 3 && (await data("tutorial")) === "feed"; i++) {
+      const [hx, hy] = await head();
+      await drag(food, line(food, { x: hx, y: hy }), 150);
+      await step(800);
+    }
+    check((await data("tutorial")) === "pet", `${name}: after a snack, pet`);
+    for (let i = 0; i < 4 && (await data("tutorial")) === "pet"; i++) {
+      const [bx, by] = (await data("body")).split(",").map(Number);
+      await drag(
+        { x: bx, y: by },
+        Array.from({ length: 90 }, (_, k) => ({ x: bx + Math.sin(k / 4) * 40, y: by })),
+      );
+      await step(300);
+    }
+    check((await data("tutorial")) === "play", `${name}: after a purr, play`);
+    const ball = { x: W - 14 - R, y: H - 14 - R };
+    await clear("toys", ball);
+    // Throw the ball toward the dragon and let them play.
+    const [hx, hy] = await head();
+    await drag(ball, line(ball, { x: hx, y: hy }, 4));
+    for (let i = 0; i < 300 && (await data("tutorial")) === "play"; i++) await step();
+    check((await data("tutorial")) === "orbs", `${name}: after playing, it moves on (not stuck!)`);
+    const targets = {
+      orbs: { x: Math.min(150, W * 0.3), y: 44 },
+      goals: { x: 68, y: 222 },
+      moon: { x: W - 14 - R, y: H - 14 - R - (2 * R + R * 0.55) },
+      menu: { x: W - 32, y: 44 + 2 * 46 + 18 },
+    };
+    for (const [id, pt] of Object.entries(targets)) {
+      check((await data("tutorial")) === id, `${name}: Shelly explains the ${id}`);
+      await clear(id, pt);
+      await p.click("#tutorial-ok");
+      await step(200);
+    }
+    check((await data("tutorial")) === "bye", `${name}: and says goodbye`);
     await p.click("#tutorial-ok");
-    await step(200);
+    await step(300);
+    check(
+      (await data("tutorial")) === "done" && (await p.$("#tutorial")) === null,
+      `${name}: the tutorial is finished`,
+    );
+    await p.waitForSelector("#howto-panel", { timeout: 8000 });
+    check(true, `${name}: then the how-to card comes`);
+  } catch (e) {
+    check(
+      false,
+      `${name}: stopped at step "${await data("tutorial")}": ${e.message.split("\n")[0]}`,
+    );
+    await shot("stuck");
   }
-  check((await data("tutorial")) === "bye", `${name}: and says goodbye`);
-  await p.click("#tutorial-ok");
-  await step(300);
-  check(
-    (await data("tutorial")) === "done" && (await p.$("#tutorial")) === null,
-    `${name}: the tutorial is finished`,
-  );
-  await p.waitForSelector("#howto-panel");
-  check(true, `${name}: then the how-to card comes`);
   check(
     errors.length === 0,
     `${name}: no errors in the page${errors.length ? `: ${errors[0]}` : ""}`,
