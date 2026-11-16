@@ -2,6 +2,16 @@
 
 Newest first. Each entry says what we decided, why, and what it affects.
 
+## 2026-11-16: Phase 43, sound: lo-fi music and gentle effects, all made by code
+
+- **Decision:** all sound is made live with the browser's Web Audio (`src/audio/sound.ts`), with no sound files: the game stays one file, and nothing needs a license. VISION asks for "relaxed lo-fi beats with soft keys and vinyl crackle" and "gentle chirps, purrs, soft pops".
+- **The music** (`src/audio/music.ts`): a slow (72 bpm) loop round the classic cozy chords **Fmaj7 → Em7 → Dm7 → Cmaj7**, one a bar. Soft electric-piano keys (a sine with a quiet, slightly detuned triangle), a round sine bass, a soft kick, a brushed-noise snare and tiny hats with a lazy swing, a bell melody wandering in C major pentatonic (fits every chord), and vinyl crackle, all through a warm low-pass filter. It fades in over 3 seconds. **At bedtime** it becomes a lullaby: the drums rest, the melody thins out and the filter darkens; three soft falling notes say goodnight.
+- **Effects:** a two-note **chirp** when petting makes it happy; a **purr** (a low throbbing rumble) that follows how deep the purr is while you pet; **munch** when it eats; a soft **pop** for ball boops and caught dumplings; **bubbles** while scrubbing in the bath; a quiet **coin ding** (at most about ten a second); an eggshell **crack**; and a sparkly rising **arpeggio** for hatching, finished goals and Dragondex stickers.
+- **🔊 button:** tenth in the corner stack (the bottom), always there: it turns all sound off or on, and the choice is remembered on the device (`noodle-dragons.sound`). Sound pauses while the game is hidden.
+- **Browsers' rule:** sound may only start from a tap, so the music begins on the first tap of each visit.
+- **Not yet:** separate music and effects volumes (phase 44, settings); a sound for petting Jinxy.
+- **Why:** phase 43 ("sound adds to the cozy feel"). I can't hear it in my workspace, so Jacob's ears are the real test: too loud, too busy, or not lo-fi enough is easy to tune.
+
 ## 2026-11-15: Phase 42, the balance gate: a family of ten, setting grown-ups free, and steadier coins
 
 - **How we tested:** a 30-day simulation (`tests/balanceSim.ts`, report with `npm run balance`) plays three made-up players (light: 2 short visits a day; regular: 3 visits and a Noodle Catch round; keen: 5 long visits and 3 rounds) using the game's real rules for coins, goals, needs, growing up, eggs, breeding and the Dragondex. Its targets are now unit tests, so a later change can't quietly break the balance.
