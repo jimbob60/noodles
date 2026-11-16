@@ -2,6 +2,17 @@
 
 Newest first. Each entry says what we decided, why, and what it affects.
 
+## 2026-11-16: Phase 44, menus and settings: a title screen, a ⚙️ menu and the credits
+
+- **Title screen** (`src/ui/menuPanel.ts`): the game now opens on the glowing "Noodle Dragons" title (the phase 4 art, every "o" a curled dragon, finally on show) over the dimmed den, with **▶ Play** ("▶ Play with Mochi" when a dragon is waiting), **⚙️ Settings** and **💜 Credits**, and "A Panda Studios game". Play fades it away, and (being a tap) also wakes the music. Only the real game shows it; the test modes (fast, gallery, hatch) don't.
+- **⚙️ Menu:** the ❓ corner button is now a gear. The menu has **Music** and **Effects** volume sliders (they change the sound as you slide, and are remembered on the device in `noodle-dragons.settings`, not in the save: a backup code moved to another tablet doesn't carry volume), then How to play, Send feedback, Report a bug, Credits and **Back to title**. From the title screen, ⚙️ Settings shows just the sliders. The 🔊 corner button stays for a one-tap mute.
+- **Credits:** Created by Jacob, Master Panda of Panda Studios; game design and testing; code, drawing and music made with Claude; Jinxy drawn from Jacob's cat; the code-played lo-fi; the Pacifico title font (SIL Open Font License); a thank-you. Closing the credits goes back to wherever they were opened from.
+- **Every screen can be reached and left:** title → game, settings, credits; game → ⚙️ menu → how to play, feedback, bug report, credits (and back to the menu), title; each card has ✕ and closes on a tap outside.
+- **How-to card:** a new tip about the gear and 🔊.
+- **Robot and screenshots:** both tap ▶ Play first; the screenshot script also saves the title screen; the robot checks the volume is remembered, the credits, and back to the title and into the game.
+- **Why:** phase 44 ("every screen can be reached and left").
+- **Affects:** phase 45 (the tutorial starts after Play), phase 47 (accessibility settings join the menu), phase 53 (Android's back button can close cards and return to the title).
+
 ## 2026-11-16: Phase 43, sound: lo-fi music and gentle effects, all made by code
 
 - **Decision:** all sound is made live with the browser's Web Audio (`src/audio/sound.ts`), with no sound files: the game stays one file, and nothing needs a license. VISION asks for "relaxed lo-fi beats with soft keys and vinyl crackle" and "gentle chirps, purrs, soft pops".

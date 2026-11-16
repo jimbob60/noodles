@@ -33,6 +33,11 @@ const open = async () => {
   await p.clock.runFor(500);
   await p.waitForSelector("body[data-ready]");
   await p.clock.runFor(500);
+  // The title screen: tap Play.
+  if (await p.$("#title-play")) {
+    await p.click("#title-play");
+    await p.clock.runFor(700);
+  }
 };
 const data = (k) => p.evaluate((key) => document.body.dataset[key] ?? "", k);
 const num = async (k) => Number(await data(k)) || 0;
@@ -66,7 +71,7 @@ const line = (a, b, n = 10) =>
     x: a.x + ((b.x - a.x) * (i + 1)) / n,
     y: a.y + ((b.y - a.y) * (i + 1)) / n,
   }));
-const topButton = (i) => ({ x: W - 32, y: 44 + i * 46 + 18 }); // 0 backup, 1 decorate, 2 shop, 3 game, 4 closet, 5 camera, 6 family, 7 Dragondex, 8 help, 9 sound
+const topButton = (i) => ({ x: W - 32, y: 44 + i * 46 + 18 }); // 0 backup, 1 decorate, 2 shop, 3 game, 4 closet, 5 camera, 6 family, 7 Dragondex, 8 menu, 9 sound
 const foodSlot = (i) => ({ x: 14 + R + i * (2 * R + GAP), y: H - 14 - R });
 const ball = { x: W - 14 - R, y: H - 14 - R };
 const sponge = { x: W - 14 - R - (2 * R + GAP), y: H - 14 - R - (2 * R + GAP) };
@@ -260,6 +265,30 @@ await tap(topButton(9).x, topButton(9).y);
 check((await data("sound")) === "off", "the sound button turns sound off");
 await tap(topButton(9).x, topButton(9).y);
 check((await data("sound")) === "on", "and back on");
+
+// The ⚙️ menu (ninth corner button): volume sliders that are remembered, the credits (which
+// come back to the menu), and back to the title screen and into the game again.
+await tap(topButton(8).x, topButton(8).y);
+await p.waitForSelector("#menu-panel #music-volume");
+await p.fill("#music-volume", "30");
+await p.click("#menu-panel >> text=Credits");
+await p.waitForSelector("#credits-panel");
+check(
+  (await p.textContent("#credits-panel")).includes("Panda Studios"),
+  "the credits name Panda Studios",
+);
+await p.click("#credits-panel [data-close]");
+await p.waitForSelector("#menu-panel");
+const savedSettings = await p.evaluate(() =>
+  JSON.parse(localStorage.getItem("noodle-dragons.settings") ?? "{}"),
+);
+check(Math.abs(savedSettings.music - 0.3) < 0.01, "the music volume is remembered");
+await p.click("#menu-panel >> text=Back to title");
+await p.waitForSelector("#title-screen");
+check((await p.textContent("#title-play")).includes("Biscuit"), "back to the title, with Biscuit");
+await p.click("#title-play");
+await p.clock.runFor(700);
+check((await p.$("#title-screen")) === null, "and Play goes back into the game");
 
 // Daily goals (the chip under the name badge): three goals for today, each counting up, and
 // the goals are saved.

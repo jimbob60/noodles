@@ -26,6 +26,13 @@ try {
     page.on("console", (m) => m.type() === "error" && errors.push(`${v.name}: ${m.text()}`));
     await page.goto(url);
     await page.waitForSelector("body[data-ready]", { timeout: 10000 });
+    // A title-screen shot first, then into the game.
+    if (await page.$("#title-play")) {
+      await page.waitForTimeout(300);
+      await page.screenshot({ path: `screenshots/${v.name}-title.png` });
+      await page.click("#title-play");
+      await page.waitForTimeout(600);
+    }
     await page.waitForTimeout(200);
     // Drag a "finger" across the screen so the screenshot shows the dot following it.
     await page.mouse.move(v.width * 0.3, v.height * 0.8);

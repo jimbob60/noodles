@@ -6,6 +6,7 @@ import {
   stepAt,
   type SoundSetting,
 } from "./music";
+import { loadSettings, type Settings } from "../settings";
 
 /**
  * All the game's sound (phase 43), made by code with Web Audio: no sound files. A lo-fi loop
@@ -40,6 +41,23 @@ class Sound {
   private random = melodyRandom(7);
   private sleepy = false;
   private lastCoin = 0;
+  /** The music and effects volumes from the settings (0–1 each). */
+  private volumes: Settings =
+    typeof localStorage === "undefined" ? { music: 0.7, effects: 0.8 } : loadSettings();
+
+  private get musicLevel(): number {
+    return MUSIC_LEVEL * this.volumes.music * (this.sleepy ? 0.7 : 1);
+  }
+
+  /** New volumes from the settings card: they change smoothly, right away. */
+  setVolumes(v: Settings): void {
+    this.volumes = { ...v };
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime;
+    this.music.gain.cancelScheduledValues(t);
+    this.music.gain.setTargetAtTime(this.musicLevel, t, 0.1);
+    this.sfx.gain.setTargetAtTime(SFX_LEVEL * v.effects, t, 0.1);
+  }
 
   constructor() {
     try {
@@ -75,10 +93,10 @@ class Sound {
     this.warm.Q.value = 0.4;
     this.music = ctx.createGain();
     this.music.gain.value = 0;
-    this.music.gain.linearRampToValueAtTime(MUSIC_LEVEL, ctx.currentTime + 3);
+    this.music.gain.linearRampToValueAtTime(this.musicLevel, ctx.currentTime + 3);
     this.music.connect(this.warm).connect(this.master);
     this.sfx = ctx.createGain();
-    this.sfx.gain.value = SFX_LEVEL;
+    this.sfx.gain.value = SFX_LEVEL * this.volumes.effects;
     this.sfx.connect(this.master);
     // Two seconds of soft noise, for drums, crackle, munches and splashes.
     this.noise = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
@@ -117,7 +135,7 @@ class Sound {
     const t = this.ctx.currentTime;
     this.warm.frequency.cancelScheduledValues(t);
     this.warm.frequency.setTargetAtTime(on ? 1100 : 2400, t, 1.2);
-    this.music.gain.setTargetAtTime(on ? MUSIC_LEVEL * 0.7 : MUSIC_LEVEL, t, 1.2);
+    this.music.gain.setTargetAtTime(this.musicLevel, t, 1.2);
   }
 
   private get live(): boolean {

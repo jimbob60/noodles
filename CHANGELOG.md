@@ -2,6 +2,7 @@
 
 Newest first. One line per finished phase.
 
+- **Phase 43 — Sound (07a4c48, 2026-11-16):** cozy lo-fi music and gentle effects (chirps, purrs, munches, pops, bubbles, coin dings, sparkles), all played live by code; a lullaby at bedtime; a 🔊 button to turn it all off.
 - **Phase 42 — Gate: balance (05fc265, 2026-11-16):** a 30-day play simulation tuned the game: a family of ten, 🕊️ set grown-ups free for coins, dragons at home keep growing, and care coins capped at 200 a day so nothing is grindy. Stage F done.
 - **Phase 41 — Daily goals (8644957, 2026-11-15):** three small goals a day on a 🎯 chip under the name, 15 coins each and a 25-coin bonus for all three; new goals every day, and no streaks to lose.
 - **Phase 40 — Dragondex (07b1892, 1f2ae91, 2026-11-15):** a 📖 collection book of 138 pages on five tabs (colors, patterns, body parts, holiday dragons and Jinx, color-and-pattern combos) that fills in as dragons hatch, remembers who found each page, and gives a sticker and coins for every finished tab.

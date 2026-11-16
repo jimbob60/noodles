@@ -23,7 +23,7 @@ export const FORM = {
   },
 };
 
-/** The help button (❓): last in the top-right stack. */
+/** The ⚙️ menu button (settings and help; phase 44, was ❓), just above the 🔊 button. */
 export function helpButton(width: number, height: number): Point & { r: number } {
   return cornerButton(8, width, height);
 }
@@ -43,11 +43,24 @@ export function drawHelpButton(ctx: CanvasRenderingContext2D, width: number, hei
   ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
   ctx.fill();
   ctx.stroke();
+  // A little gear: eight teeth round a ring.
   ctx.fillStyle = "#ffe08a";
-  ctx.font = `700 ${Math.round(b.r * 1.15)}px system-ui, sans-serif`;
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText("?", b.x, b.y + 1);
+  const R = b.r * 0.5;
+  ctx.beginPath();
+  for (let i = 0; i < 16; i++) {
+    const a = (i / 16) * Math.PI * 2;
+    const r = i % 2 === 0 ? R * 1.18 : R * 0.86;
+    const a0 = a - Math.PI / 16;
+    const a1 = a + Math.PI / 16;
+    ctx.lineTo(b.x + Math.cos(a0) * r, b.y + Math.sin(a0) * r);
+    ctx.lineTo(b.x + Math.cos(a1) * r, b.y + Math.sin(a1) * r);
+  }
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = "rgba(20,14,60,1)";
+  ctx.beginPath();
+  ctx.arc(b.x, b.y, R * 0.42, 0, Math.PI * 2);
+  ctx.fill();
   ctx.restore();
 }
 
@@ -120,6 +133,7 @@ const TIPS: [string, string][] = [
   ["💕", "The family button lets you adopt more dragons and invite friends over."],
   ["📷", "The camera takes photos. Tap the name badge for your dragon's profile."],
   ["🐈‍⬛", "Tap Jinxy the cat for a purr."],
+  ["⚙️", "The gear (top right) has volume, this help and the credits; 🔊 turns sound off."],
 ];
 
 /**

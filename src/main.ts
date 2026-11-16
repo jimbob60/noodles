@@ -32,6 +32,8 @@ import { drawHelpButton, onHelpButton, openFeedback, openHowTo } from "./ui/help
 import { drawDexButton, onDexButton, openDex } from "./ui/dexPanel";
 import { drawSoundButton, onSoundButton } from "./ui/soundButton";
 import { sound } from "./audio/sound";
+import { openCredits, openMenu, openTitle } from "./ui/menuPanel";
+import { loadSettings, saveSettings, type Settings } from "./settings";
 import { countGoal, freshGoals, isDone, type GoalEvent } from "./care/goals";
 import { drawGoalsChip, onGoalsChip, openGoals } from "./ui/goalsPanel";
 import { discover, newFinds, newPrizes, STICKERS, type Dex, type DexPage } from "./care/dex";
@@ -286,6 +288,32 @@ async function main(): Promise<void> {
       gift,
       onFeedback: () => openFeedback("feedback", bugLog),
       onBug: () => openFeedback("bug", bugLog),
+    });
+  /** The device's settings (music and effects volumes). */
+  let settings = loadSettings();
+  const changeSettings = (s: Settings) => {
+    settings = s;
+    saveSettings(s);
+    sound.setVolumes(s);
+  };
+  /** The ⚙️ menu: volumes, help, credits, back to the title. */
+  const showMenu = () =>
+    openMenu({
+      settings,
+      onSettings: changeSettings,
+      onHowTo: () => showHelp(),
+      onFeedback: () => openFeedback("feedback", bugLog),
+      onBug: () => openFeedback("bug", bugLog),
+      onCredits: () => openCredits(showMenu),
+      onTitle: () => showTitle(),
+    });
+  /** The title screen: Play (which also wakes the sound), Settings, Credits. */
+  const showTitle = () =>
+    openTitle({
+      name: newPlayerEgg ? null : identity.name,
+      onPlay: () => sound.unlock(),
+      onSettings: () => openMenu({ settings, onSettings: changeSettings }),
+      onCredits: () => openCredits(),
     });
   /** Jinxy, the dragons' pet cat. */
   const cat = new Cat();
@@ -650,7 +678,12 @@ async function main(): Promise<void> {
       const playing = mode === "play" && !egg;
       if (pressAt) logEvent(`tap ${Math.round(pressAt.x)},${Math.round(pressAt.y)} (${mode})`);
       // The first time (once named), the how-to card, with a coin gift for testers.
-      if (playing && !flag("howto") && !document.getElementById("name-panel")) {
+      if (
+        playing &&
+        !flag("howto") &&
+        !document.getElementById("name-panel") &&
+        !document.getElementById("title-screen")
+      ) {
         setFlag("howto");
         let gift = 0;
         if (!flag("testerGift")) {
@@ -673,10 +706,10 @@ async function main(): Promise<void> {
         swallowing = true;
         logEvent(`sound ${sound.toggle()}`);
       }
-      // ❓: how to play, feedback and bug reports.
+      // ⚙️: the menu (volumes, how to play, feedback, bug reports, credits, back to the title).
       if (pressAt && !swallowing && playing && onHelpButton(pressAt, screen.width, screen.height)) {
         swallowing = true;
-        showHelp();
+        showMenu();
       }
       // Jinxy the cat: a tap on her is a pet (purr!), and nothing else.
       if (
@@ -1341,6 +1374,8 @@ async function main(): Promise<void> {
   pay("hello", dragon.spine.head);
   document.body.dataset.favorite = dragon.favorite;
   document.body.dataset.seed = String(seed);
+  // The real game opens on the title screen.
+  if (mode === "play") showTitle();
   document.body.dataset.ready = "true";
 }
 
