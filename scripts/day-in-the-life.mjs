@@ -113,7 +113,10 @@ check((await data("name")) === "Biscuit", "the new dragon is named Biscuit");
 check((await data("tutorial")) === "swim", "the tutorial follows along: now it says to swim");
 await drag(
   { x: 400, y: 300 },
-  Array.from({ length: 40 }, (_, i) => ({ x: 400 + i * 15, y: 300 + Math.sin(i / 4) * 80 })),
+  Array.from({ length: 80 }, (_, i) => ({
+    x: 400 + Math.abs(((i * 15) % 900) - 450),
+    y: 300 + Math.sin(i / 4) * 80,
+  })),
 );
 check((await data("tutorial")) === "feed", "after a swim it moves on to feeding");
 await p.click("#tutorial-skip");
