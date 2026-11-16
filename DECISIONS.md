@@ -4,10 +4,11 @@ Newest first. Each entry says what we decided, why, and what it affects.
 
 ## 2026-11-16: Tutorial fixes (Jacob's playtest): the play step, and a bubble that never covers the goal
 
-- **Stuck on the play step:** booping the ball never told Shelly, and the ribbon only counted after 5 whole seconds of chasing. Now about 1½ seconds of any ball or ribbon play (or a boop) moves her on.
+- **Stuck on the play step:** booping the ball never told Shelly, the ribbon only counted after 5 whole seconds of the dragon keeping up, and a tired dragon refuses to play at all. Now the step counts **the player playing**: about 1½ seconds with the ball out (one throw is enough) or the ribbon in hand, whatever the dragon does.
+- **Stuck on the pet step (found by the new robot):** it only moved on at the moment the dragon _became_ excited, so petting a dragon that was already excited (after a snack, say) never counted. Now it counts the Love the petting gives (12, a couple of seconds of good rubbing).
 - **The bubble never covers what she's talking about:** every frame it checks whether it would cover the step's target or its arrow (the egg, the dragon, the snack tray, the toys, the orbs, the goals chip, the moon, the corner buttons); if so it glides to the other end of the screen (up top, or down just above the trays). On a tiny screen where both ends would cover it, it takes the end farther away.
 - **The toys arrow** now comes in from the left: from above it passed over the sponge and looked like it meant the sponge.
-- **`npm run tutorial`** (`scripts/tutorial-walk.mjs`): a new robot plays all of Shelly's steps on a tablet and a phone, checks each step moves on (the play step included) and that the bubble keeps clear of every target, and saves a picture of each step in `screenshots/`.
+- **`npm run tutorial`** (`scripts/tutorial-walk.mjs`): a new robot plays all of Shelly's steps on a tablet and a phone, checks each step moves on (the play step included) and that the bubble keeps clear of every target, and saves a picture of each step in `screenshots/`. Run 6 times after the fixes: every run passed.
 
 ## 2026-11-16: Phase 45, the tutorial: Shelly the talking egg
 

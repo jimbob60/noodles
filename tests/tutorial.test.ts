@@ -7,7 +7,9 @@ describe("Shelly's tutorial", () => {
   it("waits for each thing to actually be done", () => {
     expect(advance(at("feed"), "pet")).toEqual(at("feed"));
     expect(advance(at("feed"), "fed")).toEqual(at("pet"));
-    expect(advance(at("pet"), "pet")).toEqual(at("play"));
+    // Petting counts up the Love it gives.
+    expect(advance(at("pet"), "pet", 5).step).toBe(at("pet").step);
+    expect(advance(advance(at("pet"), "pet", 5), "pet", 8)).toEqual(at("play"));
   });
 
   it("counts up rubbing and swimming until there's been enough", () => {

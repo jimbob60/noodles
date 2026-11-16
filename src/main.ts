@@ -1072,9 +1072,10 @@ async function main(): Promise<void> {
           pay("ribbon", dragon.mouth);
         }
       }
-      // The tutorial's play step: a moment of any ball or ribbon play counts.
-      if (tutorial.active && (play.love > 0 || play.booped)) {
-        tutorPlay += dt + (play.booped ? 1 : 0);
+      // The tutorial's play step counts the player playing (a ball out, or the ribbon in hand),
+      // not whether the dragon boops it: a tired dragon may not want to play at all.
+      if (tutorial.active && (play.busy || toys.ball || play.booped)) {
+        tutorPlay += dt;
         if (tutorPlay >= 1.5) tutorial.on("play");
       }
       if (play.love !== 0 || play.energy !== 0 || play.grime !== 0) {
@@ -1111,6 +1112,8 @@ async function main(): Promise<void> {
         dragon.tickles,
       );
       if (pet.love > 0) needs = change(needs, { happiness: pet.love });
+      // The tutorial's pet step: a good bit of petting (however excited it already was).
+      if (pet.love > 0) tutorial.on("pet", pet.love);
       for (const sp of pet.sparkles) dragon.sparkle(sp.x, sp.y);
       if (pet.tickled) dragon.giggle();
       dragon.pet = { active: pet.active, purr: petting.purr, giggle: petting.giggle };
@@ -1201,7 +1204,6 @@ async function main(): Promise<void> {
       if (!wasExcited && dragon.exciteLeft > 0) {
         pay("petting", dragon.spine.head);
         sound.chirp();
-        tutorial.on("pet");
       }
       if (catchGame) {
         const wasDone = catchGame.phase === "done";

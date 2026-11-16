@@ -63,6 +63,8 @@ export const STEPS: TutorialStep[] = [
     id: "pet",
     say: "Now rub {name} gently to pet it. Keep going until it purrs! 💗",
     until: "pet",
+    // How much Love the petting gives (a couple of seconds of good rubbing).
+    amount: 12,
     arrow: "dragon",
   },
   {
