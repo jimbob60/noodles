@@ -66,7 +66,7 @@ const line = (a, b, n = 10) =>
     x: a.x + ((b.x - a.x) * (i + 1)) / n,
     y: a.y + ((b.y - a.y) * (i + 1)) / n,
   }));
-const topButton = (i) => ({ x: W - 32, y: 44 + i * 46 + 18 }); // 0 backup, 1 decorate, 2 shop, 3 game, 4 closet, 5 camera, 6 family, 7 Dragondex, 8 help
+const topButton = (i) => ({ x: W - 32, y: 44 + i * 46 + 18 }); // 0 backup, 1 decorate, 2 shop, 3 game, 4 closet, 5 camera, 6 family, 7 Dragondex, 8 help, 9 sound
 const foodSlot = (i) => ({ x: 14 + R + i * (2 * R + GAP), y: H - 14 - R });
 const ball = { x: W - 14 - R, y: H - 14 - R };
 const sponge = { x: W - 14 - R - (2 * R + GAP), y: H - 14 - R - (2 * R + GAP) };
@@ -252,6 +252,14 @@ check(
 );
 await p.click("#dex-panel >> text=✕");
 await step(200);
+
+// Sound (the tenth corner button): taps have woken the music, and the button turns all sound
+// off and back on.
+check((await data("sound")) === "on", "sound starts on");
+await tap(topButton(9).x, topButton(9).y);
+check((await data("sound")) === "off", "the sound button turns sound off");
+await tap(topButton(9).x, topButton(9).y);
+check((await data("sound")) === "on", "and back on");
 
 // Daily goals (the chip under the name badge): three goals for today, each counting up, and
 // the goals are saved.

@@ -30,6 +30,8 @@ import { drawCat } from "./pets/drawCat";
 import { JINX_SEED } from "./noodle/genes";
 import { drawHelpButton, onHelpButton, openFeedback, openHowTo } from "./ui/helpPanel";
 import { drawDexButton, onDexButton, openDex } from "./ui/dexPanel";
+import { drawSoundButton, onSoundButton } from "./ui/soundButton";
+import { sound } from "./audio/sound";
 import { countGoal, freshGoals, isDone, type GoalEvent } from "./care/goals";
 import { drawGoalsChip, onGoalsChip, openGoals } from "./ui/goalsPanel";
 import { discover, newFinds, newPrizes, STICKERS, type Dex, type DexPage } from "./care/dex";
@@ -98,6 +100,8 @@ async function main(): Promise<void> {
   watchErrors();
   const screen = new Screen(document.getElementById("game") as HTMLCanvasElement);
   const input = new Input(screen.canvas);
+  // Sound can only start from a tap (browsers' rule): every tap wakes it if it should be on.
+  window.addEventListener("pointerdown", () => sound.unlock(), { capture: true });
   const den = new Den();
   const world = () => ({ width: screen.width, height: screen.height, unit: segmentFor(screen) });
   // Your dragon: its look comes from the saved seed (a brand-new dragon if there's no save).
@@ -209,6 +213,7 @@ async function main(): Promise<void> {
     if (!won.length) return;
     dexPrizes = [...dexPrizes, ...won];
     prizeFresh = [...prizeFresh, ...won];
+    sound.sparkle();
     const coins = won.reduce((n, p) => n + STICKERS[p].coins, 0);
     wallet = { ...wallet, coins: wallet.coins + coins };
     coinCounter.earned(coins, { x: window.innerWidth / 2, y: window.innerHeight / 2 });
@@ -236,6 +241,7 @@ async function main(): Promise<void> {
       wallet = { ...wallet, coins: wallet.coins + r.coins };
       coinCounter.earned(r.coins, { x: 68, y: 206 });
       goalGlow = 1;
+      sound.sparkle();
       logEvent(`goal done ${r.finished.map((f) => f.kind).join(" ")} +${r.coins}`);
     }
     showGoals();
@@ -378,6 +384,8 @@ async function main(): Promise<void> {
   let bedAt = bedSpot(screen.width, screen.height);
   function setBedtime(on: boolean): void {
     needs = { ...needs, inBed: on };
+    sound.setSleepy(on);
+    if (on) sound.lullaby();
     if (on) {
       bedAt = bedSpot(screen.width, screen.height);
       feeding.sendHome();
@@ -655,6 +663,16 @@ async function main(): Promise<void> {
         }
         showHelp(gift);
       }
+      // 🔊: all sound on or off, always reachable.
+      if (
+        pressAt &&
+        !swallowing &&
+        playing &&
+        onSoundButton(pressAt, screen.width, screen.height)
+      ) {
+        swallowing = true;
+        logEvent(`sound ${sound.toggle()}`);
+      }
       // ❓: how to play, feedback and bug reports.
       if (pressAt && !swallowing && playing && onHelpButton(pressAt, screen.width, screen.height)) {
         swallowing = true;
@@ -886,6 +904,8 @@ async function main(): Promise<void> {
         }
         const tapped = !!pressAt && !swallowing && onEgg(pressAt);
         const r = egg.update(dt, rubbed, tapped);
+        if (r.cracked) sound.crack();
+        if (r.hatched) sound.sparkle();
         if (r.hatched) {
           // Out pops the dragon, right where the egg was, thrilled to meet you.
           dragon = new Dragon(at.x, at.y, segmentFor(screen), world(), genes);
@@ -937,6 +957,7 @@ async function main(): Promise<void> {
           ? { busy: false, event: null }
           : feeding.update(dt, input, pressAt, dragon, needs.values, screen.width, screen.height);
       if (tray.event) {
+        sound.munch();
         const favorite = tray.event.ate === dragon.favorite;
         needs = change(needs, feedEffect(tray.event.ate, favorite));
         pay(favorite ? "favorite" : "snack", dragon.mouth);
@@ -961,7 +982,10 @@ async function main(): Promise<void> {
       // For automated checks: boops in the current ball game.
       const boops = String(toys.ball?.boops ?? "-");
       if (document.body.dataset.boops !== boops) document.body.dataset.boops = boops;
-      if (play.booped && toys.ball) pay("boop", toys.ball);
+      if (play.booped && toys.ball) {
+        pay("boop", toys.ball);
+        sound.pop();
+      }
       // Every 5 seconds of keeping up with the ribbon earns a little.
       if (play.love > 0 && !play.booped) {
         ribbonTime += dt;
@@ -1009,6 +1033,8 @@ async function main(): Promise<void> {
       dragon.pet = { active: pet.active, purr: petting.purr, giggle: petting.giggle };
       // With the sponge in hand it holds still for its bath, eyes happily shut while scrubbed.
       if (wash.busy) dragon.pet = { active: true, purr: wash.scrubbing ? 0.45 : 0, giggle: 0 };
+      sound.purr(pet.active && !wash.busy ? petting.purr : 0);
+      if (wash.scrubbing && Math.random() < dt * 5) sound.bubble();
       // For automated checks: is it being petted, and how deep is the purr.
       const petState = pet.active ? petting.purr.toFixed(1) : "no";
       if (document.body.dataset.pet !== petState) document.body.dataset.pet = petState;
@@ -1084,11 +1110,15 @@ async function main(): Promise<void> {
       // Holding still for a photo: the pose stays exactly put.
       if (!photo?.frozen) dragon.update(dt, finger, world());
       if (photo) pose(dragon.face, photo.expression);
-      if (!wasExcited && dragon.exciteLeft > 0) pay("petting", dragon.spine.head);
+      if (!wasExcited && dragon.exciteLeft > 0) {
+        pay("petting", dragon.spine.head);
+        sound.chirp();
+      }
       if (catchGame) {
         const wasDone = catchGame.phase === "done";
         for (const kind of catchGame.update(dt, dragon.mouth, dragon.headRadius)) {
           dragon.eat("dumpling");
+          sound.pop();
           needs = change(needs, { fullness: FOOD_PER_CATCH * (kind === "golden" ? 2 : 1) });
         }
         // For automated checks: the lowest dumpling still falling.
@@ -1258,6 +1288,7 @@ async function main(): Promise<void> {
                 modeSeconds,
               );
             drawHelpButton(ctx, screen.width, screen.height);
+            drawSoundButton(ctx, screen.width, screen.height, sound.setting === "on");
           }
           if (catchGame) {
             drawCatchHud(

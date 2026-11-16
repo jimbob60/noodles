@@ -1,3 +1,4 @@
+import { sound } from "../audio/sound";
 import type { Point } from "../noodle/spine";
 
 /** A noodle coin: gold, with a little noodle swirl stamped on it. */
@@ -62,6 +63,7 @@ export class CoinCounter {
 
   /** New coins pop out at `from` (a few at most, for show). */
   earned(amount: number, from: Point): void {
+    sound.coin();
     for (let i = 0; i < Math.min(5, amount); i++)
       this.flyers.push({ from: { ...from }, t: 0, delay: i * 0.08 });
   }
