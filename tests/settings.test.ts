@@ -7,13 +7,15 @@ describe("settings", () => {
     expect(parseSettings("not json")).toEqual(DEFAULT_SETTINGS);
   });
   it("keep volumes between 0 and 1, filling in anything missing", () => {
-    expect(parseSettings(JSON.stringify({ music: 0.3, effects: 2 }))).toEqual({
+    expect(parseSettings(JSON.stringify({ music: 0.3, effects: 2, vibration: false }))).toEqual({
       music: 0.3,
       effects: 1,
+      vibration: false,
     });
     expect(parseSettings(JSON.stringify({ music: -1 }))).toEqual({
       music: 0,
       effects: DEFAULT_SETTINGS.effects,
+      vibration: true,
     });
   });
 });

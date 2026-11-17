@@ -43,7 +43,9 @@ class Sound {
   private lastCoin = 0;
   /** The music and effects volumes from the settings (0–1 each). */
   private volumes: Settings =
-    typeof localStorage === "undefined" ? { music: 0.7, effects: 0.8 } : loadSettings();
+    typeof localStorage === "undefined"
+      ? { music: 0.7, effects: 0.8, vibration: true }
+      : loadSettings();
 
   private get musicLevel(): number {
     return MUSIC_LEVEL * this.volumes.music * (this.sleepy ? 0.7 : 1);

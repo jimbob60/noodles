@@ -176,6 +176,28 @@ export function openTitle(opts: {
 
 // ---- Settings (with help, from the ⚙️ button) ----
 
+/** An on/off switch row. */
+function toggle(
+  label: string,
+  icon: string,
+  on: boolean,
+  onChange: (on: boolean) => void,
+  id: string,
+): HTMLElement {
+  const row = el("label", { display: "flex", alignItems: "center", gap: "10px", margin: "10px 0" });
+  const input = el("input", { width: "26px", height: "26px", accentColor: "#9dffc8" });
+  input.type = "checkbox";
+  input.checked = on;
+  input.id = id;
+  input.addEventListener("change", () => onChange(input.checked));
+  row.append(
+    el("div", { fontSize: "22px", width: "28px" }, icon),
+    el("div", { flex: "1" }, label),
+    input,
+  );
+  return row;
+}
+
 function slider(
   label: string,
   icon: string,
@@ -252,6 +274,13 @@ export function openMenu(opts: {
       s.effects,
       (v) => opts.onSettings({ ...s, effects: (s.effects = v) }),
       "effects-volume",
+    ),
+    toggle(
+      "Vibration",
+      "📳",
+      s.vibration,
+      (on) => opts.onSettings({ ...s, vibration: (s.vibration = on) }),
+      "vibration",
     ),
     el(
       "div",

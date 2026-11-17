@@ -32,6 +32,7 @@ import { drawHelpButton, onHelpButton, openFeedback, openHowTo } from "./ui/help
 import { drawDexButton, onDexButton, openDex } from "./ui/dexPanel";
 import { drawSoundButton, onSoundButton } from "./ui/soundButton";
 import { sound } from "./audio/sound";
+import { Juice, juiceTheCards } from "./ui/juice";
 import { Tutorial, type TutorialTarget } from "./ui/tutorial";
 import { cornerButton, trayRadius } from "./ui/layout";
 import { openCredits, openMenu, openTitle } from "./ui/menuPanel";
@@ -217,6 +218,7 @@ async function main(): Promise<void> {
     if (!won.length) return;
     dexPrizes = [...dexPrizes, ...won];
     prizeFresh = [...prizeFresh, ...won];
+    juice.burst({ x: window.innerWidth / 2, y: window.innerHeight / 2 }, 40, 320);
     sound.sparkle();
     const coins = won.reduce((n, p) => n + STICKERS[p].coins, 0);
     wallet = { ...wallet, coins: wallet.coins + coins };
@@ -245,6 +247,7 @@ async function main(): Promise<void> {
       wallet = { ...wallet, coins: wallet.coins + r.coins };
       coinCounter.earned(r.coins, { x: 68, y: 206 });
       goalGlow = 1;
+      juice.burst({ x: 68, y: 206 }, 16, 150);
       sound.sparkle();
       logEvent(`goal done ${r.finished.map((f) => f.kind).join(" ")} +${r.coins}`);
     }
@@ -293,10 +296,15 @@ async function main(): Promise<void> {
     });
   /** The device's settings (music and effects volumes). */
   let settings = loadSettings();
+  /** Ripples, sparkles, buzzes and scene-change dips (phase 46). */
+  const juice = new Juice();
+  juice.vibration = settings.vibration;
+  juiceTheCards(juice);
   const changeSettings = (s: Settings) => {
     settings = s;
     saveSettings(s);
     sound.setVolumes(s);
+    juice.vibration = s.vibration;
   };
   /** The ⚙️ menu: volumes, help, credits, back to the title. */
   const showMenu = () =>
@@ -439,6 +447,7 @@ async function main(): Promise<void> {
   let night = 0;
   let bedAt = bedSpot(screen.width, screen.height);
   function setBedtime(on: boolean): void {
+    juice.transition(0.7);
     needs = { ...needs, inBed: on };
     sound.setSleepy(on);
     if (on) sound.lullaby();
@@ -518,6 +527,7 @@ async function main(): Promise<void> {
   });
   /** Brings a family member out into the den, caught up on the time it was away. */
   function bring(member: FamilyMember): void {
+    juice.transition(0.5);
     const m = catchUp(member, Date.now());
     seed = m.seed;
     genes = m.genes;
@@ -600,6 +610,7 @@ async function main(): Promise<void> {
     family = family.filter((_, k) => k !== index);
     wallet = { ...wallet, coins: wallet.coins + gift };
     coinCounter.earned(gift, { x: screen.width / 2, y: screen.height * 0.3 });
+    juice.burst({ x: screen.width / 2, y: screen.height * 0.3 }, 24, 220);
     logEvent(`set free ${m.identity.name} +${gift}`);
     document.body.dataset.freed = String(Number(document.body.dataset.freed ?? 0) + 1);
     showFamily();
@@ -669,6 +680,8 @@ async function main(): Promise<void> {
   let catchDoneFor = 0;
   let bestBefore = 0;
   let swallowing = false;
+  /** This press already got its tap ripple. */
+  let tappedThisPress = false;
   const noFinger = { x: 0, y: 0, down: false };
   /** Photo mode: the buttons step aside so you can pose your dragon and snap it. */
   let photo: PhotoState | null = null;
@@ -708,6 +721,7 @@ async function main(): Promise<void> {
           screen.height - 14 - 4.55 * R,
         );
       }
+      juice.update(dt);
       if (pressAt && onTag(pressAt.x, pressAt.y)) {
         swallowing = true;
         enterMode(MODES[(MODES.indexOf(mode) + 1) % MODES.length]);
@@ -912,6 +926,7 @@ async function main(): Promise<void> {
         blocked = true;
         if (catchGame.phase === "done" && pressAt && catchDoneFor > 0.6) {
           catchGame = null;
+          juice.transition();
           swallowing = true;
           persist();
         }
@@ -930,6 +945,7 @@ async function main(): Promise<void> {
           feeding.sendHome();
           toys.sendHome();
           catchGame = new NoodleCatch(screen.width, screen.height);
+          juice.transition();
           catchDoneFor = 0;
         }
       }
@@ -962,6 +978,9 @@ async function main(): Promise<void> {
         gallery.update(dt, swallowing ? null : pressAt);
         return;
       }
+      // Any button tap gets a ripple, a few sparkles and a gentle buzz.
+      if (pressAt && swallowing && !tappedThisPress) juice.tap(pressAt);
+      tappedThisPress = !!pressAt || (tappedThisPress && input.down);
       if (egg) {
         // Hatching time: rub the egg to warm it, then tap to crack it. Nothing else to do yet.
         const at = eggAt();
@@ -981,6 +1000,11 @@ async function main(): Promise<void> {
         if (r.cracked) tutorial.on("crack");
         if (rubbed > 0) tutorial.on("rub", rubbed);
         if (r.hatched) sound.sparkle();
+        if (r.hatched) {
+          juice.burst(eggAt(), 30, 260);
+          juice.buzz([20, 40, 30]);
+        }
+        if (r.cracked) juice.buzz(12);
         if (r.hatched) {
           // Out pops the dragon, right where the egg was, thrilled to meet you.
           dragon = new Dragon(at.x, at.y, segmentFor(screen), world(), genes);
@@ -1382,6 +1406,7 @@ async function main(): Promise<void> {
             drawSoundButton(ctx, screen.width, screen.height, sound.setting === "on");
             tutorial.drawArrow(ctx, tutorialTarget, modeSeconds);
           }
+          juice.draw(ctx);
           if (catchGame) {
             drawCatchHud(
               ctx,
@@ -1407,6 +1432,7 @@ async function main(): Promise<void> {
       }
 
       // Build tag, frame rate and test mode in the corner. Tap it to switch mode.
+      juice.drawDip(ctx, screen.width, screen.height);
       const modeName = { play: "play", fast: "⏩ fast", gallery: "🖼 gallery", hatch: "🥚 hatch" }[
         mode
       ];

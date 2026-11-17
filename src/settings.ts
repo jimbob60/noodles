@@ -7,9 +7,11 @@ export interface Settings {
   music: number;
   /** Sound effects volume, 0 (silent) to 1. */
   effects: number;
+  /** A gentle buzz on taps, on phones that can (phase 46). */
+  vibration: boolean;
 }
 
-export const DEFAULT_SETTINGS: Settings = { music: 0.7, effects: 0.8 };
+export const DEFAULT_SETTINGS: Settings = { music: 0.7, effects: 0.8, vibration: true };
 const KEY = "noodle-dragons.settings";
 
 const level = (v: unknown, fallback: number) =>
@@ -22,6 +24,7 @@ export function parseSettings(raw: string | null): Settings {
     return {
       music: level(s.music, DEFAULT_SETTINGS.music),
       effects: level(s.effects, DEFAULT_SETTINGS.effects),
+      vibration: typeof s.vibration === "boolean" ? s.vibration : DEFAULT_SETTINGS.vibration,
     };
   } catch {
     return { ...DEFAULT_SETTINGS };

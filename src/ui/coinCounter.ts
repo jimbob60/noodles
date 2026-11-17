@@ -1,3 +1,4 @@
+import { boing } from "./juice";
 import { sound } from "../audio/sound";
 import type { Point } from "../noodle/spine";
 
@@ -91,6 +92,11 @@ export class CoinCounter {
   draw(ctx: CanvasRenderingContext2D): void {
     const at = this.at();
     const r = 11 * (1 + this.bump * 0.25);
+    const [sx, sy] = boing(this.bump, 0.12);
+    ctx.save();
+    ctx.translate(at.x + 28, at.y);
+    ctx.scale(sx, sy);
+    ctx.translate(-at.x - 28, -at.y);
     ctx.fillStyle = "rgba(20,14,60,0.75)";
     ctx.beginPath();
     ctx.roundRect(at.x - 18, at.y - 15, 92, 30, 15);
@@ -101,6 +107,7 @@ export class CoinCounter {
     ctx.textBaseline = "middle";
     ctx.fillStyle = "#ffe08a";
     ctx.fillText(String(Math.max(0, this.shown)), at.x + 18, at.y + 1);
+    ctx.restore();
     for (const f of this.flyers) {
       if (f.delay > 0) continue;
       // An arc: pop up, then swoop to the counter.

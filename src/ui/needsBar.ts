@@ -1,3 +1,4 @@
+import { boing } from "./juice";
 import { FLOOR, MAX, NEED_NAMES, type NeedName, type Needs } from "../care/needs";
 
 /** One short word under each orb (Jacob's choice). */
@@ -53,6 +54,14 @@ export function wobble(value: number, time: number, offset: number): number {
 export class NeedsBar {
   private shown: Needs | null = null;
   private time = 0;
+  /** The last target values, and a springy boing (1 → 0) when one jumps up (phase 46). */
+  private target: Needs | null = null;
+  private boings: Record<NeedName, number> = {
+    fullness: 0,
+    happiness: 0,
+    energy: 0,
+    cleanliness: 0,
+  };
 
   update(dt: number, needs: Needs): void {
     this.time += dt;
@@ -60,6 +69,11 @@ export class NeedsBar {
       this.shown = { ...needs };
       return;
     }
+    for (const n of NEED_NAMES) {
+      if (this.target && needs[n] - this.target[n] > 1.5) this.boings[n] = 1;
+      this.boings[n] = Math.max(0, this.boings[n] - dt * 1.8);
+    }
+    this.target = { ...needs };
     const k = 1 - Math.exp(-GLIDE_RATE * dt);
     for (const n of NEED_NAMES) this.shown[n] += (needs[n] - this.shown[n]) * k;
   }
@@ -98,6 +112,8 @@ export class NeedsBar {
     const light = brightness(value);
     ctx.save();
     ctx.translate(x, y);
+    const [sx, sy] = boing(this.boings[name], 0.2);
+    ctx.scale(sx, sy);
     ctx.rotate(wobble(value, this.time, index * 0.9));
     ctx.globalAlpha = light;
 
