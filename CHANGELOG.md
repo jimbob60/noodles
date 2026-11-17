@@ -2,6 +2,7 @@
 
 Newest first. One line per finished phase.
 
+- **Phase 45 — Tutorial (a2faa64 … d627f42, 2026-11-16):** Shelly the talking egg guides a new player step by step (hatch, swim, feed, pet, play, then the orbs, goals, moon and buttons), waits for each thing to be done, keeps her bubble clear of it, and can be skipped.
 - **Phase 44 — Menus and settings (ed10280, 2026-11-16):** a glowing title screen with Play, Settings and Credits; a ⚙️ menu with music and effects volumes, help and back to the title; Panda Studios credits.
 - **Phase 43 — Sound (07a4c48, 2026-11-16):** cozy lo-fi music and gentle effects (chirps, purrs, munches, pops, bubbles, coin dings, sparkles), all played live by code; a lullaby at bedtime; a 🔊 button to turn it all off.
 - **Phase 42 — Gate: balance (05fc265, 2026-11-16):** a 30-day play simulation tuned the game: a family of ten, 🕊️ set grown-ups free for coins, dragons at home keep growing, and care coins capped at 200 a day so nothing is grindy. Stage F done.

@@ -2,6 +2,17 @@
 
 Newest first. Each entry says what we decided, why, and what it affects.
 
+## 2026-11-17: Phase 46, juice: ripples, sparkles, boings, buzzes and smooth scene changes
+
+- **Every tap** on a button in the den (the corner stack, the trays, the goals chip, Jinxy) gets a soft **ripple ring**, a few tiny **sparkles** and a short **buzz** on phones that can vibrate (most Android phones; iPhones can't). Every button in the cards **squishes** when pressed (and buzzes too).
+- **Squash and stretch:** the need orbs **boing** (a springy squash-and-stretch) whenever a need jumps up (a snack, a purr, a bath, a nap); the coin counter boings as each coin lands. The jelly ball already squashed.
+- **Sparkle bursts** for happy moments: hatching (a big burst and a little buzz pattern; each crack of the egg buzzes too), a finished goal (from the 🎯 chip), a Dragondex sticker, and setting a dragon free.
+- **Smooth scene changes:** a soft dip to dark and back when Noodle Catch starts and ends, at bedtime and waking, and when swapping which dragon is in the den. **Cards pop in** with a little spring (the dark shade fades in, the card grows in with a small overshoot), without any card needing to know: one watcher adds it to every `*-panel`.
+- **Vibration switch** in the ⚙️ menu (📳, on by default, remembered on the device with the volumes).
+- **Kept light:** at most 160 sparkles at once; the dip and ripples cost almost nothing. Phase 47 adds a reduced-motion option that will tone these down.
+- **Code:** `src/ui/juice.ts` (`Juice`: `tap`, `burst`, `buzz`, `transition`; `boing` and `dipAlpha` helpers; `juiceTheCards`).
+- **Why:** phase 46 ("every tap feels rewarding").
+
 ## 2026-11-16: Tutorial fixes (Jacob's playtest): the play step, and a bubble that never covers the goal
 
 - **Stuck on the play step:** booping the ball never told Shelly, the ribbon only counted after 5 whole seconds of the dragon keeping up, and a tired dragon refuses to play at all. Now the step counts **the player playing**: about 1½ seconds with the ball out (one throw is enough) or the ribbon in hand, whatever the dragon does.
